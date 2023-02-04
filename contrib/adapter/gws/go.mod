@@ -1,0 +1,10 @@
+module github.com/lxzan/gmux/contrib/adapter/gws
+
+go 1.16
+
+replace github.com/lxzan/uRouter => ../../../
+
+require (
+	github.com/lxzan/gws v1.2.12
+	github.com/lxzan/uRouter v0.0.0-00010101000000-000000000000
+)
