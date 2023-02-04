@@ -81,11 +81,9 @@ func (c *HeaderCodec) Encode(writer *bytes.Buffer, h Header) error {
 	var p0 [4]byte
 	writer.Write(p0[:c.lengthEncoding])
 
-	if h != nil {
-		if num := h.Len(); num > 0 {
-			if err := codec.NewEncoder(writer, c.handle).Encode(h); err != nil {
-				return err
-			}
+	if h != nil && h.Len() > 0 {
+		if err := codec.NewEncoder(writer, c.handle).Encode(h); err != nil {
+			return err
 		}
 	}
 

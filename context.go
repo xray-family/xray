@@ -1,6 +1,7 @@
 package uRouter
 
 import (
+	"bytes"
 	"github.com/lxzan/uRouter/internal"
 	"github.com/ugorji/go/codec"
 	"io"
@@ -86,7 +87,10 @@ func (c *Context) RawResponseWriter() interface{} {
 
 // WriteJSON 写入JSON
 func (c *Context) WriteJSON(code int, v interface{}) error {
-	c.Writer.Header().Set(ContentType, MimeJson)
+	var header = c.Writer.Header()
+	if _, ok := header.(HttpHeader); ok {
+		c.Writer.Header().Set(ContentType, MimeJson)
+	}
 	c.Writer.Code(code)
 	if err := codec.NewEncoder(c.Writer, JsonHandle).Encode(v); err != nil {
 		return err
@@ -96,11 +100,7 @@ func (c *Context) WriteJSON(code int, v interface{}) error {
 
 // WriteBytes 写入字节流
 func (c *Context) WriteBytes(code int, p []byte) error {
-	c.Writer.Code(code)
-	if _, err := c.Writer.Write(p); err != nil {
-		return err
-	}
-	return c.Writer.Flush()
+	return c.WriteReader(code, bytes.NewBuffer(p))
 }
 
 // WriteString 写入字节流
