@@ -1,4 +1,4 @@
-module github.com/lxzan/gmux/contrib/adapter/http
+module github.com/lxzan/uRouter/contrib/adapter/http
 
 go 1.16
 

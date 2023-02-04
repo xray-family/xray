@@ -1,4 +1,4 @@
-module github.com/lxzan/gmux/contrib/adapter/gws
+module github.com/lxzan/uRouter/contrib/adapter/gws
 
 go 1.16
 
