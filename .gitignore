@@ -15,3 +15,5 @@
 .vscode/
 vendor/
 examples/debug/
+
+go.work
