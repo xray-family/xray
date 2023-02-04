@@ -4,13 +4,14 @@ func Join1(a string, sep string) string {
 	if len(a) == 0 {
 		return sep
 	}
-	if a[0:1] == sep {
-		return a
+	if a[0:1] != sep {
+		a = sep + a
 	}
-	return sep + a
+	return trimRight(a, sep)
 }
 
 func Join2(a string, b string, sep string) string {
+	b = trimRight(b, sep)
 	var m = len(a)
 	var n = len(b)
 	if m == 0 && n == 0 {
@@ -31,6 +32,17 @@ func Join2(a string, b string, sep string) string {
 		return a + b
 	}
 	return a + sep + b
+}
+
+func trimRight(path string, sep string) string {
+	var n = len(path)
+	if n == 0 {
+		return path
+	}
+	if path[n-1:] == sep {
+		return path[:n-1]
+	}
+	return path
 }
 
 func SelectString(expression bool, a, b string) string {

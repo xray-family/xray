@@ -4,6 +4,7 @@ import (
 	"github.com/lxzan/uRouter/internal"
 	"log"
 	"reflect"
+	"runtime"
 	"sort"
 )
 
@@ -85,6 +86,8 @@ func (c *Router) Display() {
 		if n == 0 {
 			continue
 		}
-		log.Printf("path=%s, handler=%s", key, reflect.TypeOf(handlers[n-1]).String())
+
+		funcName := runtime.FuncForPC(reflect.ValueOf(handlers[n-1]).Pointer()).Name()
+		log.Printf("path=%s, handler=%s", key, funcName)
 	}
 }
