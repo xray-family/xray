@@ -1,12 +1,38 @@
 package http
 
 import (
+	"bytes"
 	"github.com/lxzan/uRouter"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/url"
 	"testing"
 )
+
+func newWriterMocker() http.ResponseWriter {
+	return &writerMocker{
+		header: http.Header{},
+		buf:    bytes.NewBufferString(""),
+	}
+}
+
+type writerMocker struct {
+	header http.Header
+	buf    *bytes.Buffer
+	code   int
+}
+
+func (c *writerMocker) Header() http.Header {
+	return c.header
+}
+
+func (c *writerMocker) Write(p []byte) (int, error) {
+	return c.buf.Write(p)
+}
+
+func (c *writerMocker) WriteHeader(statusCode int) {
+	c.code = statusCode
+}
 
 func TestNewAdapter(t *testing.T) {
 	var as = assert.New(t)
@@ -84,6 +110,15 @@ func TestNewAdapter(t *testing.T) {
 		g0.On("/t1", func(ctx *uRouter.Context) {
 			v, _ := ctx.Get("sum")
 			as.Equal(3, v.(int))
+
+			{
+				ctx.Writer.Header().Set(uRouter.ContentType, "plain/text")
+				as.NoError(ctx.WriteString(http.StatusOK, "OK"))
+				_, ok := ctx.RawResponseWriter().(http.ResponseWriter)
+				as.Equal(true, ok)
+				as.Equal("plain/text", ctx.Writer.Header().Get(uRouter.ContentType))
+			}
+
 		}, func(ctx *uRouter.Context) {
 			v, _ := ctx.Get("sum")
 			ctx.Set("sum", v.(int)+2)
@@ -109,16 +144,16 @@ func TestNewAdapter(t *testing.T) {
 
 		router.Display()
 
-		adapter.ServeHTTP(nil, &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/0123abc"}})
-		adapter.ServeHTTP(nil, &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/t1"}})
-		adapter.ServeHTTP(nil, &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/t2"}})
-		adapter.ServeHTTP(nil, &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/user/t3"}})
-		adapter.ServeHTTP(nil, &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/session/t4"}})
+		adapter.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/0123abc"}})
+		adapter.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/t1"}})
+		adapter.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/t2"}})
+		adapter.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/user/t3"}})
+		adapter.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/session/t4"}})
 
-		adapter.ServeHTTP(nil, &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/0123abc"}})
-		adapter.ServeHTTP(nil, &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/t1"}})
-		adapter.ServeHTTP(nil, &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/t2"}})
-		adapter.ServeHTTP(nil, &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/user/t3"}})
-		adapter.ServeHTTP(nil, &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/session/t4"}})
+		adapter.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/0123abc"}})
+		adapter.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/t1"}})
+		adapter.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/t2"}})
+		adapter.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/user/t3"}})
+		adapter.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/session/t4"}})
 	})
 }

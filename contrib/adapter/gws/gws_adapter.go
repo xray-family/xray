@@ -6,13 +6,19 @@ import (
 	"github.com/lxzan/uRouter"
 )
 
-type Writer struct {
-	conn        *gws.Conn
-	headerCodec *uRouter.HeaderCodec
-	header      uRouter.Header
-	code        gws.Opcode
-	payload     []byte
-}
+type (
+	Conn interface {
+		WriteMessage(opcode gws.Opcode, payload []byte)
+	}
+
+	Writer struct {
+		conn        Conn
+		headerCodec *uRouter.HeaderCodec
+		header      uRouter.Header
+		code        gws.Opcode
+		payload     []byte
+	}
+)
 
 func (c *Writer) Header() uRouter.Header {
 	return c.header
@@ -23,7 +29,7 @@ func (c *Writer) Code(opcode int) {
 }
 
 func (c *Writer) RawResponseWriter() interface{} {
-	return c.code
+	return c.conn
 }
 
 func (c *Writer) Write(p []byte) (int, error) {
