@@ -1,9 +1,0 @@
-go 1.16
-
-use (
-	.
-	./contrib/adapter/gws
-	./contrib/adapter/http
-	./examples/gws
-	./examples/http
-)
