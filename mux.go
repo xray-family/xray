@@ -1,5 +1,7 @@
 package uRouter
 
+import "github.com/lxzan/uRouter/internal"
+
 type (
 	// Router 路由器
 	Router struct {
@@ -34,14 +36,14 @@ func (c *Router) Group(prefix string, middlewares ...HandlerFunc) *Group {
 	return &Group{
 		router:      c,
 		separator:   c.separator,
-		prefix:      join1(prefix, c.separator),
+		prefix:      internal.Join1(prefix, c.separator),
 		middlewares: append(c.middlewares, middlewares...),
 	}
 }
 
 // On 监听事件
 func (c *Router) On(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
-	path = join1(path, c.separator)
+	path = internal.Join1(path, c.separator)
 	var h = c.middlewares
 	h = append(h, middlewares...)
 	h = append(h, handler)
@@ -50,7 +52,7 @@ func (c *Router) On(path string, handler HandlerFunc, middlewares ...HandlerFunc
 
 // Emit 分发事件
 func (c *Router) Emit(ctx *Context) {
-	path := join1(ctx.Request.Header.Get(XPath), c.separator)
+	path := internal.Join1(ctx.Request.Header.Get(XPath), c.separator)
 	funcs, ok := c.routes[path]
 	if !ok && c.OnNoMatch != nil {
 		funcs = append(c.middlewares, c.OnNoMatch)
