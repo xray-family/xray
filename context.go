@@ -75,14 +75,9 @@ func (c *Context) Get(key string) (interface{}, bool) {
 	return val, ok
 }
 
-// RawRequest 获取原生请求
-func (c *Context) RawRequest() interface{} {
-	return c.Request.RawRequest
-}
-
-// RawResponseWriter 获取原生响应写入器
-func (c *Context) RawResponseWriter() interface{} {
-	return c.Writer.RawResponseWriter()
+// Raw 获取原生上下文
+func (c *Context) Raw() (request interface{}, writer interface{}) {
+	return c.Request.RawRequest, c.Writer.RawResponseWriter()
 }
 
 // WriteJSON 写入JSON

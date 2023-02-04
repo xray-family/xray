@@ -146,6 +146,7 @@ func TestContext_Storage(t *testing.T) {
 func TestContext_Others(t *testing.T) {
 	var as = assert.New(t)
 	var ctx = newContextMocker()
-	as.Nil(ctx.RawRequest())
-	as.Nil(ctx.RawResponseWriter())
+	r, w := ctx.Raw()
+	as.Nil(r)
+	as.Nil(w)
 }
