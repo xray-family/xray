@@ -1,6 +1,11 @@
 package uRouter
 
-import "github.com/lxzan/uRouter/internal"
+import (
+	"github.com/lxzan/uRouter/internal"
+	"log"
+	"reflect"
+	"sort"
+)
 
 type (
 	// Router 路由器
@@ -64,4 +69,22 @@ func (c *Router) Emit(ctx *Context) {
 	ctx.index = -1
 	ctx.handlers = funcs
 	ctx.Next()
+}
+
+func (c *Router) Display() {
+	var keys = make([]string, 0, len(c.routes))
+	for k, _ := range c.routes {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	log.Printf("API List")
+	for _, key := range keys {
+		var handlers = c.routes[key]
+		var n = len(handlers)
+		if n == 0 {
+			continue
+		}
+		log.Printf("path=%s, handler=%s", key, reflect.TypeOf(handlers[n-1]).String())
+	}
 }

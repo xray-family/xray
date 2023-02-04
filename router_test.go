@@ -38,6 +38,8 @@ func TestNew(t *testing.T) {
 			list = append(list, 8)
 		})
 
+		r.Display()
+
 		r.Emit(&Context{
 			Request: &Request{
 				Header: NewHttpHeader(http.Header{"X-Path": []string{"/api/v1/greet"}}),
@@ -58,4 +60,66 @@ func TestNew(t *testing.T) {
 		as.Equal(2, list[8])
 	})
 
+	t.Run("", func(t *testing.T) {
+		var r = New()
+		var list []int
+
+		r.On("test", func(ctx *Context) {
+			list = append(list, 3)
+		}, func(ctx *Context) {
+			list = append(list, 1)
+			ctx.Next()
+			list = append(list, 2)
+		})
+
+		r.Emit(&Context{
+			Request: &Request{
+				Header: NewHttpHeader(http.Header{"X-Path": []string{"/test"}}), Body: nil,
+			},
+			Writer: nil,
+		})
+
+		as.Equal(len(list), 3)
+		as.Equal(1, list[0])
+		as.Equal(3, list[1])
+		as.Equal(2, list[2])
+	})
+
+	t.Run("no match", func(t *testing.T) {
+		var r = New()
+		var list []int
+
+		r.OnNoMatch = func(ctx *Context) {
+			list = append(list, 1)
+		}
+
+		r.Emit(&Context{
+			Request: &Request{
+				Header: NewHttpHeader(http.Header{XPath: []string{"/test"}}), Body: nil,
+			},
+			Writer: nil,
+		})
+
+		as.Equal(len(list), 1)
+		as.Equal(1, list[0])
+	})
+
+	t.Run("no handler", func(t *testing.T) {
+		var r = New()
+		var list []int
+
+		r.Group("test")
+
+		r.Emit(&Context{
+			Request: &Request{
+				Header: NewHttpHeader(http.Header{XPath: []string{"/test"}}), Body: nil,
+			},
+			Writer: nil,
+		})
+
+		r.routes["404"] = nil
+
+		r.Display()
+		as.Equal(len(list), 0)
+	})
 }

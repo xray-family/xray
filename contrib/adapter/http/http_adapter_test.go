@@ -107,6 +107,8 @@ func TestNewAdapter(t *testing.T) {
 			as.Equal(1, v.(int))
 		})
 
+		router.Display()
+
 		adapter.ServeHTTP(nil, &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/0123abc"}})
 		adapter.ServeHTTP(nil, &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/t1"}})
 		adapter.ServeHTTP(nil, &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/t2"}})

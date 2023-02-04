@@ -3,6 +3,7 @@ package uRouter
 import (
 	"bytes"
 	"github.com/stretchr/testify/assert"
+	"net/http"
 	"testing"
 )
 
@@ -80,4 +81,34 @@ func TestHeaderCodec(t *testing.T) {
 		}
 		as.Equal(0, len(header2.(F)))
 	})
+}
+
+func TestHttpHeader(t *testing.T) {
+	var as = assert.New(t)
+	var header = HttpHeader{Header: http.Header{}}
+	header.Set(ContentType, MimeJson)
+	header.Set(XPath, "")
+	as.Equal(2, header.Len())
+
+	var keys []string
+	header.Del(XPath)
+	header.Range(func(key string, value string) {
+		keys = append(keys, key)
+	})
+	as.Equal(1, len(keys))
+}
+
+func TestFHeader(t *testing.T) {
+	var as = assert.New(t)
+	var header = F{}
+	header.Set(ContentType, MimeJson)
+	header.Set(XPath, "")
+	as.Equal(2, header.Len())
+
+	var keys []string
+	header.Del(XPath)
+	header.Range(func(key string, value string) {
+		keys = append(keys, key)
+	})
+	as.Equal(1, len(keys))
 }

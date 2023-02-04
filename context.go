@@ -111,7 +111,11 @@ func (c *Context) WriteString(code int, s string) error {
 // WriteReader 写入Reader
 func (c *Context) WriteReader(code int, r io.Reader) error {
 	c.Writer.Code(code)
-	if _, err := io.Copy(c.Writer, r); err != nil {
+	if v, ok := r.(internal.BytesReader); ok {
+		if _, err := c.Writer.Write(v.Bytes()); err != nil {
+			return err
+		}
+	} else if _, err := io.Copy(c.Writer, r); err != nil {
 		return err
 	}
 	return c.Writer.Flush()
