@@ -7,12 +7,12 @@ import (
 )
 
 type (
-	Conn interface {
+	websocket interface {
 		WriteMessage(opcode gws.Opcode, payload []byte)
 	}
 
-	Writer struct {
-		conn        Conn
+	responseWriter struct {
+		conn        websocket
 		headerCodec *uRouter.HeaderCodec
 		header      uRouter.Header
 		code        gws.Opcode
@@ -20,24 +20,24 @@ type (
 	}
 )
 
-func (c *Writer) Header() uRouter.Header {
+func (c *responseWriter) Header() uRouter.Header {
 	return c.header
 }
 
-func (c *Writer) Code(opcode int) {
+func (c *responseWriter) Code(opcode int) {
 	c.code = gws.Opcode(opcode)
 }
 
-func (c *Writer) RawResponseWriter() interface{} {
+func (c *responseWriter) RawResponseWriter() interface{} {
 	return c.conn
 }
 
-func (c *Writer) Write(p []byte) (int, error) {
+func (c *responseWriter) Write(p []byte) (int, error) {
 	c.payload = p
 	return len(p), nil
 }
 
-func (c *Writer) Flush() error {
+func (c *responseWriter) Flush() error {
 	if c.code == 0 {
 		c.code = gws.OpcodeText
 	}
@@ -68,7 +68,7 @@ func (c *Adapter) ServeWebSocket(socket *gws.Conn, p []byte) error {
 		Request: &uRouter.Request{
 			Body: message,
 		},
-		Writer: &Writer{
+		Writer: &responseWriter{
 			conn:        socket,
 			headerCodec: c.codec,
 			header:      c.codec.Generate(),

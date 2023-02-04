@@ -5,23 +5,23 @@ import (
 	"net/http"
 )
 
-type Writer struct {
+type responseWriter struct {
 	http.ResponseWriter
 }
 
-func (c *Writer) Header() uRouter.Header {
+func (c *responseWriter) Header() uRouter.Header {
 	return uRouter.NewHttpHeader(c.ResponseWriter.Header())
 }
 
-func (c *Writer) Code(code int) {
+func (c *responseWriter) Code(code int) {
 	c.ResponseWriter.WriteHeader(code)
 }
 
-func (c *Writer) RawResponseWriter() interface{} {
+func (c *responseWriter) RawResponseWriter() interface{} {
 	return c.ResponseWriter
 }
 
-func (c *Writer) Flush() error {
+func (c *responseWriter) Flush() error {
 	return nil
 }
 
@@ -40,6 +40,6 @@ func (c *Adapter) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 		Body:       request.Body,
 	}
 	request.Header.Set(uRouter.XPath, request.URL.Path)
-	var ctx = uRouter.NewContext(r, &Writer{ResponseWriter: writer})
+	var ctx = uRouter.NewContext(r, &responseWriter{ResponseWriter: writer})
 	c.router.Emit(ctx)
 }

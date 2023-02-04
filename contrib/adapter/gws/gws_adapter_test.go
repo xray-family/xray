@@ -29,7 +29,7 @@ func TestNewAdapter(t *testing.T) {
 		var adapter = NewAdapter(router, uRouter.TextHeader)
 
 		router.On("testEncode", func(ctx *uRouter.Context) {
-			ctx.Writer = &Writer{
+			ctx.Writer = &responseWriter{
 				conn:        &connMocker{buf: bytes.NewBufferString("")},
 				headerCodec: uRouter.TextHeader,
 				header:      uRouter.TextHeader.Generate(),
