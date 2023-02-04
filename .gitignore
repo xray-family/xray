@@ -14,6 +14,7 @@
 .idea/
 .vscode/
 vendor/
+bin/
 examples/debug/
 
 go.work
