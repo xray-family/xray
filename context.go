@@ -96,7 +96,7 @@ func (c *Context) WriteJSON(code int, v interface{}) error {
 
 // WriteBytes 写入字节流
 func (c *Context) WriteBytes(code int, p []byte) error {
-	return c.WriteReader(code, bytes.NewReader(p))
+	return c.WriteReader(code, bytes.NewBuffer(p))
 }
 
 // WriteString 写入字节流

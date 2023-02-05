@@ -104,6 +104,12 @@ func TestHeaderCodec(t *testing.T) {
 		_, err := TextHeader.Decode(buf)
 		as.Error(err)
 	})
+
+	t.Run("decode error header", func(t *testing.T) {
+		var buf = bytes.NewBufferString("00xx")
+		_, err := TextHeader.Decode(buf)
+		as.Error(err)
+	})
 }
 
 func TestHttpHeader(t *testing.T) {

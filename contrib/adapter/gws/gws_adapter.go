@@ -5,6 +5,7 @@ import (
 	"github.com/lxzan/gws"
 	"github.com/lxzan/uRouter"
 	"github.com/lxzan/uRouter/internal"
+	"sync"
 )
 
 type (
@@ -13,23 +14,23 @@ type (
 	}
 
 	responseWriter struct {
+		once        sync.Once
 		conn        websocket
 		headerCodec *uRouter.HeaderCodec
 		header      uRouter.Header
 		code        gws.Opcode
-		headerBuf   *bytes.Buffer
-		bodyBuf     *bytes.Buffer
+		buf         *bytes.Buffer
 	}
 )
 
 func newResponseWriter(socket websocket, codec *uRouter.HeaderCodec) *responseWriter {
 	return &responseWriter{
+		once:        sync.Once{},
 		code:        gws.OpcodeText,
 		conn:        socket,
 		headerCodec: codec,
 		header:      codec.Generate(),
-		headerBuf:   bytes.NewBuffer(make([]byte, 0, 1024)),
-		bodyBuf:     bytes.NewBuffer(make([]byte, 0, 1024)),
+		buf:         uRouter.DefaultBufferPool.Get(),
 	}
 }
 
@@ -53,20 +54,20 @@ func (c *responseWriter) RawResponseWriter() interface{} {
 	return c.conn
 }
 
-func (c *responseWriter) Write(p []byte) (int, error) {
-	return c.bodyBuf.Write(p)
+func (c *responseWriter) Write(p []byte) (n int, err error) {
+	c.once.Do(func() {
+		err = c.headerCodec.Encode(c.buf, c.header)
+		n = c.buf.Len()
+	})
+	if err != nil {
+		return
+	}
+	return c.buf.Write(p)
 }
 
 func (c *responseWriter) Flush() error {
-	if c.code == 0 {
-		c.code = gws.OpcodeText
-	}
-
-	if err := c.headerCodec.Encode(c.headerBuf, c.header); err != nil {
-		return err
-	}
-	c.headerBuf.Write(c.bodyBuf.Bytes())
-	c.conn.WriteMessage(c.code, c.headerBuf.Bytes())
+	c.conn.WriteMessage(c.code, c.buf.Bytes())
+	uRouter.DefaultBufferPool.Put(c.buf)
 	return nil
 }
 
