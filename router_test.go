@@ -114,7 +114,7 @@ func TestNew(t *testing.T) {
 			Request: &Request{
 				Header: NewHttpHeader(http.Header{XPath: []string{"/test"}}), Body: nil,
 			},
-			Writer: nil,
+			Writer: newResponseWriterMocker(),
 		})
 
 		r.routes["404"] = nil

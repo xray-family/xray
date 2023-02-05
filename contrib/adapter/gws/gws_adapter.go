@@ -83,7 +83,7 @@ func (c *Adapter) ServeWebSocket(socket *gws.Conn, p []byte) error {
 		},
 	}
 
-	header, err := c.router.HeaderCodec.Decode(message)
+	header, err := c.codec.Decode(message)
 	if err != nil {
 		return err
 	}

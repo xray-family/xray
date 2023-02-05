@@ -3,6 +3,7 @@ package uRouter
 import (
 	"github.com/lxzan/uRouter/internal"
 	"log"
+	"net/http"
 	"reflect"
 	"runtime"
 	"sort"
@@ -11,11 +12,14 @@ import (
 type (
 	// Router 路由器
 	Router struct {
-		separator   string        // separator
-		middlewares []HandlerFunc // global middlewares
-		routes      map[string][]HandlerFunc
-		HeaderCodec *HeaderCodec
-		OnNoMatch   HandlerFunc
+		// 分隔符
+		separator string
+		// 全局中间件
+		middlewares []HandlerFunc
+		// 接口映射
+		routes map[string][]HandlerFunc
+		// 路径匹配失败的处理
+		OnNoMatch HandlerFunc
 	}
 
 	// HandlerFunc 处理函数
@@ -24,12 +28,17 @@ type (
 
 // New 创建路由器
 func New() *Router {
-	return &Router{
+	r := &Router{
 		separator:   "/",
 		middlewares: make([]HandlerFunc, 0),
 		routes:      map[string][]HandlerFunc{},
-		HeaderCodec: TextHeader,
 	}
+	r.OnNoMatch = func(ctx *Context) {
+		if ctx.Writer.Protocol() == ProtocolHTTP {
+			_ = ctx.WriteString(http.StatusNotFound, "not found")
+		}
+	}
+	return r
 }
 
 // Use 设置全局中间件
