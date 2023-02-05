@@ -20,16 +20,17 @@ universal router for http, websocket and other custom protocol
 [8]: https://codecov.io/gh/lxzan/uRouter
 
 
-- [uRouter](#urouter)
-  - [Feature](#feature)
-  - [Quick Start](#quick-start)
-
-
 #### Feature
 - use static router powered by map
 - support middleware and router group 
 - support http, websocket...
 
+#### Index
+- [uRouter](#urouter)
+  - [Feature](#feature)
+  - [Index](#index)
+  - [Quick Start](#quick-start)
+  
 #### Quick Start
 
 - http
