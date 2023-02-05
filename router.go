@@ -18,6 +18,10 @@ type (
 		middlewares []HandlerFunc
 		// 接口映射
 		routes map[string][]HandlerFunc
+		// 路由列表
+		routePaths map[string]uint8
+		// 路由组列表
+		groupPaths map[string]uint8
 		// 路径匹配失败的处理
 		OnNoMatch HandlerFunc
 	}
@@ -32,6 +36,8 @@ func New() *Router {
 		separator:   "/",
 		middlewares: make([]HandlerFunc, 0),
 		routes:      map[string][]HandlerFunc{},
+		routePaths:  map[string]uint8{},
+		groupPaths:  map[string]uint8{},
 	}
 	r.OnNoMatch = func(ctx *Context) {
 		if ctx.Writer.Protocol() == ProtocolHTTP {
@@ -41,19 +47,29 @@ func New() *Router {
 	return r
 }
 
+func (c *Router) checkPathConflict(m map[string]uint8, path string) {
+	if _, ok := m[path]; ok {
+		log.Fatalf("path=%s, msg=path conflict\n", path)
+		return
+	}
+	m[path] = 1
+}
+
 // Use 设置全局中间件
 func (c *Router) Use(middlewares ...HandlerFunc) {
 	c.middlewares = append(c.middlewares, middlewares...)
 }
 
 // Group 创建路由组
-func (c *Router) Group(prefix string, middlewares ...HandlerFunc) *Group {
-	return &Group{
+func (c *Router) Group(path string, middlewares ...HandlerFunc) *Group {
+	var group = &Group{
 		router:      c,
 		separator:   c.separator,
-		prefix:      internal.Join1(prefix, c.separator),
+		path:        internal.Join1(path, c.separator),
 		middlewares: append(c.middlewares, middlewares...),
 	}
+	c.checkPathConflict(c.groupPaths, group.path)
+	return group
 }
 
 // On 监听事件
@@ -63,6 +79,7 @@ func (c *Router) On(path string, handler HandlerFunc, middlewares ...HandlerFunc
 	h = append(h, middlewares...)
 	h = append(h, handler)
 	c.routes[path] = h
+	c.checkPathConflict(c.routePaths, path)
 }
 
 // Emit 分发事件
@@ -81,6 +98,7 @@ func (c *Router) Emit(ctx *Context) {
 	ctx.Next()
 }
 
+// Display 展示接口列表
 func (c *Router) Display() {
 	var keys = make([]string, 0, len(c.routes))
 	for k, _ := range c.routes {
