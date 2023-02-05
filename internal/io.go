@@ -8,11 +8,8 @@ type (
 	}
 
 	BytesReader interface {
+		io.Reader
 		Bytes() []byte
-	}
-
-	Lener interface {
-		Len() int
 	}
 )
 
@@ -24,4 +21,14 @@ func Close(source interface{}) error {
 		v.Close()
 	}
 	return nil
+}
+
+func Write(w io.Writer, p []byte) error {
+	_, err := w.Write(p)
+	return err
+}
+
+func Copy(dst io.Writer, src io.Reader) error {
+	_, err := io.Copy(dst, src)
+	return err
 }

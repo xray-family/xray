@@ -2,7 +2,6 @@ package uRouter
 
 import (
 	"bytes"
-	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
@@ -32,6 +31,10 @@ type responseWriterMocker struct {
 	buf        *bytes.Buffer
 }
 
+func (c *responseWriterMocker) Protocol() string {
+	return ProtocolHTTP
+}
+
 func (c *responseWriterMocker) Header() Header {
 	return c.header
 }
@@ -48,7 +51,7 @@ func (c *responseWriterMocker) Flush() error {
 	return nil
 }
 
-func (c *responseWriterMocker) RawResponseWriter() interface{} {
+func (c *responseWriterMocker) Raw() interface{} {
 	return nil
 }
 
@@ -89,7 +92,7 @@ func TestContext_Write(t *testing.T) {
 
 	t.Run("write json", func(t *testing.T) {
 		var ctx = newContextMocker()
-		var params = A{"name": "aha"}
+		var params = Any{"name": "aha"}
 		if err := ctx.WriteJSON(http.StatusOK, params); err != nil {
 			as.NoError(err)
 			return
@@ -97,8 +100,9 @@ func TestContext_Write(t *testing.T) {
 		var writer = ctx.Writer.(*responseWriterMocker)
 		as.Equal(http.StatusOK, writer.statusCode)
 		as.Equal(MimeJson, writer.header.Get(ContentType))
-		p, _ := json.Marshal(params)
-		as.Equal(len(p), writer.buf.Len())
+		var buf = bytes.NewBufferString("")
+		defaultJsonCodec.NewEncoder(buf).Encode(params)
+		as.Equal(buf.Len(), writer.buf.Len())
 	})
 
 	t.Run("write string", func(t *testing.T) {
@@ -146,7 +150,6 @@ func TestContext_Storage(t *testing.T) {
 func TestContext_Others(t *testing.T) {
 	var as = assert.New(t)
 	var ctx = newContextMocker()
-	r, w := ctx.Raw()
-	as.Nil(r)
-	as.Nil(w)
+	as.Nil(ctx.Request.Raw)
+	as.Nil(ctx.Writer.Raw())
 }

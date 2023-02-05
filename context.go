@@ -2,33 +2,42 @@ package uRouter
 
 import (
 	"bytes"
+	"errors"
 	"github.com/lxzan/uRouter/internal"
-	"github.com/ugorji/go/codec"
 	"io"
 	"strings"
 )
 
+// TODO buffer pool
+// TODO form encode
+// TODO route conflict
 type (
 	// ResponseWriter 响应写入器
 	ResponseWriter interface {
+		// Protocol 获取协议
+		Protocol() string
+
+		// Header 获取header
 		Header() Header
 
+		// Write 写入数据
 		Write([]byte) (int, error)
 
+		// Code 设置状态码
 		Code(code int)
 
 		// Flush 刷新缓冲区
 		Flush() error
 
-		// RawResponseWriter 获取原生响应写入器
-		RawResponseWriter() interface{}
+		// Raw 获取原生响应写入器
+		Raw() interface{}
 	}
 
 	// Request 请求
 	Request struct {
-		RawRequest interface{}
-		Header     Header
-		Body       io.Reader
+		Raw    interface{}
+		Header Header
+		Body   io.Reader
 	}
 
 	// Context 请求上下文
@@ -36,7 +45,7 @@ type (
 		// 中间件游标
 		index int
 		// 缓存
-		storage A
+		storage Any
 		// 中间件
 		handlers []HandlerFunc
 		// 请求
@@ -49,7 +58,7 @@ type (
 func NewContext(request *Request, writer ResponseWriter) *Context {
 	return &Context{
 		index:    -1,
-		storage:  A{},
+		storage:  Any{},
 		handlers: []HandlerFunc{},
 		Request:  request,
 		Writer:   writer,
@@ -75,19 +84,13 @@ func (c *Context) Get(key string) (interface{}, bool) {
 	return val, ok
 }
 
-// Raw 获取原生上下文
-func (c *Context) Raw() (request interface{}, writer interface{}) {
-	return c.Request.RawRequest, c.Writer.RawResponseWriter()
-}
-
 // WriteJSON 写入JSON
 func (c *Context) WriteJSON(code int, v interface{}) error {
-	var header = c.Writer.Header()
-	if _, ok := header.(HttpHeader); ok {
+	if c.Writer.Protocol() == ProtocolHTTP {
 		c.Writer.Header().Set(ContentType, MimeJson)
 	}
 	c.Writer.Code(code)
-	if err := codec.NewEncoder(c.Writer, JsonHandle).Encode(v); err != nil {
+	if err := defaultJsonCodec.NewEncoder(c.Writer).Encode(v); err != nil {
 		return err
 	}
 	return c.Writer.Flush()
@@ -104,13 +107,14 @@ func (c *Context) WriteString(code int, s string) error {
 }
 
 // WriteReader 写入Reader
-func (c *Context) WriteReader(code int, r io.Reader) error {
+func (c *Context) WriteReader(code int, r io.Reader) (err error) {
 	c.Writer.Code(code)
 	if v, ok := r.(internal.BytesReader); ok {
-		if _, err := c.Writer.Write(v.Bytes()); err != nil {
-			return err
-		}
-	} else if _, err := io.Copy(c.Writer, r); err != nil {
+		err = internal.Write(c.Writer, v.Bytes())
+	} else {
+		err = internal.Copy(c.Writer, r)
+	}
+	if err != nil {
 		return err
 	}
 	return c.Writer.Flush()
@@ -121,9 +125,8 @@ func (c *Context) BindJSON(v interface{}) error {
 	defer func() {
 		_ = internal.Close(c.Request.Body)
 	}()
-
-	if br, ok := c.Request.Body.(internal.BytesReader); ok {
-		return codec.NewDecoderBytes(br.Bytes(), JsonHandle).Decode(v)
+	if c.Request.Body != nil {
+		return defaultJsonCodec.NewDecoder(c.Request.Body).Decode(v)
 	}
-	return codec.NewDecoder(c.Request.Body, JsonHandle).Decode(v)
+	return errors.New("request body cannot be nil")
 }
