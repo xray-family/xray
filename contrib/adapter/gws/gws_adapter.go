@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"github.com/lxzan/gws"
 	"github.com/lxzan/uRouter"
+	"github.com/lxzan/uRouter/internal"
 )
 
 type (
@@ -16,9 +17,21 @@ type (
 		headerCodec *uRouter.HeaderCodec
 		header      uRouter.Header
 		code        gws.Opcode
-		payload     []byte
+		headerBuf   *bytes.Buffer
+		bodyBuf     *bytes.Buffer
 	}
 )
+
+func newResponseWriter(socket websocket, codec *uRouter.HeaderCodec) *responseWriter {
+	return &responseWriter{
+		code:        gws.OpcodeText,
+		conn:        socket,
+		headerCodec: codec,
+		header:      codec.Generate(),
+		headerBuf:   bytes.NewBuffer(make([]byte, 0, 1024)),
+		bodyBuf:     bytes.NewBuffer(make([]byte, 0, 1024)),
+	}
+}
 
 func (c *responseWriter) Protocol() string {
 	return uRouter.ProtocolWebSocket
@@ -41,20 +54,19 @@ func (c *responseWriter) RawResponseWriter() interface{} {
 }
 
 func (c *responseWriter) Write(p []byte) (int, error) {
-	c.payload = p
-	return len(p), nil
+	return c.bodyBuf.Write(p)
 }
 
 func (c *responseWriter) Flush() error {
 	if c.code == 0 {
 		c.code = gws.OpcodeText
 	}
-	var buf = bytes.NewBuffer(nil)
-	if err := c.headerCodec.Encode(buf, c.header); err != nil {
+
+	if err := c.headerCodec.Encode(c.headerBuf, c.header); err != nil {
 		return err
 	}
-	buf.Write(c.payload)
-	c.conn.WriteMessage(c.code, buf.Bytes())
+	c.headerBuf.Write(c.bodyBuf.Bytes())
+	c.conn.WriteMessage(c.code, c.headerBuf.Bytes())
 	return nil
 }
 
@@ -70,17 +82,13 @@ type Adapter struct {
 	codec  *uRouter.HeaderCodec
 }
 
-func (c *Adapter) ServeWebSocket(socket *gws.Conn, p []byte) error {
-	message := bytes.NewBuffer(p)
+func (c *Adapter) ServeWebSocket(socket *gws.Conn, message internal.BytesReader) error {
 	ctx := &uRouter.Context{
 		Request: &uRouter.Request{
+			Raw:  message,
 			Body: message,
 		},
-		Writer: &responseWriter{
-			conn:        socket,
-			headerCodec: c.codec,
-			header:      c.codec.Generate(),
-		},
+		Writer: newResponseWriter(socket, c.codec),
 	}
 
 	header, err := c.codec.Decode(message)

@@ -3,8 +3,10 @@ package uRouter
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"github.com/lxzan/uRouter/internal"
+	"math"
 	"net/http"
 	"strconv"
 )
@@ -43,6 +45,13 @@ type (
 	HeaderLengthEncoding uint8
 )
 
+func (c HeaderLengthEncoding) MaxLength() int {
+	if c == BinaryLengthEncoding {
+		return math.MaxUint16
+	}
+	return 9999
+}
+
 func NewHeaderCodec(lengthEncoding HeaderLengthEncoding, codec Codec, generator func() Header) *HeaderCodec {
 	return new(HeaderCodec).
 		setLengthBytes(lengthEncoding).
@@ -77,18 +86,23 @@ func (c *HeaderCodec) Encode(writer *bytes.Buffer, h Header) error {
 		}
 	}
 
-	var length = writer.Len() - int(c.lengthEncoding)
-	var p1 = writer.Bytes()[:4]
+	var headerLength = writer.Len() - int(c.lengthEncoding)
+	if headerLength > c.lengthEncoding.MaxLength() {
+		return errors.New("encode header error")
+	}
+
+	var p1 = writer.Bytes()
+	var p2 = p1[:c.lengthEncoding]
 	if c.lengthEncoding == BinaryLengthEncoding {
-		binary.BigEndian.PutUint16(p1[:c.lengthEncoding], uint16(length))
+		binary.BigEndian.PutUint16(p2, uint16(headerLength))
 	} else {
-		copy(p1, fmt.Sprintf("%04d", length))
+		copy(p2, fmt.Sprintf("%04d", headerLength))
 	}
 
 	return nil
 }
 
-func (c *HeaderCodec) Decode(reader *bytes.Buffer) (Header, error) {
+func (c *HeaderCodec) Decode(reader internal.BytesReader) (Header, error) {
 	var v = c.Generate()
 	var p0 [4]byte
 
@@ -107,11 +121,15 @@ func (c *HeaderCodec) Decode(reader *bytes.Buffer) (Header, error) {
 		headerLength = n
 	}
 
-	var p1 = make([]byte, headerLength)
-	if _, err := reader.Read(p1); err != nil {
-		return nil, err
+	var p1 = reader.Bytes()
+	if len(p1) < headerLength || headerLength > c.lengthEncoding.MaxLength() {
+		return nil, errors.New("decode header error")
 	}
+
 	if headerLength > 0 {
+		if _, err := reader.Read(p1[:headerLength]); err != nil {
+			return nil, err
+		}
 		if err := c.codec.NewDecoder(bytes.NewReader(p1)).Decode(v); err != nil {
 			return nil, err
 		}

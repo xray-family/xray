@@ -18,6 +18,18 @@ func (c *connMocker) WriteMessage(opcode gws.Opcode, payload []byte) {
 	c.buf.Write(payload)
 }
 
+type messageMocker struct {
+	b *bytes.Buffer
+}
+
+func (c *messageMocker) Read(p []byte) (n int, err error) {
+	return c.b.Read(p)
+}
+
+func (c *messageMocker) Bytes() []byte {
+	return c.b.Bytes()
+}
+
 func TestNewAdapter(t *testing.T) {
 	var as = assert.New(t)
 
@@ -29,11 +41,7 @@ func TestNewAdapter(t *testing.T) {
 		var adapter = NewAdapter(router, uRouter.TextHeader)
 
 		router.On("testEncode", func(ctx *uRouter.Context) {
-			ctx.Writer = &responseWriter{
-				conn:        &connMocker{buf: bytes.NewBufferString("")},
-				headerCodec: uRouter.TextHeader,
-				header:      uRouter.TextHeader.Generate(),
-			}
+			ctx.Writer = newResponseWriter(&connMocker{buf: bytes.NewBufferString("")}, uRouter.TextHeader)
 
 			sum++
 			ctx.Writer.Header().Set(uRouter.ContentType, uRouter.MimeStream)
@@ -47,10 +55,10 @@ func TestNewAdapter(t *testing.T) {
 			}
 
 			as.Equal(2, ctx.Request.Header.Len())
-			as.Equal(requestPayload, ctx.Request.Body.(*bytes.Buffer).String())
+			as.Equal(requestPayload, ctx.Request.Body.(*messageMocker).b.String())
 
 			var writer = ctx.Writer.Raw().(*connMocker)
-			if err := adapter.ServeWebSocket(nil, writer.buf.Bytes()); err != nil {
+			if err := adapter.ServeWebSocket(nil, &messageMocker{b: writer.buf}); err != nil {
 				as.NoError(err)
 				return
 			}
@@ -59,20 +67,20 @@ func TestNewAdapter(t *testing.T) {
 		router.On("testDecode", func(ctx *uRouter.Context) {
 			sum++
 			as.Equal(2, ctx.Request.Header.Len())
-			as.Equal(responsePayload, ctx.Request.Body.(*bytes.Buffer).String())
+			as.Equal(responsePayload, ctx.Request.Body.(*messageMocker).b.String())
 		})
 
-		var b = bytes.NewBufferString("")
+		var b = &messageMocker{b: bytes.NewBufferString("")}
 		var header = uRouter.MapHeader{
 			uRouter.ContentType: uRouter.MimeJson,
 			uRouter.XPath:       "/testEncode",
 		}
-		if err := adapter.codec.Encode(b, header); err != nil {
+		if err := adapter.codec.Encode(b.b, header); err != nil {
 			as.NoError(err)
 			return
 		}
-		b.WriteString(requestPayload)
-		if err := adapter.ServeWebSocket(nil, b.Bytes()); err != nil {
+		b.b.WriteString(requestPayload)
+		if err := adapter.ServeWebSocket(nil, b); err != nil {
 			as.NoError(err)
 			return
 		}
