@@ -1,9 +1,34 @@
 # uRouter
 universal router for http, websocket and other custom protocol
 
+[![Build Status][1]][2] [![MIT licensed][3]][4] [![Go Version][5]][6] [![codecov][7]][8]
+
+[1]: https://github.com/lxzan/gws/workflows/Go%20Test/badge.svg?branch=master
+
+[2]: https://github.com/lxzan/gws/actions?query=branch%3Amaster
+
+[3]: https://img.shields.io/badge/license-MIT-blue.svg
+
+[4]: LICENSE
+
+[5]: https://img.shields.io/badge/go-%3E%3D1.16-30dff3?style=flat-square&logo=go
+
+[6]: https://github.com/lxzan/gws
+
+[7]: https://codecov.io/gh/lxzan/uRouter/branch/main/graph/badge.svg?token=0Tx9xH9Lvd
+
+[8]: https://codecov.io/gh/lxzan/uRouter
+
+
+- [uRouter](#urouter)
+			- [Feature](#feature)
+			- [Quick Start](#quick-start)
+
+
 #### Feature
 - use static router powered by map
 - support middleware and router group 
+- support http, websocket...
 
 #### Quick Start
 
@@ -20,10 +45,6 @@ import (
 func main() {
 	var router = uRouter.New()
 
-	router.OnNoMatch = func(ctx *uRouter.Context) {
-		ctx.WriteString(http.StatusNotFound, "not found")
-	}
-
 	group := router.Group("api/v1")
 
 	group.On("greet", Greet)
@@ -34,7 +55,7 @@ func main() {
 }
 
 func Greet(ctx *uRouter.Context) {
-	ctx.WriteJSON(http.StatusOK, uRouter.A{
+	ctx.WriteJSON(http.StatusOK, uRouter.Any{
 		"hello": "world",
 	})
 }
@@ -64,7 +85,8 @@ func main() {
 	})
 
 	router.On("/connect", func(ctx *uRouter.Context) {
-		r, w := ctx.Raw()
+		r := ctx.Request.Raw
+		w := ctx.Writer.Raw()
 		socket, err := upgrader.Accept(w.(http.ResponseWriter), r.(*http.Request))
 		if err != nil {
 			log.Println(err.Error())
@@ -74,11 +96,12 @@ func main() {
 	})
 
 	router.On("/greet", func(ctx *uRouter.Context) {
-		var req = uRouter.A{}
+		var req = uRouter.Any{}
 		ctx.BindJSON(&req)
 		log.Printf("%v", req)
 	})
 
+	router.Display()
 	if err := http.ListenAndServe(":3000", httpAdapter.NewAdapter(router)); err != nil {
 		log.Fatalln(err.Error())
 	}
