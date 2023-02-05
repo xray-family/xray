@@ -15,16 +15,17 @@ const (
 	XPath       = "X-Path"
 	XRealIP     = "X-Real-IP"
 	ContentType = "Content-Type"
-)
 
-const (
 	MimeJson   = "application/json; charset=utf-8"
 	MimeStream = "application/octet-stream"
-)
 
-const (
 	BinaryLengthEncoding HeaderLengthEncoding = 2
 	TextLengthEncoding   HeaderLengthEncoding = 4
+)
+
+var (
+	ErrHeaderTooLarge = errors.New("header size too large")
+	ErrHeaderSize     = errors.New("header size error")
 )
 
 type (
@@ -88,7 +89,7 @@ func (c *HeaderCodec) Encode(writer *bytes.Buffer, h Header) error {
 
 	var headerLength = writer.Len() - int(c.lengthEncoding)
 	if headerLength > c.lengthEncoding.MaxLength() {
-		return errors.New("encode header error")
+		return ErrHeaderTooLarge
 	}
 
 	var p1 = writer.Bytes()
@@ -106,7 +107,7 @@ func (c *HeaderCodec) Decode(reader internal.BytesReader) (Header, error) {
 	var v = c.Generate()
 	var p0 [4]byte
 
-	if _, err := reader.Read(p0[:c.lengthEncoding]); err != nil {
+	if err := internal.Read(reader, p0[:c.lengthEncoding]); err != nil {
 		return nil, err
 	}
 
@@ -122,12 +123,12 @@ func (c *HeaderCodec) Decode(reader internal.BytesReader) (Header, error) {
 	}
 
 	var p1 = reader.Bytes()
-	if len(p1) < headerLength || headerLength > c.lengthEncoding.MaxLength() {
-		return nil, errors.New("decode header error")
+	if len(p1) < headerLength {
+		return nil, ErrHeaderSize
 	}
 
 	if headerLength > 0 {
-		if _, err := reader.Read(p1[:headerLength]); err != nil {
+		if err := internal.Read(reader, p1[:headerLength]); err != nil {
 			return nil, err
 		}
 		if err := c.codec.NewDecoder(bytes.NewReader(p1)).Decode(v); err != nil {

@@ -2,6 +2,7 @@ package uRouter
 
 import (
 	"bytes"
+	"github.com/lxzan/uRouter/internal"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
@@ -80,6 +81,28 @@ func TestHeaderCodec(t *testing.T) {
 			return
 		}
 		as.Equal(0, header2.Len())
+	})
+
+	t.Run("encode big header", func(t *testing.T) {
+		var header = TextHeader.Generate()
+		var w = bytes.NewBufferString("")
+		for i := 0; i < 1000; i++ {
+			var key = string(internal.AlphabetNumeric.Generate(16))
+			header.Set(key, "1")
+		}
+		as.Error(TextHeader.Encode(w, header))
+	})
+
+	t.Run("decode small header 1", func(t *testing.T) {
+		var buf = bytes.NewBufferString("0012xxx")
+		_, err := TextHeader.Decode(buf)
+		as.Equal(true, err == ErrHeaderSize)
+	})
+
+	t.Run("decode small header 2", func(t *testing.T) {
+		var buf = bytes.NewBufferString("00")
+		_, err := TextHeader.Decode(buf)
+		as.Error(err)
 	})
 }
 
