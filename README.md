@@ -3,9 +3,9 @@ universal router for http, websocket and other custom protocol
 
 [![Build Status][1]][2] [![MIT licensed][3]][4] [![Go Version][5]][6] [![codecov][7]][8]
 
-[1]: https://github.com/lxzan/gws/workflows/Go%20Test/badge.svg?branch=master
+[1]: https://github.com/lxzan/uRouter/workflows/Go%20Test/badge.svg?branch=main
 
-[2]: https://github.com/lxzan/gws/actions?query=branch%3Amaster
+[2]: https://github.com/lxzan/uRouter/actions?query=branch%3Amain
 
 [3]: https://img.shields.io/badge/license-MIT-blue.svg
 
@@ -13,7 +13,7 @@ universal router for http, websocket and other custom protocol
 
 [5]: https://img.shields.io/badge/go-%3E%3D1.16-30dff3?style=flat-square&logo=go
 
-[6]: https://github.com/lxzan/gws
+[6]: https://github.com/lxzan/uRouter
 
 [7]: https://codecov.io/gh/lxzan/uRouter/branch/main/graph/badge.svg?token=0Tx9xH9Lvd
 
@@ -21,8 +21,8 @@ universal router for http, websocket and other custom protocol
 
 
 - [uRouter](#urouter)
-			- [Feature](#feature)
-			- [Quick Start](#quick-start)
+  - [Feature](#feature)
+  - [Quick Start](#quick-start)
 
 
 #### Feature
