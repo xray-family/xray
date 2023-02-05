@@ -20,6 +20,14 @@ type (
 	}
 )
 
+func (c *responseWriter) Protocol() string {
+	return uRouter.ProtocolWebSocket
+}
+
+func (c *responseWriter) Raw() interface{} {
+	return c.conn
+}
+
 func (c *responseWriter) Header() uRouter.Header {
 	return c.header
 }

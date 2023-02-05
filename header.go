@@ -4,21 +4,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"github.com/ugorji/go/codec"
 	"net/http"
 	"strconv"
-)
-
-var (
-	JsonHandle = new(codec.JsonHandle)
-
-	TextHeader = NewHeaderCodec(TextLengthEncoding, JsonHandle, func() Header {
-		return F{}
-	})
-
-	BinaryHeader = NewHeaderCodec(BinaryLengthEncoding, JsonHandle, func() Header {
-		return F{}
-	})
 )
 
 const (
@@ -47,7 +34,7 @@ type (
 	}
 
 	HeaderCodec struct {
-		handle         codec.Handle
+		codec          Codec
 		lengthEncoding HeaderLengthEncoding
 		generator      func() Header
 	}
@@ -55,10 +42,10 @@ type (
 	HeaderLengthEncoding uint8
 )
 
-func NewHeaderCodec(lengthEncoding HeaderLengthEncoding, handle codec.Handle, generator func() Header) *HeaderCodec {
+func NewHeaderCodec(lengthEncoding HeaderLengthEncoding, codec Codec, generator func() Header) *HeaderCodec {
 	return new(HeaderCodec).
 		setLengthBytes(lengthEncoding).
-		setHandle(handle).
+		setCodec(codec).
 		SetGenerator(generator)
 }
 
@@ -67,8 +54,8 @@ func (c *HeaderCodec) setLengthBytes(lb HeaderLengthEncoding) *HeaderCodec {
 	return c
 }
 
-func (c *HeaderCodec) setHandle(handle codec.Handle) *HeaderCodec {
-	c.handle = handle
+func (c *HeaderCodec) setCodec(codec Codec) *HeaderCodec {
+	c.codec = codec
 	return c
 }
 
@@ -82,7 +69,7 @@ func (c *HeaderCodec) Encode(writer *bytes.Buffer, h Header) error {
 	writer.Write(p0[:c.lengthEncoding])
 
 	if h != nil && h.Len() > 0 {
-		if err := codec.NewEncoder(writer, c.handle).Encode(h); err != nil {
+		if err := c.codec.NewEncoder(writer).Encode(h); err != nil {
 			return err
 		}
 	}
@@ -122,7 +109,8 @@ func (c *HeaderCodec) Decode(reader *bytes.Buffer) (Header, error) {
 		return nil, err
 	}
 	if headerLength > 0 {
-		if err := codec.NewDecoderBytes(p1, c.handle).Decode(v); err != nil {
+		if err := c.codec.NewDecoder(bytes.NewReader(p1)).Decode(v); err != nil {
+			println(err.Error())
 			return nil, err
 		}
 	}
@@ -133,27 +121,27 @@ func (c *HeaderCodec) Generate() Header {
 	return c.generator()
 }
 
-type F map[string]string
+type MapHeader map[string]string
 
-func (c F) Del(key string) {
+func (c MapHeader) Del(key string) {
 	delete(c, key)
 }
 
-func (c F) Len() int {
+func (c MapHeader) Len() int {
 	return len(c)
 }
 
-func (c F) Range(f func(key string, value string)) {
+func (c MapHeader) Range(f func(key string, value string)) {
 	for k, v := range c {
 		f(k, v)
 	}
 }
 
-func (c F) Set(key, value string) {
+func (c MapHeader) Set(key, value string) {
 	c[key] = value
 }
 
-func (c F) Get(key string) string {
+func (c MapHeader) Get(key string) string {
 	return c[key]
 }
 

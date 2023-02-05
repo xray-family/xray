@@ -114,7 +114,7 @@ func TestNewAdapter(t *testing.T) {
 			{
 				ctx.Writer.Header().Set(uRouter.ContentType, "plain/text")
 				as.NoError(ctx.WriteString(http.StatusOK, "OK"))
-				_, ok := ctx.RawResponseWriter().(http.ResponseWriter)
+				_, ok := ctx.Writer.Raw().(http.ResponseWriter)
 				as.Equal(true, ok)
 				as.Equal("plain/text", ctx.Writer.Header().Get(uRouter.ContentType))
 			}

@@ -40,7 +40,7 @@ func TestNewAdapter(t *testing.T) {
 			ctx.Writer.Header().Set(uRouter.XPath, "/testDecode")
 			ctx.Writer.Code(int(gws.OpcodeText))
 			_, _ = ctx.Writer.Write([]byte(responsePayload))
-			ctx.Writer.RawResponseWriter()
+			ctx.Writer.Raw()
 			if err := ctx.Writer.Flush(); err != nil {
 				as.NoError(err)
 				return
@@ -49,7 +49,7 @@ func TestNewAdapter(t *testing.T) {
 			as.Equal(2, ctx.Request.Header.Len())
 			as.Equal(requestPayload, ctx.Request.Body.(*bytes.Buffer).String())
 
-			var writer = ctx.Writer.RawResponseWriter().(*connMocker)
+			var writer = ctx.Writer.Raw().(*connMocker)
 			if err := adapter.ServeWebSocket(nil, writer.buf.Bytes()); err != nil {
 				as.NoError(err)
 				return
@@ -63,7 +63,7 @@ func TestNewAdapter(t *testing.T) {
 		})
 
 		var b = bytes.NewBufferString("")
-		var header = uRouter.F{
+		var header = uRouter.MapHeader{
 			uRouter.ContentType: uRouter.MimeJson,
 			uRouter.XPath:       "/testEncode",
 		}

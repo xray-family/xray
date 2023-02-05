@@ -9,6 +9,10 @@ type responseWriter struct {
 	http.ResponseWriter
 }
 
+func (c *responseWriter) Protocol() string {
+	return uRouter.ProtocolHTTP
+}
+
 func (c *responseWriter) Header() uRouter.Header {
 	return uRouter.NewHttpHeader(c.ResponseWriter.Header())
 }
@@ -17,7 +21,7 @@ func (c *responseWriter) Code(code int) {
 	c.ResponseWriter.WriteHeader(code)
 }
 
-func (c *responseWriter) RawResponseWriter() interface{} {
+func (c *responseWriter) Raw() interface{} {
 	return c.ResponseWriter
 }
 
@@ -35,9 +39,9 @@ type Adapter struct {
 
 func (c *Adapter) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	var r = &uRouter.Request{
-		RawRequest: request,
-		Header:     uRouter.NewHttpHeader(request.Header),
-		Body:       request.Body,
+		Raw:    request,
+		Header: uRouter.NewHttpHeader(request.Header),
+		Body:   request.Body,
 	}
 	request.Header.Set(uRouter.XPath, request.URL.Path)
 	var ctx = uRouter.NewContext(r, &responseWriter{ResponseWriter: writer})

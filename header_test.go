@@ -43,7 +43,7 @@ func TestHeaderCodec(t *testing.T) {
 			as.NoError(err)
 			return
 		}
-		as.Equal(0, len(header2.(F)))
+		as.Equal(0, header2.Len())
 	})
 
 	t.Run("non empty binary", func(t *testing.T) {
@@ -79,7 +79,7 @@ func TestHeaderCodec(t *testing.T) {
 			as.NoError(err)
 			return
 		}
-		as.Equal(0, len(header2.(F)))
+		as.Equal(0, header2.Len())
 	})
 }
 
@@ -98,9 +98,9 @@ func TestHttpHeader(t *testing.T) {
 	as.Equal(1, len(keys))
 }
 
-func TestFHeader(t *testing.T) {
+func TestMapHeader(t *testing.T) {
 	var as = assert.New(t)
-	var header = F{}
+	var header = MapHeader{}
 	header.Set(ContentType, MimeJson)
 	header.Set(XPath, "")
 	as.Equal(2, header.Len())

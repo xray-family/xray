@@ -2,11 +2,14 @@ package internal
 
 import (
 	"bytes"
-	"github.com/lxzan/gws"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"testing"
 )
+
+type closerMocker struct{}
+
+func (c *closerMocker) Close() {}
 
 func TestClose(t *testing.T) {
 	var as = assert.New(t)
@@ -17,7 +20,7 @@ func TestClose(t *testing.T) {
 	})
 
 	t.Run("", func(t *testing.T) {
-		var c = &gws.Message{}
+		var c = &closerMocker{}
 		as.NoError(Close(c))
 	})
 
