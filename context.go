@@ -9,8 +9,6 @@ import (
 )
 
 // TODO buffer pool
-// TODO form encode
-// TODO route conflict
 type (
 	// ResponseWriter 响应写入器
 	ResponseWriter interface {
@@ -98,7 +96,7 @@ func (c *Context) WriteJSON(code int, v interface{}) error {
 
 // WriteBytes 写入字节流
 func (c *Context) WriteBytes(code int, p []byte) error {
-	return c.WriteReader(code, bytes.NewBuffer(p))
+	return c.WriteReader(code, bytes.NewReader(p))
 }
 
 // WriteString 写入字节流

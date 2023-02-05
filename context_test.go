@@ -150,6 +150,8 @@ func TestContext_Storage(t *testing.T) {
 func TestContext_Others(t *testing.T) {
 	var as = assert.New(t)
 	var ctx = newContextMocker()
+	SetJsonCodec(StdJsonCodec)
+	defaultGenerator()
 	as.Nil(ctx.Request.Raw)
 	as.Nil(ctx.Writer.Raw())
 }

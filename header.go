@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"github.com/lxzan/uRouter/internal"
 	"net/http"
 	"strconv"
 )
@@ -66,7 +67,9 @@ func (c *HeaderCodec) SetGenerator(generator func() Header) *HeaderCodec {
 
 func (c *HeaderCodec) Encode(writer *bytes.Buffer, h Header) error {
 	var p0 [4]byte
-	writer.Write(p0[:c.lengthEncoding])
+	if err := internal.Write(writer, p0[:c.lengthEncoding]); err != nil {
+		return err
+	}
 
 	if h != nil && h.Len() > 0 {
 		if err := c.codec.NewEncoder(writer).Encode(h); err != nil {
@@ -110,7 +113,6 @@ func (c *HeaderCodec) Decode(reader *bytes.Buffer) (Header, error) {
 	}
 	if headerLength > 0 {
 		if err := c.codec.NewDecoder(bytes.NewReader(p1)).Decode(v); err != nil {
-			println(err.Error())
 			return nil, err
 		}
 	}
