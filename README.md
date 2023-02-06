@@ -130,4 +130,3 @@ let ws = new WebSocket('ws://127.0.0.1:3000/connect');
 ws.send('0019{"X-Path":"/greet"}{"hello":"world"}');
 ```
 
-[]
