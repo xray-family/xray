@@ -49,7 +49,7 @@ func New() *Router {
 
 func (c *Router) checkPathConflict(m map[string]uint8, path string) {
 	if _, ok := m[path]; ok {
-		log.Fatalf("path=%s, msg=path conflict\n", path)
+		log.Panicf("path=%s, msg=path conflict\n", path)
 		return
 	}
 	m[path] = 1
@@ -89,13 +89,11 @@ func (c *Router) Emit(ctx *Context) {
 	if !ok && c.OnNoMatch != nil {
 		funcs = append(c.middlewares, c.OnNoMatch)
 	}
-	if len(funcs) == 0 {
-		return
+	if len(funcs) > 0 {
+		ctx.index = -1
+		ctx.handlers = funcs
+		ctx.Next()
 	}
-
-	ctx.index = -1
-	ctx.handlers = funcs
-	ctx.Next()
 }
 
 // Display 展示接口列表

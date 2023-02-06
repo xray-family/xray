@@ -147,10 +147,39 @@ func TestContext_Storage(t *testing.T) {
 	}
 }
 
+func TestRouter_Conflict(t *testing.T) {
+	var as = assert.New(t)
+
+	t.Run("route conflict", func(t *testing.T) {
+		defer func() {
+			e := recover()
+			as.NotNil(e)
+		}()
+
+		var r = New()
+		var g = r.Group("user")
+		r.On("user/1", AccessLog())
+		g.On("1", AccessLog())
+	})
+
+	t.Run("group conflict", func(t *testing.T) {
+		defer func() {
+			e := recover()
+			as.NotNil(e)
+		}()
+
+		var r = New()
+		r.Group("api/v1")
+		g1 := r.Group("api")
+		g1.Group("v1")
+	})
+}
+
 func TestContext_Others(t *testing.T) {
 	var as = assert.New(t)
 	var ctx = newContextMocker()
 	SetJsonCodec(StdJsonCodec)
+	SetBufferPool(newBufferPool())
 	defaultGenerator()
 	as.Nil(ctx.Request.Raw)
 	as.Nil(ctx.Writer.Raw())

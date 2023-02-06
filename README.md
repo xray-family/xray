@@ -21,9 +21,10 @@ universal router for http, websocket and other custom protocol
 
 
 #### Feature
-- use static router powered by map
-- support middleware and router group 
-- support http, websocket...
+- no dependence
+- static router, powered by map
+- the onion model middleware, router group 
+- adapt to http, websocket...
 
 #### Index
 - [uRouter](#urouter)

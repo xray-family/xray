@@ -13,7 +13,7 @@ const (
 type (
 	Any map[string]interface{}
 
-	Form = MapHeader
+	Form map[string]string
 
 	Encoder interface {
 		Encode(v interface{}) error

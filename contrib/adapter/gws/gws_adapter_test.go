@@ -38,7 +38,7 @@ func TestNewAdapter(t *testing.T) {
 		const responsePayload = "world"
 		var sum = 0
 		var router = uRouter.New()
-		var adapter = NewAdapter(router, uRouter.TextHeader)
+		var adapter = NewAdapter(router).SetHeaderCodec(uRouter.TextHeader)
 
 		router.On("testEncode", func(ctx *uRouter.Context) {
 			ctx.Writer = newResponseWriter(&connMocker{buf: bytes.NewBufferString("")}, uRouter.TextHeader)

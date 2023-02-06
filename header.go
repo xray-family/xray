@@ -144,10 +144,6 @@ func (c *HeaderCodec) Generate() Header {
 
 type MapHeader map[string]string
 
-func (c MapHeader) Del(key string) {
-	delete(c, key)
-}
-
 func (c MapHeader) Len() int {
 	return len(c)
 }
@@ -159,15 +155,33 @@ func (c MapHeader) Range(f func(key string, value string)) {
 }
 
 func (c MapHeader) Set(key, value string) {
+	key = c.formatKey(key)
 	c[key] = value
 }
 
 func (c MapHeader) Get(key string) string {
+	key = c.formatKey(key)
 	return c[key]
+}
+
+func (c MapHeader) Del(key string) {
+	key = c.formatKey(key)
+	delete(c, key)
 }
 
 func NewHttpHeader(h http.Header) HttpHeader {
 	return HttpHeader{Header: h}
+}
+
+func (c MapHeader) formatKey(key string) string {
+	var b = []byte(key)
+	var n = len(b)
+	for i := 0; i < n-1; i++ {
+		if (i == 0 || b[i-1] == '-') && (b[i] >= 'a' && b[i] <= 'z') {
+			b[i] -= 32
+		}
+	}
+	return string(b)
 }
 
 type HttpHeader struct {

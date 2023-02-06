@@ -140,4 +140,8 @@ func TestMapHeader(t *testing.T) {
 		keys = append(keys, key)
 	})
 	as.Equal(1, len(keys))
+
+	as.Equal(XPath, header.formatKey("x-path"))
+	as.Equal("Ct", header.formatKey("ct"))
+	as.Equal("", header.formatKey(""))
 }
