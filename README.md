@@ -27,7 +27,7 @@ universal router for http, websocket and other custom protocol
 - no dependence
 - static router, powered by map
 - the onion model middleware, router group 
-- adapt to `http]`, `lxzan/gws`, `gorilla/websocket` ...
+- adapt to `http`, `lxzan/gws`, `gorilla/websocket` ...
 
 #### Index
 - [uRouter](#urouter)
@@ -118,7 +118,6 @@ type WebSocketHandler struct {
 }
 
 func (c *WebSocketHandler) OnMessage(socket *gws.Conn, message *gws.Message) {
-	defer message.Close()
 	if err := c.adapter.ServeWebSocket(socket, message); err != nil {
 		log.Println(err.Error())
 	}
@@ -130,3 +129,5 @@ func (c *WebSocketHandler) OnMessage(socket *gws.Conn, message *gws.Message) {
 let ws = new WebSocket('ws://127.0.0.1:3000/connect');
 ws.send('0019{"X-Path":"/greet"}{"hello":"world"}');
 ```
+
+[]

@@ -8,13 +8,13 @@ import (
 )
 
 type (
-	websocket interface {
+	websocketWrapper interface {
 		WriteMessage(opcode gws.Opcode, payload []byte)
 	}
 
 	responseWriter struct {
 		once        sync.Once
-		conn        websocket
+		conn        websocketWrapper
 		headerCodec *uRouter.HeaderCodec
 		header      uRouter.Header
 		code        gws.Opcode
@@ -22,7 +22,7 @@ type (
 	}
 )
 
-func newResponseWriter(socket websocket, codec *uRouter.HeaderCodec) *responseWriter {
+func newResponseWriter(socket websocketWrapper, codec *uRouter.HeaderCodec) *responseWriter {
 	return &responseWriter{
 		once:        sync.Once{},
 		code:        gws.OpcodeText,
