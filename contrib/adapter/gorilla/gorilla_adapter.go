@@ -1,31 +1,44 @@
-package gws
+package gorilla
 
 import (
 	"bytes"
-	"github.com/lxzan/gws"
+	"github.com/gorilla/websocket"
 	"github.com/lxzan/uRouter"
 	"sync"
 )
 
 type (
-	websocket interface {
-		WriteMessage(opcode gws.Opcode, payload []byte)
+	Message struct {
+		Opcode int
+		Data   *bytes.Buffer
+	}
+
+	websocketWrapper interface {
+		WriteMessage(opcode int, payload []byte) error
 	}
 
 	responseWriter struct {
 		once        sync.Once
-		conn        websocket
+		conn        websocketWrapper
 		headerCodec *uRouter.HeaderCodec
 		header      uRouter.Header
-		code        gws.Opcode
+		code        int
 		buf         *bytes.Buffer
 	}
 )
 
-func newResponseWriter(socket websocket, codec *uRouter.HeaderCodec) *responseWriter {
+func (c *Message) Bytes() []byte {
+	return c.Data.Bytes()
+}
+
+func (c *Message) Read(p []byte) (n int, err error) {
+	return c.Data.Read(p)
+}
+
+func newResponseWriter(socket websocketWrapper, codec *uRouter.HeaderCodec) *responseWriter {
 	return &responseWriter{
 		once:        sync.Once{},
-		code:        gws.OpcodeText,
+		code:        websocket.TextMessage,
 		conn:        socket,
 		headerCodec: codec,
 		header:      codec.Generate(),
@@ -46,7 +59,7 @@ func (c *responseWriter) Header() uRouter.Header {
 }
 
 func (c *responseWriter) Code(opcode int) {
-	c.code = gws.Opcode(opcode)
+	c.code = int(opcode)
 }
 
 func (c *responseWriter) RawResponseWriter() interface{} {
@@ -88,7 +101,11 @@ func (c *Adapter) SetHeaderCodec(codec *uRouter.HeaderCodec) *Adapter {
 	return c
 }
 
-func (c *Adapter) ServeWebSocket(socket *gws.Conn, message uRouter.BytesReader) error {
+func (c *Adapter) ServeWebSocket(socket *websocket.Conn, opcode int, p []byte) error {
+	var message = &Message{
+		Opcode: opcode,
+		Data:   bytes.NewBuffer(p),
+	}
 	ctx := uRouter.NewContext(
 		&uRouter.Request{Raw: message, Body: message},
 		newResponseWriter(socket, c.codec),
@@ -102,4 +119,5 @@ func (c *Adapter) ServeWebSocket(socket *gws.Conn, message uRouter.BytesReader) 
 	ctx.Request.Header = header
 	c.router.Emit(ctx)
 	return nil
+
 }

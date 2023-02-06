@@ -1,7 +1,7 @@
 # uRouter
 universal router for http, websocket and other custom protocol
 
-[![Build Status][1]][2] [![MIT licensed][3]][4] [![Go Version][5]][6] [![codecov][7]][8]
+[![Build Status][1]][2] [![MIT licensed][3]][4] [![Go Version][5]][6] [![codecov][7]][8] [![Go Report Card][9]][10]
 
 [1]: https://github.com/lxzan/uRouter/workflows/Go%20Test/badge.svg?branch=main
 
@@ -19,12 +19,15 @@ universal router for http, websocket and other custom protocol
 
 [8]: https://codecov.io/gh/lxzan/uRouter
 
+[9]: https://goreportcard.com/badge/github.com/lxzan/uRouter
+
+[10]: https://goreportcard.com/report/github.com/lxzan/uRouter
 
 #### Feature
 - no dependence
 - static router, powered by map
 - the onion model middleware, router group 
-- adapt to http, websocket...
+- adapt to `http]`, `lxzan/gws`, `gorilla/websocket` ...
 
 #### Index
 - [uRouter](#urouter)
@@ -82,7 +85,7 @@ func main() {
 	var router = uRouter.New()
 	var upgrader = gws.NewUpgrader(func(c *gws.Upgrader) {
 		c.EventHandler = &WebSocketHandler{
-			adapter: gwsAdapter.NewAdapter(router, uRouter.TextHeader),
+			adapter: gwsAdapter.NewAdapter(router),
 		}
 	})
 
@@ -116,7 +119,7 @@ type WebSocketHandler struct {
 
 func (c *WebSocketHandler) OnMessage(socket *gws.Conn, message *gws.Message) {
 	defer message.Close()
-	if err := c.adapter.ServeWebSocket(socket, message.Bytes()); err != nil {
+	if err := c.adapter.ServeWebSocket(socket, message); err != nil {
 		log.Println(err.Error())
 	}
 }

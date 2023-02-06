@@ -5,16 +5,9 @@ import (
 	"io"
 )
 
-type (
-	Closer interface {
-		Close()
-	}
-
-	BytesReader interface {
-		io.Reader
-		Bytes() []byte
-	}
-)
+type Closer interface {
+	Close()
+}
 
 func Close(source interface{}) error {
 	if v, ok := source.(io.Closer); ok {

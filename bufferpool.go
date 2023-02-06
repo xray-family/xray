@@ -5,9 +5,10 @@ import (
 	"sync"
 )
 
-const defaultBufferSize = 4 * 1024
+const defaultBufferSize = 1024
 
 type BufferPool interface {
+	SetSize(size int)
 	Get() *bytes.Buffer
 	Put(b *bytes.Buffer)
 }
@@ -17,15 +18,22 @@ func DefaultBufferPool() BufferPool {
 }
 
 func newBufferPool() *bufferPool {
-	return &bufferPool{
-		p: sync.Pool{New: func() interface{} {
-			return bytes.NewBuffer(make([]byte, 0, defaultBufferSize))
-		}},
+	bp := &bufferPool{
+		size: defaultBufferSize,
 	}
+	bp.p.New = func() interface{} {
+		return bytes.NewBuffer(make([]byte, 0, bp.size))
+	}
+	return bp
 }
 
 type bufferPool struct {
-	p sync.Pool
+	p    sync.Pool
+	size int
+}
+
+func (c *bufferPool) SetSize(size int) {
+	c.size = size
 }
 
 func (c *bufferPool) Get() *bytes.Buffer {

@@ -8,7 +8,6 @@ import (
 	"strings"
 )
 
-// TODO buffer pool
 type (
 	// ResponseWriter 响应写入器
 	ResponseWriter interface {
@@ -50,6 +49,11 @@ type (
 		Request *Request
 		// 响应写入器
 		Writer ResponseWriter
+	}
+
+	BytesReader interface {
+		io.Reader
+		Bytes() []byte
 	}
 )
 
@@ -107,7 +111,7 @@ func (c *Context) WriteString(code int, s string) error {
 // WriteReader 写入Reader
 func (c *Context) WriteReader(code int, r io.Reader) (err error) {
 	c.Writer.Code(code)
-	if v, ok := r.(internal.BytesReader); ok {
+	if v, ok := r.(BytesReader); ok {
 		err = internal.Write(c.Writer, v.Bytes())
 	} else {
 		err = internal.Copy(c.Writer, r)

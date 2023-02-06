@@ -24,7 +24,12 @@ func AccessLog() HandlerFunc {
 	return func(ctx *Context) {
 		var startTime = time.Now()
 		ctx.Next()
-		log.Printf("access: path=%s, cost=%s\n", ctx.Request.Header.Get(XPath), time.Since(startTime).String())
+		log.Printf(
+			"access: protocol=%s, path=%s, cost=%s\n",
+			ctx.Writer.Protocol(),
+			ctx.Request.Header.Get(XPath),
+			time.Since(startTime).String(),
+		)
 	}
 }
 

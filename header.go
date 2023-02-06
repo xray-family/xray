@@ -103,7 +103,7 @@ func (c *HeaderCodec) Encode(writer *bytes.Buffer, h Header) error {
 	return nil
 }
 
-func (c *HeaderCodec) Decode(reader internal.BytesReader) (Header, error) {
+func (c *HeaderCodec) Decode(reader BytesReader) (Header, error) {
 	var v = c.Generate()
 	var p0 [4]byte
 
