@@ -70,10 +70,10 @@ func (c *responseWriter) Flush() error {
 	return nil
 }
 
-func NewAdapter(r *uRouter.Router, codec *uRouter.HeaderCodec) *Adapter {
+func NewAdapter(r *uRouter.Router) *Adapter {
 	return &Adapter{
 		router: r,
-		codec:  codec,
+		codec:  uRouter.TextHeader,
 	}
 }
 
@@ -82,14 +82,17 @@ type Adapter struct {
 	codec  *uRouter.HeaderCodec
 }
 
+// SetHeaderCodec 设置头部编码方式
+func (c *Adapter) SetHeaderCodec(codec *uRouter.HeaderCodec) *Adapter {
+	c.codec = codec
+	return c
+}
+
 func (c *Adapter) ServeWebSocket(socket *gws.Conn, message internal.BytesReader) error {
-	ctx := &uRouter.Context{
-		Request: &uRouter.Request{
-			Raw:  message,
-			Body: message,
-		},
-		Writer: newResponseWriter(socket, c.codec),
-	}
+	ctx := uRouter.NewContext(
+		&uRouter.Request{Raw: message, Body: message},
+		newResponseWriter(socket, c.codec),
+	)
 
 	header, err := c.codec.Decode(message)
 	if err != nil {
