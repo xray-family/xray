@@ -1,5 +1,7 @@
 # uRouter
-universal router for http, websocket and other custom protocol
+universal router for http, websocket and custom protocol
+
+Hats off to express, koa, gin!
 
 [![Build Status][1]][2] [![MIT licensed][3]][4] [![Go Version][5]][6] [![codecov][7]][8] [![Go Report Card][9]][10]
 
