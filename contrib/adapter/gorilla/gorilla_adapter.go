@@ -111,7 +111,7 @@ func (c *Adapter) ServeWebSocket(socket *websocket.Conn, opcode int, p []byte) e
 		newResponseWriter(socket, c.codec),
 	)
 
-	header, err := c.codec.Decode(message)
+	header, err := c.codec.Decode(message.Data)
 	if err != nil {
 		return err
 	}

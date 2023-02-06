@@ -103,35 +103,31 @@ func (c *HeaderCodec) Encode(writer *bytes.Buffer, h Header) error {
 	return nil
 }
 
-func (c *HeaderCodec) Decode(reader BytesReader) (Header, error) {
+func (c *HeaderCodec) Decode(reader *bytes.Buffer) (Header, error) {
 	var v = c.Generate()
-	var p0 [4]byte
+	var p [4]byte
 
-	if err := internal.Read(reader, p0[:c.lengthEncoding]); err != nil {
+	if err := internal.Read(reader, p[:c.lengthEncoding]); err != nil {
 		return nil, err
 	}
 
 	var headerLength = 0
 	if c.lengthEncoding == BinaryLengthEncoding {
-		headerLength = int(binary.BigEndian.Uint16(p0[:c.lengthEncoding]))
+		headerLength = int(binary.BigEndian.Uint16(p[:c.lengthEncoding]))
 	} else {
-		n, err := strconv.Atoi(string(p0[:c.lengthEncoding]))
+		n, err := strconv.Atoi(string(p[:c.lengthEncoding]))
 		if err != nil {
 			return nil, err
 		}
 		headerLength = n
 	}
 
-	var p1 = reader.Bytes()
-	if len(p1) < headerLength {
+	if reader.Len() < headerLength {
 		return nil, ErrHeaderSize
 	}
 
 	if headerLength > 0 {
-		if err := internal.Read(reader, p1[:headerLength]); err != nil {
-			return nil, err
-		}
-		if err := c.codec.NewDecoder(bytes.NewReader(p1)).Decode(v); err != nil {
+		if err := c.codec.Decode(reader.Next(headerLength), v); err != nil {
 			return nil, err
 		}
 	}

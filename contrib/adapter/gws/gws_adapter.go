@@ -88,13 +88,13 @@ func (c *Adapter) SetHeaderCodec(codec *uRouter.HeaderCodec) *Adapter {
 	return c
 }
 
-func (c *Adapter) ServeWebSocket(socket *gws.Conn, message uRouter.BytesReader) error {
+func (c *Adapter) ServeWebSocket(socket *gws.Conn, message *gws.Message) error {
 	ctx := uRouter.NewContext(
-		&uRouter.Request{Raw: message, Body: message},
+		&uRouter.Request{Raw: message, Body: message.Data},
 		newResponseWriter(socket, c.codec),
 	)
 
-	header, err := c.codec.Decode(message)
+	header, err := c.codec.Decode(message.Data)
 	if err != nil {
 		return err
 	}

@@ -18,18 +18,6 @@ func (c *connMocker) WriteMessage(opcode gws.Opcode, payload []byte) {
 	c.buf.Write(payload)
 }
 
-type messageMocker struct {
-	b *bytes.Buffer
-}
-
-func (c *messageMocker) Read(p []byte) (n int, err error) {
-	return c.b.Read(p)
-}
-
-func (c *messageMocker) Bytes() []byte {
-	return c.b.Bytes()
-}
-
 func TestNewAdapter(t *testing.T) {
 	var as = assert.New(t)
 
@@ -55,10 +43,10 @@ func TestNewAdapter(t *testing.T) {
 			}
 
 			as.Equal(2, ctx.Request.Header.Len())
-			as.Equal(requestPayload, ctx.Request.Body.(*messageMocker).b.String())
+			as.Equal(requestPayload, ctx.Request.Body.(*bytes.Buffer).String())
 
 			var writer = ctx.Writer.Raw().(*connMocker)
-			if err := adapter.ServeWebSocket(nil, &messageMocker{b: writer.buf}); err != nil {
+			if err := adapter.ServeWebSocket(nil, &gws.Message{Data: writer.buf}); err != nil {
 				as.NoError(err)
 				return
 			}
@@ -67,19 +55,22 @@ func TestNewAdapter(t *testing.T) {
 		router.On("testDecode", func(ctx *uRouter.Context) {
 			sum++
 			as.Equal(2, ctx.Request.Header.Len())
-			as.Equal(responsePayload, ctx.Request.Body.(*messageMocker).b.String())
+			as.Equal(responsePayload, ctx.Request.Body.(*bytes.Buffer).String())
 		})
 
-		var b = &messageMocker{b: bytes.NewBufferString("")}
+		var b = &gws.Message{
+			Opcode: gws.OpcodeText,
+			Data:   bytes.NewBufferString(""),
+		}
 		var header = uRouter.MapHeader{
 			uRouter.ContentType: uRouter.MimeJson,
 			uRouter.XPath:       "/testEncode",
 		}
-		if err := adapter.codec.Encode(b.b, header); err != nil {
+		if err := adapter.codec.Encode(b.Data, header); err != nil {
 			as.NoError(err)
 			return
 		}
-		b.b.WriteString(requestPayload)
+		b.Data.WriteString(requestPayload)
 		if err := adapter.ServeWebSocket(nil, b); err != nil {
 			as.NoError(err)
 			return
