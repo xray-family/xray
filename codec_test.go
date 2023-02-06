@@ -21,3 +21,9 @@ func TestAny(t *testing.T) {
 	as.Equal(int64(0), m.ToInt64("xxx"))
 	as.Equal("", m.ToString("xxx"))
 }
+
+func TestStdJsonCodec_Encode(t *testing.T) {
+	var v = MapHeader{}
+	_, err := StdJsonCodec.Encode(v)
+	assert.NoError(t, err)
+}

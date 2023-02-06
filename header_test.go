@@ -83,15 +83,6 @@ func TestHeaderCodec(t *testing.T) {
 		as.Equal(0, header2.Len())
 	})
 
-	t.Run("error header", func(t *testing.T) {
-		var result = bytes.NewBufferString(`0020{{"X-Path":"/greet"}{"hello":"你好, 少侠"}`)
-		_, err := TextHeader.Decode(result)
-		if err != nil {
-			as.Error(err)
-			return
-		}
-	})
-
 	t.Run("encode big header", func(t *testing.T) {
 		var header = TextHeader.Generate()
 		var w = bytes.NewBufferString("")
@@ -114,10 +105,19 @@ func TestHeaderCodec(t *testing.T) {
 		as.Error(err)
 	})
 
-	t.Run("decode error header", func(t *testing.T) {
+	t.Run("decode error header 1", func(t *testing.T) {
 		var buf = bytes.NewBufferString("00xx")
 		_, err := TextHeader.Decode(buf)
 		as.Error(err)
+	})
+
+	t.Run("decode error header 2", func(t *testing.T) {
+		var result = bytes.NewBufferString(`0019{"X-Path":"/greet}{"hello":"你好, 少侠"}`)
+		_, err := TextHeader.Decode(result)
+		if err != nil {
+			as.Error(err)
+			return
+		}
 	})
 }
 

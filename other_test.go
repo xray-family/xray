@@ -10,6 +10,7 @@ func TestBufferPool(t *testing.T) {
 	var as = assert.New(t)
 	var p = DefaultBufferPool()
 	SetBufferPool(newBufferPool())
+	p.SetSize(4 * 1024)
 	as.NotNil(p.Get())
 	p.Put(bytes.NewBufferString(""))
 	as.NotNil(p.Get())

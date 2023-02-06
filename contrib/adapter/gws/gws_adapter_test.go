@@ -43,7 +43,7 @@ func TestNewAdapter(t *testing.T) {
 			}
 
 			as.Equal(2, ctx.Request.Header.Len())
-			as.Equal(requestPayload, ctx.Request.Body.(*bytes.Buffer).String())
+			as.Equal(requestPayload, ctx.Request.Body.(*gws.Message).Data.String())
 
 			var writer = ctx.Writer.Raw().(*connMocker)
 			if err := adapter.ServeWebSocket(nil, &gws.Message{Data: writer.buf}); err != nil {
@@ -55,7 +55,7 @@ func TestNewAdapter(t *testing.T) {
 		router.On("testDecode", func(ctx *uRouter.Context) {
 			sum++
 			as.Equal(2, ctx.Request.Header.Len())
-			as.Equal(responsePayload, ctx.Request.Body.(*bytes.Buffer).String())
+			as.Equal(responsePayload, ctx.Request.Body.(*gws.Message).Data.String())
 		})
 
 		var b = &gws.Message{

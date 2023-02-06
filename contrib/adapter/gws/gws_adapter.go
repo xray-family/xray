@@ -90,7 +90,7 @@ func (c *Adapter) SetHeaderCodec(codec *uRouter.HeaderCodec) *Adapter {
 
 func (c *Adapter) ServeWebSocket(socket *gws.Conn, message *gws.Message) error {
 	ctx := uRouter.NewContext(
-		&uRouter.Request{Raw: message, Body: message.Data},
+		&uRouter.Request{Raw: message, Body: message},
 		newResponseWriter(socket, c.codec),
 	)
 
