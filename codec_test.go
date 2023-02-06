@@ -24,6 +24,14 @@ func TestAny(t *testing.T) {
 
 func TestStdJsonCodec_Encode(t *testing.T) {
 	var v = MapHeader{}
+	v.Set(ContentType, MimeJson)
 	_, err := StdJsonCodec.Encode(v)
+	assert.NoError(t, err)
+}
+
+func TestStdJsonCodec_Decode(t *testing.T) {
+	var d = `{"xpath":"/api"}`
+	var v = MapHeader{}
+	err := StdJsonCodec.Decode([]byte(d), &v)
 	assert.NoError(t, err)
 }
