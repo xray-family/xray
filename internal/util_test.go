@@ -22,9 +22,15 @@ func TestJoin2(t *testing.T) {
 	as.Equal("/api/v1", Join2("/api/", "v1", sep))
 	as.Equal("/api/v1", Join2("/api", "v1", sep))
 	as.Equal("/api/v1", Join2("/api/", "/v1", sep))
+	as.Equal("/api/v1", Join2("/api/", "/v1/", sep))
 }
 
 func TestSelectString(t *testing.T) {
 	assert.Equal(t, "1", SelectString(true, "1", "0"))
 	assert.Equal(t, "0", SelectString(false, "1", "0"))
+}
+
+func TestRandomString_Generate(t *testing.T) {
+	var s = AlphabetNumeric.Generate(16)
+	assert.Equal(t, 16, len(s))
 }
