@@ -33,11 +33,13 @@ Hats off to express, koa, gin!
 
 #### Index
 - [uRouter](#urouter)
-			- [Feature](#feature)
-			- [Index](#index)
-			- [Quick Start](#quick-start)
-			- [Best Practice](#best-practice)
-			- [Middleware](#middleware)
+  - [Feature](#feature)
+  - [Index](#index)
+  - [Quick Start](#quick-start)
+  - [Best Practice](#best-practice)
+  - [Middleware](#middleware)
+  - [JSON Codec](#json-codec)
+  - [Header Codec (Not applicable to HTTP)](#header-codec-not-applicable-to-http)
 
 
   
@@ -193,4 +195,31 @@ func main() {
 
 ```
 output: 1, 3, 5, 4, 2
+```
+
+#### JSON Codec
+
+```go
+import (
+	"github.com/lxzan/uRouter"
+	"github.com/lxzan/uRouter/contrib/codec/jsoniter"
+)
+
+func init() {
+    // Better performance than uRouter.StdJsonCodec
+	uRouter.SetJsonCodec(jsoniter.JsoniterCodec)
+}
+```
+
+#### Header Codec (Not applicable to HTTP)
+
+```
+uRouter.TextHeader: length_encoding=4 byte, max_header_length=9999 byte
+uRouter.BinaryHeader: length_encoding=2 byte, max_header_length=65535 byte
+```
+
+```
+// TextHeader Example
+// header length => header payload => body
+0019{"X-Path":"/greet"}{"hello":"world!"}
 ```
