@@ -12,6 +12,9 @@ type Group struct {
 
 // Group 创建子路由组
 func (c *Group) Group(path string, middlewares ...HandlerFunc) *Group {
+	c.router.mu.Lock()
+	defer c.router.mu.Unlock()
+
 	group := &Group{
 		router:      c.router,
 		separator:   c.separator,
@@ -23,8 +26,11 @@ func (c *Group) Group(path string, middlewares ...HandlerFunc) *Group {
 
 // On 监听事件
 func (c *Group) On(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
-	path = internal.Join2(c.path, path, c.separator)
 	router := c.router
+	router.mu.Lock()
+	defer router.mu.Unlock()
+
+	path = internal.Join2(c.path, path, c.separator)
 	h := append(c.middlewares, middlewares...)
 	h = append(h, handler)
 

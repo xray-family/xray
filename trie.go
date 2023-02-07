@@ -7,14 +7,14 @@ const (
 	defaultVarPrefix = ':'
 )
 
-type Handler struct {
-	VPath string
-	Funcs []HandlerFunc
-}
-
 type (
+	apiHandler struct {
+		VPath string
+		Funcs []HandlerFunc
+	}
+
 	routeTree struct {
-		Value    *Handler
+		Value    *apiHandler
 		Children map[string]*routeTree
 	}
 )
@@ -40,7 +40,7 @@ func hasVar(s string) bool {
 }
 
 func (c *routeTree) Set(vpath string, handlers []HandlerFunc) {
-	var handler = &Handler{VPath: vpath, Funcs: handlers}
+	var handler = &apiHandler{VPath: vpath, Funcs: handlers}
 	var list = internal.Split(handler.VPath, defaultSeparator)
 	if len(list) == 0 {
 		return
@@ -48,7 +48,7 @@ func (c *routeTree) Set(vpath string, handlers []HandlerFunc) {
 	c.doSet(c, 0, list, handler)
 }
 
-func (c *routeTree) doSet(node *routeTree, index int, list []string, handler *Handler) {
+func (c *routeTree) doSet(node *routeTree, index int, list []string, handler *apiHandler) {
 	var segment = list[index]
 	if isVar(segment) {
 		segment = "*"
@@ -71,7 +71,7 @@ func (c *routeTree) doSet(node *routeTree, index int, list []string, handler *Ha
 	}
 }
 
-func (c *routeTree) Get(path string) *Handler {
+func (c *routeTree) Get(path string) *apiHandler {
 	var list = internal.Split(path, defaultSeparator)
 	if len(list) == 0 {
 		return nil
@@ -79,7 +79,7 @@ func (c *routeTree) Get(path string) *Handler {
 	return c.doGet(c, 0, list)
 }
 
-func (c *routeTree) doGet(node *routeTree, index int, list []string) *Handler {
+func (c *routeTree) doGet(node *routeTree, index int, list []string) *apiHandler {
 	if index == len(list) {
 		return node.Value
 	}

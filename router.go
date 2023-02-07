@@ -7,16 +7,18 @@ import (
 	"reflect"
 	"runtime"
 	"sort"
+	"sync"
 )
 
 type (
 	// Router 路由器
 	Router struct {
+		// 互斥锁
+		mu *sync.Mutex
 		// 分隔符
 		separator string
 		// 全局中间件
 		middlewares []HandlerFunc
-		// 接口映射
 		// 静态路由
 		staticRoutes map[string][]HandlerFunc
 		// 动态路由
@@ -32,7 +34,8 @@ type (
 // New 创建路由器
 func New() *Router {
 	r := &Router{
-		separator:     "/",
+		separator:     defaultSeparator,
+		mu:            &sync.Mutex{},
 		middlewares:   make([]HandlerFunc, 0),
 		staticRoutes:  map[string][]HandlerFunc{},
 		dynamicRoutes: newRouteTree(),
@@ -56,6 +59,9 @@ func (c *Router) Use(middlewares ...HandlerFunc) {
 
 // Group 创建路由组
 func (c *Router) Group(path string, middlewares ...HandlerFunc) *Group {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	var group = &Group{
 		router:      c,
 		separator:   c.separator,
@@ -67,8 +73,10 @@ func (c *Router) Group(path string, middlewares ...HandlerFunc) *Group {
 
 // On 监听事件
 func (c *Router) On(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
-	path = internal.Join1(path, c.separator)
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
+	path = internal.Join1(path, c.separator)
 	h := append(c.middlewares, middlewares...)
 	h = append(h, handler)
 
