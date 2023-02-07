@@ -34,3 +34,7 @@ func TestRandomString_Generate(t *testing.T) {
 	var s = AlphabetNumeric.Generate(16)
 	assert.Equal(t, 16, len(s))
 }
+
+func TestSplit(t *testing.T) {
+	assert.ElementsMatch(t, []string{"api", "v1"}, Split("/api/v1", "/"))
+}

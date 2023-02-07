@@ -156,3 +156,29 @@ func TestContext_Others(t *testing.T) {
 	as.Nil(ctx.Request.Raw)
 	as.Nil(ctx.Writer.Raw())
 }
+
+func TestContext_Param(t *testing.T) {
+	var as = assert.New(t)
+
+	t.Run("", func(t *testing.T) {
+		var ctx = NewContext(&Request{
+			Header: NewHttpHeader(http.Header{
+				XPath: []string{""},
+			}),
+			VPath: "",
+		}, newResponseWriterMocker())
+		id := ctx.Param("id")
+		as.Equal("", id)
+	})
+
+	t.Run("", func(t *testing.T) {
+		var ctx = NewContext(&Request{
+			Header: NewHttpHeader(http.Header{
+				XPath: []string{"/api/v1"},
+			}),
+			VPath: "/api/v1",
+		}, newResponseWriterMocker())
+		id := ctx.Param("id")
+		as.Equal("", id)
+	})
+}
