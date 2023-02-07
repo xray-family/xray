@@ -1,5 +1,7 @@
 package internal
 
+import "strings"
+
 func Join1(a string, sep string) string {
 	if len(a) == 0 {
 		return sep
@@ -50,4 +52,16 @@ func SelectString(expression bool, a, b string) string {
 		return a
 	}
 	return b
+}
+
+func Split(s string, sep string) []string {
+	var tmp = strings.Split(s, sep)
+	var arr = make([]string, 0, len(tmp))
+	for _, item := range tmp {
+		var s = strings.TrimSpace(item)
+		if s != "" {
+			arr = append(arr, s)
+		}
+	}
+	return arr
 }
