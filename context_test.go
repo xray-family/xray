@@ -165,7 +165,7 @@ func TestContext_Param(t *testing.T) {
 			Header: NewHttpHeader(http.Header{
 				XPath: []string{""},
 			}),
-			VPath: "",
+			VPath: "/:id",
 		}, newResponseWriterMocker())
 		id := ctx.Param("id")
 		as.Equal("", id)

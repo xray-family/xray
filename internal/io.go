@@ -5,20 +5,6 @@ import (
 	"io"
 )
 
-type Closer interface {
-	Close()
-}
-
-func Close(source interface{}) error {
-	if v, ok := source.(io.Closer); ok {
-		return v.Close()
-	}
-	if v, ok := source.(Closer); ok {
-		v.Close()
-	}
-	return nil
-}
-
 func Write(w io.Writer, p []byte) error {
 	num, err := w.Write(p)
 	if err != nil {
