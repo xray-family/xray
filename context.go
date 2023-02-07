@@ -35,6 +35,7 @@ type (
 		Raw    interface{}
 		Header Header
 		Body   io.Reader
+		VPath  string
 	}
 
 	// Context 请求上下文
@@ -131,4 +132,21 @@ func (c *Context) BindJSON(v interface{}) error {
 		return defaultJsonCodec.NewDecoder(c.Request.Body).Decode(v)
 	}
 	return errors.New("request body cannot be nil")
+}
+
+// Param 获取路径中的参数
+func (c *Context) Param(key string) string {
+	var list1 = internal.Split(c.Request.VPath, defaultSeparator)
+	var list2 = internal.Split(c.Request.Header.Get(XPath), defaultSeparator)
+	var m = len(list1)
+	var n = len(list2)
+	if m != n || m == 0 {
+		return ""
+	}
+	for i, v := range list1 {
+		if isVar(v) && v[1:] == key {
+			return list2[i]
+		}
+	}
+	return ""
 }

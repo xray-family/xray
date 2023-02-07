@@ -91,21 +91,42 @@ func (c *Router) On(path string, handler HandlerFunc, middlewares ...HandlerFunc
 // Emit 分发事件
 func (c *Router) Emit(ctx *Context) {
 	path := internal.Join1(ctx.Request.Header.Get(XPath), c.separator)
+	sum := uint8(0)
 
-	// 优先匹配静态路由
 	{
+		// 优先匹配静态路由
 		funcs, ok := c.staticRoutes[path]
-		if !ok && c.OnNoMatch != nil {
-			funcs = append(c.middlewares, c.OnNoMatch)
+		if ok {
+			ctx.Request.VPath = path
+			sum++
+			if len(funcs) > 0 {
+				ctx.handlers = funcs
+				ctx.Next()
+			}
+			return
 		}
-		if len(funcs) > 0 {
-			ctx.index = -1
-			ctx.handlers = funcs
-			ctx.Next()
-		}
-		return
 	}
 
+	{
+		// 匹配动态路由
+		h := c.dynamicRoutes.Get(path)
+		if h != nil {
+			ctx.Request.VPath = h.VPath
+			sum++
+			if len(h.Funcs) > 0 {
+				ctx.handlers = h.Funcs
+				ctx.Next()
+			}
+			return
+		}
+	}
+
+	// 匹配失败的处理
+	if sum == 0 && c.OnNoMatch != nil {
+		funcs := append(c.middlewares, c.OnNoMatch)
+		ctx.handlers = funcs
+		ctx.Next()
+	}
 }
 
 // Display 展示接口列表
