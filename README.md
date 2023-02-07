@@ -27,7 +27,7 @@ Hats off to express, koa, gin!
 
 #### Feature
 - no dependence
-- dynamic separation matching interface paths, powered by map and trie
+- dynamic separation matching request paths, powered by map and trie
 - the onion model middleware, router group 
 - adapt to `http`, `lxzan/gws`, `gorilla/websocket` ...
 
