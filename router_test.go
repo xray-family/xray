@@ -46,7 +46,7 @@ func TestNew(t *testing.T) {
 				Header: NewHttpHeader(http.Header{"X-Path": []string{"/api/v1/greet"}}),
 				Body:   nil,
 			},
-			Writer: nil,
+			Writer: newResponseWriterMocker(),
 		})
 
 		as.Equal(9, len(list))
@@ -118,7 +118,7 @@ func TestNew(t *testing.T) {
 			Writer: newResponseWriterMocker(),
 		})
 
-		r.routes["404"] = nil
+		r.staticRoutes["404"] = nil
 
 		r.Display()
 		as.Equal(len(list), 0)

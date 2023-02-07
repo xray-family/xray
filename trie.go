@@ -20,14 +20,27 @@ type (
 )
 
 func newRouteTree() *routeTree {
-	return new(routeTree)
+	return &routeTree{
+		Children: make(map[string]*routeTree),
+	}
 }
 
 func isVar(s string) bool {
 	return len(s) > 0 && s[0] == defaultVarPrefix
 }
 
-func (c *routeTree) Set(handler *Handler) {
+func hasVar(s string) bool {
+	var list = internal.Split(s, defaultSeparator)
+	for _, item := range list {
+		if isVar(item) {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *routeTree) Set(vpath string, handlers []HandlerFunc) {
+	var handler = &Handler{VPath: vpath, Funcs: handlers}
 	var list = internal.Split(handler.VPath, defaultSeparator)
 	if len(list) == 0 {
 		return
@@ -58,8 +71,8 @@ func (c *routeTree) doSet(node *routeTree, index int, list []string, handler *Ha
 	}
 }
 
-func (c *routeTree) Get(realPath string) *Handler {
-	var list = internal.Split(realPath, defaultSeparator)
+func (c *routeTree) Get(path string) *Handler {
+	var list = internal.Split(path, defaultSeparator)
 	if len(list) == 0 {
 		return nil
 	}

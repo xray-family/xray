@@ -17,11 +17,10 @@ type (
 		// 全局中间件
 		middlewares []HandlerFunc
 		// 接口映射
-		routes map[string][]HandlerFunc
-		// 路由列表
-		routePaths map[string]uint8
-		// 路由组列表
-		groupPaths map[string]uint8
+		// 静态路由
+		staticRoutes map[string][]HandlerFunc
+		// 动态路由
+		dynamicRoutes *routeTree
 		// 路径匹配失败的处理
 		OnNoMatch HandlerFunc
 	}
@@ -33,11 +32,10 @@ type (
 // New 创建路由器
 func New() *Router {
 	r := &Router{
-		separator:   "/",
-		middlewares: make([]HandlerFunc, 0),
-		routes:      map[string][]HandlerFunc{},
-		routePaths:  map[string]uint8{},
-		groupPaths:  map[string]uint8{},
+		separator:     "/",
+		middlewares:   make([]HandlerFunc, 0),
+		staticRoutes:  map[string][]HandlerFunc{},
+		dynamicRoutes: newRouteTree(),
 	}
 	r.OnNoMatch = func(ctx *Context) {
 		if ctx.Writer.Protocol() == ProtocolHTTP {
@@ -47,12 +45,8 @@ func New() *Router {
 	return r
 }
 
-func (c *Router) checkPathConflict(m map[string]uint8, path string) {
-	if _, ok := m[path]; ok {
-		log.Panicf("path=%s, msg=path conflict\n", path)
-		return
-	}
-	m[path] = 1
+func (c *Router) showPathConflict(path string) {
+	log.Panicf("path=%s, msg=path conflict\n", path)
 }
 
 // Use 设置全局中间件
@@ -68,45 +62,63 @@ func (c *Router) Group(path string, middlewares ...HandlerFunc) *Group {
 		path:        internal.Join1(path, c.separator),
 		middlewares: append(c.middlewares, middlewares...),
 	}
-	c.checkPathConflict(c.groupPaths, group.path)
 	return group
 }
 
 // On 监听事件
 func (c *Router) On(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
 	path = internal.Join1(path, c.separator)
-	var h = c.middlewares
-	h = append(h, middlewares...)
+
+	h := append(c.middlewares, middlewares...)
 	h = append(h, handler)
-	c.routes[path] = h
-	c.checkPathConflict(c.routePaths, path)
+
+	if !hasVar(path) {
+		if _, ok := c.staticRoutes[path]; ok {
+			c.showPathConflict(path)
+			return
+		}
+		c.staticRoutes[path] = h
+		return
+	}
+
+	if v := c.dynamicRoutes.Get(path); v != nil {
+		c.showPathConflict(path)
+		return
+	}
+	c.dynamicRoutes.Set(path, h)
 }
 
 // Emit 分发事件
 func (c *Router) Emit(ctx *Context) {
 	path := internal.Join1(ctx.Request.Header.Get(XPath), c.separator)
-	funcs, ok := c.routes[path]
-	if !ok && c.OnNoMatch != nil {
-		funcs = append(c.middlewares, c.OnNoMatch)
+
+	// 优先匹配静态路由
+	{
+		funcs, ok := c.staticRoutes[path]
+		if !ok && c.OnNoMatch != nil {
+			funcs = append(c.middlewares, c.OnNoMatch)
+		}
+		if len(funcs) > 0 {
+			ctx.index = -1
+			ctx.handlers = funcs
+			ctx.Next()
+		}
+		return
 	}
-	if len(funcs) > 0 {
-		ctx.index = -1
-		ctx.handlers = funcs
-		ctx.Next()
-	}
+
 }
 
 // Display 展示接口列表
 func (c *Router) Display() {
-	var keys = make([]string, 0, len(c.routes))
-	for k, _ := range c.routes {
+	var keys = make([]string, 0, len(c.staticRoutes))
+	for k, _ := range c.staticRoutes {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 
 	log.Printf("API List")
 	for _, key := range keys {
-		var handlers = c.routes[key]
+		var handlers = c.staticRoutes[key]
 		var n = len(handlers)
 		if n == 0 {
 			continue

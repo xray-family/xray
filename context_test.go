@@ -158,20 +158,8 @@ func TestRouter_Conflict(t *testing.T) {
 
 		var r = New()
 		var g = r.Group("user")
-		r.On("user/1", AccessLog())
 		g.On("1", AccessLog())
-	})
-
-	t.Run("group conflict", func(t *testing.T) {
-		defer func() {
-			e := recover()
-			as.NotNil(e)
-		}()
-
-		var r = New()
-		r.Group("api/v1")
-		g1 := r.Group("api")
-		g1.Group("v1")
+		r.On("user/1", AccessLog())
 	})
 }
 

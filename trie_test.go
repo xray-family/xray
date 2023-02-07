@@ -9,18 +9,9 @@ func TestRouteTree_Get(t *testing.T) {
 	var as = assert.New(t)
 
 	var tree = newRouteTree()
-	tree.Set(&Handler{
-		VPath: "/api/v1/user/:id",
-		Funcs: []HandlerFunc{AccessLog()},
-	})
-	tree.Set(&Handler{
-		VPath: "/api/v1/user/:id/profile",
-		Funcs: []HandlerFunc{AccessLog()},
-	})
-	tree.Set(&Handler{
-		VPath: "/api/v1/user/:id/article/:article_id",
-		Funcs: []HandlerFunc{AccessLog()},
-	})
+	tree.Set("/api/v1/user/:id", []HandlerFunc{AccessLog()})
+	tree.Set("/api/v1/user/:id/profile", []HandlerFunc{AccessLog()})
+	tree.Set("/api/v1/user/:id/article/:article_id", []HandlerFunc{AccessLog()})
 
 	{
 		handler := tree.Get("/user")
@@ -50,12 +41,6 @@ func TestRouteTree_Get(t *testing.T) {
 
 func TestRouteTree_Set(t *testing.T) {
 	var tree = newRouteTree()
-	tree.Set(&Handler{
-		VPath: "",
-		Funcs: []HandlerFunc{AccessLog()},
-	})
-	tree.Set(&Handler{
-		VPath: "/api/",
-		Funcs: []HandlerFunc{AccessLog()},
-	})
+	tree.Set("", []HandlerFunc{AccessLog()})
+	tree.Set("/api/", []HandlerFunc{AccessLog()})
 }
