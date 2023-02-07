@@ -26,6 +26,7 @@ Hats off to express, koa, gin!
 [10]: https://goreportcard.com/report/github.com/lxzan/uRouter
 
 #### Feature
+- 100% branch coverage for unit tests
 - no dependence
 - dynamic separation matching request paths, powered by map and trie
 - the onion model middleware, router group 
