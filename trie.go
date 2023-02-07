@@ -3,8 +3,8 @@ package uRouter
 import "github.com/lxzan/uRouter/internal"
 
 const (
-	defaultSeparator = "/"
-	defaultVarPrefix = ':'
+	defaultSeparator = "/" // 默认路径分隔符
+	defaultVarPrefix = ':' // 默认变量前缀
 )
 
 type (
@@ -25,10 +25,12 @@ func newRouteTree() *routeTree {
 	}
 }
 
+// 判断字符串是否为变量
 func isVar(s string) bool {
 	return len(s) > 0 && s[0] == defaultVarPrefix
 }
 
+// 判断字符串是否含有变量
 func hasVar(s string) bool {
 	var list = internal.Split(s, defaultSeparator)
 	for _, item := range list {

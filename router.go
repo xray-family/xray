@@ -52,8 +52,38 @@ func (c *Router) showPathConflict(path string) {
 	log.Panicf("path=%s, msg=path conflict\n", path)
 }
 
+// pathExists 检测接口是否存在, 最坏情况O(n)复杂度
+func (c *Router) pathExists(path string) bool {
+	if _, ok := c.staticRoutes[path]; ok {
+		return true
+	}
+	if !hasVar(path) {
+		return false
+	}
+
+	var list1 = internal.Split(path, defaultSeparator)
+	var n = len(list1)
+	for k, _ := range c.staticRoutes {
+		var list2 = internal.Split(k, defaultSeparator)
+		if n == len(list2) {
+			var sum = 0
+			for i, v := range list2 {
+				if v == list1[i] || isVar(list1[i]) {
+					sum++
+				}
+			}
+			if sum == n {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // Use 设置全局中间件
 func (c *Router) Use(middlewares ...HandlerFunc) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.middlewares = append(c.middlewares, middlewares...)
 }
 
@@ -80,20 +110,19 @@ func (c *Router) On(path string, handler HandlerFunc, middlewares ...HandlerFunc
 	h := append(c.middlewares, middlewares...)
 	h = append(h, handler)
 
-	if !hasVar(path) {
-		if _, ok := c.staticRoutes[path]; ok {
-			c.showPathConflict(path)
-			return
-		}
-		c.staticRoutes[path] = h
-		return
+	// 检测路径冲突
+	if c.pathExists(path) {
+		c.showPathConflict(path)
 	}
-
 	if v := c.dynamicRoutes.Get(path); v != nil {
 		c.showPathConflict(path)
-		return
 	}
-	c.dynamicRoutes.Set(path, h)
+
+	if !hasVar(path) {
+		c.staticRoutes[path] = h
+	} else {
+		c.dynamicRoutes.Set(path, h)
+	}
 }
 
 // Emit 分发事件

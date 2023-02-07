@@ -32,10 +32,14 @@ type (
 
 	// Request 请求
 	Request struct {
-		Raw    interface{}
+		// 原始请求结构
+		Raw interface{}
+		// 请求头
 		Header Header
-		Body   io.Reader
-		VPath  string
+		// 请求体
+		Body io.Reader
+		// 接口路径定义
+		VPath string
 	}
 
 	// Context 请求上下文

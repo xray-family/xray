@@ -34,18 +34,17 @@ func (c *Group) On(path string, handler HandlerFunc, middlewares ...HandlerFunc)
 	h := append(c.middlewares, middlewares...)
 	h = append(h, handler)
 
-	if !hasVar(path) {
-		if _, ok := router.staticRoutes[path]; ok {
-			router.showPathConflict(path)
-			return
-		}
-		router.staticRoutes[path] = h
-		return
+	// 检测路径冲突
+	if router.pathExists(path) {
+		router.showPathConflict(path)
 	}
-
 	if v := router.dynamicRoutes.Get(path); v != nil {
 		router.showPathConflict(path)
-		return
 	}
-	router.dynamicRoutes.Set(path, h)
+
+	if !hasVar(path) {
+		router.staticRoutes[path] = h
+	} else {
+		router.dynamicRoutes.Set(path, h)
+	}
 }

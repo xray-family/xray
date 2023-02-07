@@ -109,7 +109,57 @@ func TestNew(t *testing.T) {
 		as.Equal(2, list[8])
 	})
 
-	t.Run("", func(t *testing.T) {
+	t.Run("mix router", func(t *testing.T) {
+		var list []int
+		var r = New()
+		r.Use(func(ctx *Context) {
+			list = append(list, 1)
+			ctx.Next()
+			list = append(list, 2)
+		})
+
+		var g0 = r.Group("", func(ctx *Context) {
+			list = append(list, 3)
+			ctx.Next()
+			list = append(list, 4)
+		})
+
+		var g1 = g0.Group("/api/:version", func(ctx *Context) {
+			list = append(list, 5)
+			ctx.Next()
+			list = append(list, 6)
+		})
+
+		g1.On("greet", func(ctx *Context) {
+			list = append(list, 9)
+			as.Equal("v1", ctx.Param("version"))
+		}, func(ctx *Context) {
+			list = append(list, 7)
+			ctx.Next()
+			list = append(list, 8)
+		})
+
+		r.Display()
+
+		ctx := NewContext(
+			&Request{Header: NewHttpHeader(http.Header{"X-Path": []string{"/api/v1/greet"}})},
+			newResponseWriterMocker(),
+		)
+		r.Emit(ctx)
+
+		as.Equal(9, len(list))
+		as.Equal(1, list[0])
+		as.Equal(3, list[1])
+		as.Equal(5, list[2])
+		as.Equal(7, list[3])
+		as.Equal(9, list[4])
+		as.Equal(8, list[5])
+		as.Equal(6, list[6])
+		as.Equal(4, list[7])
+		as.Equal(2, list[8])
+	})
+
+	t.Run("match", func(t *testing.T) {
 		var r = New()
 		var list []int
 
@@ -199,4 +249,55 @@ func TestRouter_OnNoMatch(t *testing.T) {
 		}()
 	}
 	wg.Wait()
+}
+
+func TestRouter_Conflict(t *testing.T) {
+	var as = assert.New(t)
+
+	t.Run("route conflict 1", func(t *testing.T) {
+		defer func() {
+			e := recover()
+			as.NotNil(e)
+		}()
+
+		var r = New()
+		var g = r.Group("user")
+		g.On("1", AccessLog())
+		r.On("user/1", AccessLog())
+	})
+
+	t.Run("route conflict 2", func(t *testing.T) {
+		defer func() {
+			e := recover()
+			as.NotNil(e)
+		}()
+
+		var r = New()
+		r.On("user/:id", AccessLog())
+		r.On("user/1", AccessLog())
+	})
+
+	t.Run("route conflict 3", func(t *testing.T) {
+		defer func() {
+			e := recover()
+			as.NotNil(e)
+		}()
+
+		var r = New()
+		r.On("user/:id", AccessLog())
+		var g = r.Group("user")
+		g.On("1", AccessLog())
+	})
+
+	t.Run("route conflict 4", func(t *testing.T) {
+		defer func() {
+			e := recover()
+			as.NotNil(e)
+		}()
+
+		var r = New()
+		r.On("user/1", AccessLog())
+		var g = r.Group("user")
+		g.On(":id", AccessLog())
+	})
 }

@@ -147,22 +147,6 @@ func TestContext_Storage(t *testing.T) {
 	}
 }
 
-func TestRouter_Conflict(t *testing.T) {
-	var as = assert.New(t)
-
-	t.Run("route conflict", func(t *testing.T) {
-		defer func() {
-			e := recover()
-			as.NotNil(e)
-		}()
-
-		var r = New()
-		var g = r.Group("user")
-		g.On("1", AccessLog())
-		r.On("user/1", AccessLog())
-	})
-}
-
 func TestContext_Others(t *testing.T) {
 	var as = assert.New(t)
 	var ctx = newContextMocker()
