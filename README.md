@@ -32,6 +32,7 @@ Hats off to express, koa, gin!
 - adapt to `http`, `lxzan/gws`, `gorilla/websocket` ...
 
 #### Index
+
 - [uRouter](#urouter)
   - [Feature](#feature)
   - [Index](#index)
@@ -40,6 +41,8 @@ Hats off to express, koa, gin!
   - [Middleware](#middleware)
   - [JSON Codec](#json-codec)
   - [Header Codec (Not applicable to HTTP)](#header-codec-not-applicable-to-http)
+  - [Benchmark (dynamic route match)](#benchmark-dynamic-route-match)
+
 
 
   
@@ -206,7 +209,7 @@ import (
 )
 
 func init() {
-    // Better performance than uRouter.StdJsonCodec
+	// Better performance than uRouter.StdJsonCodec 
 	uRouter.SetJsonCodec(jsoniter.JsoniterCodec)
 }
 ```
@@ -222,4 +225,49 @@ uRouter.BinaryHeader: length_encoding=2 byte, max_header_length=65535 byte
 // TextHeader Example
 // header length => header payload => body
 0019{"X-Path":"/greet"}{"hello":"world!"}
+```
+
+#### Benchmark (dynamic route match)
+
+```
+goos: darwin
+goarch: arm64
+pkg: github.com/lxzan/uRouter
+BenchmarkRouteTree_Get
+BenchmarkRouteTree_Get-8   	 5646444	       207.6 ns/op
+PASS
+```
+
+```go
+func BenchmarkRouteTree_Get(b *testing.B) {
+	var count = 1024
+	var segmentLen = 2
+	var tree = newRouteTree()
+	var r = internal.Numeric
+	for i := 0; i < count; i++ {
+		var idx = r.Intn(4)
+		var list []string
+		for j := 0; j < 4; j++ {
+			var ele = string(r.Generate(segmentLen))
+			if j == idx {
+				ele = ":" + ele
+			}
+			list = append(list, ele)
+		}
+		tree.Set(strings.Join(list, defaultSeparator), []HandlerFunc{})
+	}
+
+	var paths []string
+	for i := 0; i < count; i++ {
+		var path = r.Generate(12)
+		path[0], path[3], path[6], path[9] = defaultSeparator[0], defaultSeparator[0], defaultSeparator[0], defaultSeparator[0]
+		paths = append(paths, string(path))
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		var path = paths[i&(count-1)]
+		tree.Get(path)
+	}
+}
 ```

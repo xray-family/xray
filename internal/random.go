@@ -18,6 +18,12 @@ var (
 		r:      rand.New(rand.NewSource(time.Now().UnixNano())),
 		mu:     sync.Mutex{},
 	}
+
+	Numeric = &RandomString{
+		layout: "0123456789",
+		r:      rand.New(rand.NewSource(time.Now().UnixNano())),
+		mu:     sync.Mutex{},
+	}
 )
 
 func (c *RandomString) Generate(n int) []byte {
@@ -30,4 +36,11 @@ func (c *RandomString) Generate(n int) []byte {
 	}
 	c.mu.Unlock()
 	return b
+}
+
+func (c *RandomString) Intn(n int) int {
+	c.mu.Lock()
+	x := c.r.Intn(n)
+	c.mu.Unlock()
+	return x
 }

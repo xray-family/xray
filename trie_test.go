@@ -1,7 +1,9 @@
 package uRouter
 
 import (
+	"github.com/lxzan/uRouter/internal"
 	"github.com/stretchr/testify/assert"
+	"strings"
 	"testing"
 )
 
@@ -61,4 +63,36 @@ func TestRouteTree_Set(t *testing.T) {
 func TestRouteTree_Range(t *testing.T) {
 	var tree *routeTree
 	tree.Range(func(h *apiHandler) {})
+}
+
+func BenchmarkRouteTree_Get(b *testing.B) {
+	var count = 1024
+	var segmentLen = 2
+	var tree = newRouteTree()
+	var r = internal.Numeric
+	for i := 0; i < count; i++ {
+		var idx = r.Intn(4)
+		var list []string
+		for j := 0; j < 4; j++ {
+			var ele = string(r.Generate(segmentLen))
+			if j == idx {
+				ele = ":" + ele
+			}
+			list = append(list, ele)
+		}
+		tree.Set(strings.Join(list, defaultSeparator), []HandlerFunc{})
+	}
+
+	var paths []string
+	for i := 0; i < count; i++ {
+		var path = r.Generate(12)
+		path[0], path[3], path[6], path[9] = defaultSeparator[0], defaultSeparator[0], defaultSeparator[0], defaultSeparator[0]
+		paths = append(paths, string(path))
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		var path = paths[i&(count-1)]
+		tree.Get(path)
+	}
 }

@@ -30,9 +30,10 @@ func TestSelectString(t *testing.T) {
 	assert.Equal(t, "0", SelectString(false, "1", "0"))
 }
 
-func TestRandomString_Generate(t *testing.T) {
+func TestRandomString(t *testing.T) {
 	var s = AlphabetNumeric.Generate(16)
 	assert.Equal(t, 16, len(s))
+	assert.Less(t, AlphabetNumeric.Intn(16), 16)
 }
 
 func TestSplit(t *testing.T) {
