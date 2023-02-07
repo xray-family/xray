@@ -3,6 +3,7 @@ package uRouter
 import (
 	"github.com/stretchr/testify/assert"
 	"net/http"
+	"sync"
 	"testing"
 )
 
@@ -122,4 +123,34 @@ func TestNew(t *testing.T) {
 		r.Display()
 		as.Equal(len(list), 0)
 	})
+}
+
+func TestRouter_OnNoMatch(t *testing.T) {
+	var as = assert.New(t)
+	var r = New()
+	r.Use(func(ctx *Context) {
+		ctx.Set("sum", 1)
+		ctx.Next()
+	}, func(ctx *Context) {
+		val, _ := ctx.Get("sum")
+		ctx.Set("sum", val.(int)+2)
+		ctx.Next()
+	})
+
+	const count = 10
+	var wg = &sync.WaitGroup{}
+	wg.Add(count)
+	for i := 0; i < count; i++ {
+		go func() {
+			var ctx = NewContext(
+				&Request{Header: NewHttpHeader(http.Header{XPath: []string{"test"}})},
+				newResponseWriterMocker(),
+			)
+			r.Emit(ctx)
+			sum, _ := ctx.Get("sum")
+			as.Equal(3, sum.(int))
+			wg.Done()
+		}()
+	}
+	wg.Wait()
 }
