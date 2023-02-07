@@ -1,5 +1,5 @@
 # uRouter
-universal router for http, websocket and custom protocol
+universal router for http, websocket and custom protocol, one is all.
 
 Hats off to express, koa, gin!
 
@@ -27,7 +27,7 @@ Hats off to express, koa, gin!
 
 #### Feature
 - no dependence
-- static router, powered by map
+- dynamic separation matching interface paths, powered by map and trie
 - the onion model middleware, router group 
 - adapt to `http`, `lxzan/gws`, `gorilla/websocket` ...
 
@@ -36,42 +36,44 @@ Hats off to express, koa, gin!
   - [Feature](#feature)
   - [Index](#index)
   - [Quick Start](#quick-start)
+  - [Best Practice](#best-practice)
+
   
 #### Quick Start
 
-- http
 ```go
 package main
 
 import (
 	"github.com/lxzan/uRouter"
-	httpAdapter "github.com/lxzan/uRouter/contrib/adapter/http"
+	http2 "github.com/lxzan/uRouter/contrib/adapter/http"
 	"net/http"
 )
 
 func main() {
 	var router = uRouter.New()
-
-	group := router.Group("api/v1")
-
-	group.On("greet", Greet)
+	router.Use(uRouter.Recovery(), uRouter.AccessLog())
+	var group = router.Group("/api/v1")
+	
+	group.On("/user/:uid/article/:aid", func(ctx *uRouter.Context) {
+		_ = ctx.WriteJSON(http.StatusOK, uRouter.Any{
+			"uid": ctx.Param("uid"),
+			"aid": ctx.Param("aid"),
+		})
+	})
 
 	router.Display()
-
-	http.ListenAndServe(":3000", httpAdapter.NewAdapter(router))
+	_ = http.ListenAndServe(":3000", http2.NewAdapter(router))
 }
 
-func Greet(ctx *uRouter.Context) {
-	ctx.WriteJSON(http.StatusOK, uRouter.Any{
-		"hello": "world",
-	})
-}
 
 ```
 
-- websocket (gws)
+#### Best Practice
+
+- server
+  
 ```go
-// server
 package main
 
 import (
@@ -85,27 +87,21 @@ import (
 
 func main() {
 	var router = uRouter.New()
+	router.Use(uRouter.Recovery(), uRouter.AccessLog())
+
 	var upgrader = gws.NewUpgrader(func(c *gws.Upgrader) {
-		c.EventHandler = &WebSocketHandler{
-			adapter: gwsAdapter.NewAdapter(router),
-		}
+		c.EventHandler = NewWebSocketHandler(router, gwsAdapter.NewAdapter(router))
 	})
 
 	router.On("/connect", func(ctx *uRouter.Context) {
 		r := ctx.Request.Raw
 		w := ctx.Writer.Raw()
-		socket, err := upgrader.Accept(w.(http.ResponseWriter), r.(*http.Request))
+		socket, err := upgrader.Accept(w.( http.ResponseWriter), r.(*http.Request))
 		if err != nil {
 			log.Println(err.Error())
 			return
 		}
 		socket.Listen()
-	})
-
-	router.On("/greet", func(ctx *uRouter.Context) {
-		var req = uRouter.Any{}
-		ctx.BindJSON(&req)
-		log.Printf("%v", req)
 	})
 
 	router.Display()
@@ -114,9 +110,20 @@ func main() {
 	}
 }
 
+func NewWebSocketHandler(router *uRouter.Router, adapter *gwsAdapter.Adapter) *WebSocketHandler {
+	h := &WebSocketHandler{
+		adapter: adapter,
+		router:  router,
+	}
+	group := router.Group("", uRouter.Protocol(uRouter.ProtocolWebSocket))
+	group.On("/greet", h.Greet)
+	return h
+}
+
 type WebSocketHandler struct {
 	gws.BuiltinEventEngine
 	adapter *gwsAdapter.Adapter
+	router  *uRouter.Router
 }
 
 func (c *WebSocketHandler) OnMessage(socket *gws.Conn, message *gws.Message) {
@@ -124,11 +131,21 @@ func (c *WebSocketHandler) OnMessage(socket *gws.Conn, message *gws.Message) {
 		log.Println(err.Error())
 	}
 }
+
+func (c *WebSocketHandler) Greet(ctx *uRouter.Context) {
+	var req = uRouter.Any{}
+	if err := ctx.BindJSON(&req); err != nil {
+		log.Println(err.Error())
+		return
+	}
+	ctx.Writer.Header().Set(uRouter.ContentType, uRouter.MimeJson)
+	_ = ctx.WriteJSON(int(gws.OpcodeText), req)
+}
 ```
 
+- client
+  
 ```js
-// client
 let ws = new WebSocket('ws://127.0.0.1:3000/connect');
-ws.send('0019{"X-Path":"/greet"}{"hello":"world"}');
+ws.send('0019{"X-Path":"/greet"}{"hello":"world!"}');
 ```
-

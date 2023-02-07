@@ -94,3 +94,19 @@ func (c *routeTree) doGet(node *routeTree, index int, list []string) *apiHandler
 	}
 	return nil
 }
+
+func (c *routeTree) Range(f func(h *apiHandler)) {
+	c.doRange(c, f)
+}
+
+func (c *routeTree) doRange(node *routeTree, f func(h *apiHandler)) {
+	if node == nil {
+		return
+	}
+	if node.Value != nil {
+		f(node.Value)
+	}
+	for _, v := range node.Children {
+		c.doRange(v, f)
+	}
+}

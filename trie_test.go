@@ -13,6 +13,19 @@ func TestRouteTree_Get(t *testing.T) {
 	tree.Set("/api/v1/user/:id/profile", []HandlerFunc{AccessLog()})
 	tree.Set("/api/v1/user/:id/article/:article_id", []HandlerFunc{AccessLog()})
 
+	var list []string
+	tree.Range(func(h *apiHandler) {
+		list = append(list, h.VPath)
+	})
+	as.ElementsMatch(
+		[]string{
+			"/api/v1/user/:id",
+			"/api/v1/user/:id/profile",
+			"/api/v1/user/:id/article/:article_id",
+		},
+		list,
+	)
+
 	{
 		handler := tree.Get("/user")
 		as.Nil(handler)
@@ -43,4 +56,9 @@ func TestRouteTree_Set(t *testing.T) {
 	var tree = newRouteTree()
 	tree.Set("", []HandlerFunc{AccessLog()})
 	tree.Set("/api/", []HandlerFunc{AccessLog()})
+}
+
+func TestRouteTree_Range(t *testing.T) {
+	var tree *routeTree
+	tree.Range(func(h *apiHandler) {})
 }
