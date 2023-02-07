@@ -3,6 +3,7 @@ package uRouter
 import (
 	"bytes"
 	"github.com/stretchr/testify/assert"
+	"io"
 	"testing"
 )
 
@@ -86,5 +87,26 @@ func TestRecovery(t *testing.T) {
 		var ctx = newContextMocker()
 		ctx.Request.Header.Set(XPath, "test")
 		r.Emit(ctx)
+	})
+}
+
+type closerMocker struct{}
+
+func (c *closerMocker) Close() {}
+
+func TestClose(t *testing.T) {
+	t.Run("", func(t *testing.T) {
+		var c = io.NopCloser(bytes.NewBuffer(nil))
+		Close(c)
+	})
+
+	t.Run("", func(t *testing.T) {
+		var c = &closerMocker{}
+		Close(c)
+	})
+
+	t.Run("", func(t *testing.T) {
+		var c = bytes.NewBuffer(nil)
+		Close(c)
 	})
 }

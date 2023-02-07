@@ -90,7 +90,7 @@ func TestContext_BindJSON(t *testing.T) {
 func TestContext_Write(t *testing.T) {
 	var as = assert.New(t)
 
-	t.Run("write json", func(t *testing.T) {
+	t.Run("write json 1", func(t *testing.T) {
 		var ctx = newContextMocker()
 		var params = Any{"name": "aha"}
 		if err := ctx.WriteJSON(http.StatusOK, params); err != nil {
@@ -103,6 +103,13 @@ func TestContext_Write(t *testing.T) {
 		var buf = bytes.NewBufferString("")
 		defaultJsonCodec.NewEncoder(buf).Encode(params)
 		as.Equal(buf.Len(), writer.buf.Len())
+	})
+
+	t.Run("write json 2", func(t *testing.T) {
+		var ctx = newContextMocker()
+		var header = &headerMocker{MapHeader{}}
+		header.Set(ContentType, MimeJson)
+		as.Error(ctx.WriteJSON(http.StatusOK, header))
 	})
 
 	t.Run("write string", func(t *testing.T) {
@@ -129,6 +136,13 @@ func TestContext_Write(t *testing.T) {
 		as.Equal(http.StatusOK, writer.statusCode)
 		as.Equal("", writer.header.Get(ContentType))
 		as.Equal(string(params), writer.buf.String())
+	})
+
+	t.Run("write reader", func(t *testing.T) {
+		var ctx = newContextMocker()
+		var header = &headerMocker{MapHeader{}}
+		header.Set(ContentType, MimeJson)
+		as.Error(ctx.WriteReader(http.StatusOK, header))
 	})
 }
 
@@ -165,7 +179,7 @@ func TestContext_Param(t *testing.T) {
 			Header: NewHttpHeader(http.Header{
 				XPath: []string{""},
 			}),
-			VPath: "",
+			VPath: "/:id",
 		}, newResponseWriterMocker())
 		id := ctx.Param("id")
 		as.Equal("", id)

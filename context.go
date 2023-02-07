@@ -60,7 +60,21 @@ type (
 		io.Reader
 		Bytes() []byte
 	}
+
+	Closer interface {
+		Close()
+	}
 )
+
+func Close(source interface{}) {
+	if v, ok := source.(io.Closer); ok {
+		_ = v.Close()
+		return
+	}
+	if v, ok := source.(Closer); ok {
+		v.Close()
+	}
+}
 
 func NewContext(request *Request, writer ResponseWriter) *Context {
 	return &Context{
@@ -129,9 +143,7 @@ func (c *Context) WriteReader(code int, r io.Reader) (err error) {
 
 // BindJSON 绑定请求数据
 func (c *Context) BindJSON(v interface{}) error {
-	defer func() {
-		_ = internal.Close(c.Request.Body)
-	}()
+	defer Close(c.Request.Body)
 	if c.Request.Body != nil {
 		return defaultJsonCodec.NewDecoder(c.Request.Body).Decode(v)
 	}
@@ -140,11 +152,11 @@ func (c *Context) BindJSON(v interface{}) error {
 
 // Param 获取路径中的参数
 func (c *Context) Param(key string) string {
-	var list1 = internal.Split(c.Request.VPath, defaultSeparator)
-	var list2 = internal.Split(c.Request.Header.Get(XPath), defaultSeparator)
+	var list1 = strings.Split(c.Request.VPath, defaultSeparator)
+	var list2 = strings.Split(c.Request.Header.Get(XPath), defaultSeparator)
 	var m = len(list1)
 	var n = len(list2)
-	if m != n || m == 0 {
+	if m != n {
 		return ""
 	}
 	for i, v := range list1 {

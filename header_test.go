@@ -2,11 +2,24 @@ package uRouter
 
 import (
 	"bytes"
+	"errors"
 	"github.com/lxzan/uRouter/internal"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
 )
+
+type headerMocker struct {
+	MapHeader
+}
+
+func (h headerMocker) Read(p []byte) (n int, err error) {
+	return 0, errors.New("test")
+}
+
+func (h headerMocker) MarshalJSON() ([]byte, error) {
+	return nil, errors.New("test")
+}
 
 func TestHeaderCodec(t *testing.T) {
 	var as = assert.New(t)
@@ -81,6 +94,13 @@ func TestHeaderCodec(t *testing.T) {
 			return
 		}
 		as.Equal(0, header2.Len())
+	})
+
+	t.Run("encode header error", func(t *testing.T) {
+		var header = &headerMocker{MapHeader{}}
+		header.Set(ContentType, MimeJson)
+		var w = bytes.NewBufferString("")
+		as.Error(TextHeader.Encode(w, header))
 	})
 
 	t.Run("encode big header", func(t *testing.T) {
