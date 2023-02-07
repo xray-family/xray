@@ -77,9 +77,7 @@ func (c *HeaderCodec) SetGenerator(generator func() Header) *HeaderCodec {
 
 func (c *HeaderCodec) Encode(writer *bytes.Buffer, h Header) error {
 	var p0 [4]byte
-	if err := internal.Write(writer, p0[:c.lengthEncoding]); err != nil {
-		return err
-	}
+	_, _ = writer.Write(p0[:c.lengthEncoding]) // err must be nil
 
 	if h != nil && h.Len() > 0 {
 		if err := c.codec.NewEncoder(writer).Encode(h); err != nil {
