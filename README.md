@@ -33,10 +33,12 @@ Hats off to express, koa, gin!
 
 #### Index
 - [uRouter](#urouter)
-  - [Feature](#feature)
-  - [Index](#index)
-  - [Quick Start](#quick-start)
-  - [Best Practice](#best-practice)
+			- [Feature](#feature)
+			- [Index](#index)
+			- [Quick Start](#quick-start)
+			- [Best Practice](#best-practice)
+			- [Middleware](#middleware)
+
 
   
 #### Quick Start
@@ -148,4 +150,47 @@ func (c *WebSocketHandler) Greet(ctx *uRouter.Context) {
 ```js
 let ws = new WebSocket('ws://127.0.0.1:3000/connect');
 ws.send('0019{"X-Path":"/greet"}{"hello":"world!"}');
+```
+
+#### Middleware
+  
+![onion model](https://upload-images.jianshu.io/upload_images/26203625-b80a51afcf265c9d.jpg?imageMogr2/auto-orient/strip|imageView2/2/w/1078/format/webp)
+  
+```go
+package main
+
+import (
+	"github.com/lxzan/uRouter"
+	http2 "github.com/lxzan/uRouter/contrib/adapter/http"
+	"net/http"
+)
+
+func main() {
+	var router = uRouter.New()
+	
+	var list []int
+	router.Use(func(ctx *uRouter.Context) {
+		list = append(list, 1)
+		ctx.Next()
+		list = append(list, 2)
+		fmt.Printf("%v\n", list)
+	})
+	
+	var group = router.Group("/api/v1", func(ctx *uRouter.Context) {
+		list = append(list, 3)
+		ctx.Next()
+		list = append(list, 4)
+	})
+
+	group.On("/greet", func(ctx *uRouter.Context) {
+		list = append(list, 5)
+	})
+
+	router.Display()
+	_ = http.ListenAndServe(":3000", http2.NewAdapter(router))
+}
+```
+
+```
+output: 1, 3, 5, 4, 2
 ```
