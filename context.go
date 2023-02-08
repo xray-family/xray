@@ -3,7 +3,7 @@ package uRouter
 import (
 	"bytes"
 	"errors"
-	"github.com/lxzan/uRouter/contrib/helper"
+	"github.com/lxzan/uRouter/helper"
 	"github.com/lxzan/uRouter/internal"
 	"io"
 	"strings"

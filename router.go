@@ -2,7 +2,7 @@ package uRouter
 
 import (
 	_ "embed"
-	"github.com/lxzan/uRouter/contrib/helper"
+	"github.com/lxzan/uRouter/helper"
 	"github.com/lxzan/uRouter/internal"
 	"net/http"
 	"reflect"
@@ -15,7 +15,7 @@ type (
 	// Router 路由器
 	Router struct {
 		// 互斥锁, 防止有人搞骚操作, 多线程注册路由
-		// mutual exclusion locks, prevent people from tampering, multi-threaded registration routes
+		// mutual exclusion locks, prevent people from tampering, multi-thread registration routes
 		mu *sync.Mutex
 
 		// 分隔符

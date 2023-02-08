@@ -1,7 +1,7 @@
 package uRouter
 
 import (
-	"github.com/lxzan/uRouter/contrib/helper"
+	"github.com/lxzan/uRouter/helper"
 )
 
 const (
