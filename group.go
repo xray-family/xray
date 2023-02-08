@@ -3,6 +3,7 @@ package uRouter
 import "github.com/lxzan/uRouter/internal"
 
 // Group 路由组
+// route group
 type Group struct {
 	router      *Router
 	separator   string
@@ -11,6 +12,7 @@ type Group struct {
 }
 
 // Group 创建子路由组
+// create a child route group
 func (c *Group) Group(path string, middlewares ...HandlerFunc) *Group {
 	c.router.mu.Lock()
 	defer c.router.mu.Unlock()
@@ -25,6 +27,7 @@ func (c *Group) Group(path string, middlewares ...HandlerFunc) *Group {
 }
 
 // On 监听事件
+// listen to event
 func (c *Group) On(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
 	router := c.router
 	router.mu.Lock()

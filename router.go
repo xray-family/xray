@@ -15,12 +15,14 @@ type (
 	// Router 路由器
 	Router struct {
 		// 互斥锁, 防止有人搞骚操作, 多线程注册路由
+		// mutual exclusion locks, prevent people from tampering, multi-threaded registration routes
 		mu *sync.Mutex
 
 		// 分隔符
 		separator string
 
 		// 全局中间件
+		// global middlewares
 		chainsGlobal []HandlerFunc
 
 		// 静态路由
@@ -29,13 +31,16 @@ type (
 		// 动态路由
 		dynamicRoutes *routeTree
 
-		// 单例, 确保chainsNotFound只构建一次
+		// 单例模式, 确保chainsNotFound只构建一次
+		// singleton pattern, ensuring that chainsNotFound is built only once
 		once *sync.Once
 
-		// 路径匹配失败的处理函数链, 全局中间件+OnNotFound
+		// 路径匹配失败的处理函数链: 全局中间件 + OnNotFound
+		// path match failure handler chain: global middleware + OnNotFound
 		chainsNotFound []HandlerFunc
 
 		// 路径匹配失败的处理函数
+		// path matching failure handling function
 		OnNotFound HandlerFunc
 	}
 
@@ -66,6 +71,7 @@ func (c *Router) showPathConflict(path string) {
 }
 
 // pathExists 检测接口是否存在, 最坏情况O(n)复杂度
+// detection of interface existence, worst-case O(n) complexity
 func (c *Router) pathExists(path string) bool {
 	if _, ok := c.staticRoutes[path]; ok {
 		return true
@@ -96,6 +102,7 @@ func (c *Router) pathExists(path string) bool {
 }
 
 // Use 设置全局中间件
+// set global middlewares
 func (c *Router) Use(middlewares ...HandlerFunc) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -103,6 +110,7 @@ func (c *Router) Use(middlewares ...HandlerFunc) {
 }
 
 // Group 创建路由组
+// create a route group
 func (c *Router) Group(path string, middlewares ...HandlerFunc) *Group {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -117,6 +125,7 @@ func (c *Router) Group(path string, middlewares ...HandlerFunc) *Group {
 }
 
 // On 监听事件
+// listen to event
 func (c *Router) On(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -139,11 +148,13 @@ func (c *Router) On(path string, handler HandlerFunc, middlewares ...HandlerFunc
 }
 
 // Emit 分发事件
+// emit event
 func (c *Router) Emit(ctx *Context) {
 	path := internal.Join1(ctx.Request.Header.Get(XPath), c.separator)
 
 	{
 		// 优先匹配静态路由
+		// preferred match for static routes
 		if funcs, ok := c.staticRoutes[path]; ok {
 			ctx.Request.VPath = path
 			if len(funcs) > 0 {
@@ -156,6 +167,7 @@ func (c *Router) Emit(ctx *Context) {
 
 	{
 		// 匹配动态路由
+		// matching dynamic routes
 		if h, ok := c.dynamicRoutes.Get(path); ok {
 			ctx.Request.VPath = h.VPath
 			if len(h.Funcs) > 0 {
@@ -167,6 +179,7 @@ func (c *Router) Emit(ctx *Context) {
 	}
 
 	// 匹配失败的处理
+	// handling of failed matches
 	c.once.Do(func() {
 		c.chainsNotFound = append(c.chainsGlobal, c.OnNotFound)
 	})
@@ -178,16 +191,18 @@ func (c *Router) Emit(ctx *Context) {
 var blessMessage string
 
 // Display 展示接口列表
+// display api list
 func (c *Router) Display() {
 	log.Println(blessMessage)
 
+	log.Println("uRouter is running")
 	var keys = make([]string, 0, len(c.staticRoutes))
 	for k, _ := range c.staticRoutes {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 
-	log.Printf("API List")
+	log.Printf("API List:")
 	for _, key := range keys {
 		var handlers = c.staticRoutes[key]
 		var n = len(handlers)

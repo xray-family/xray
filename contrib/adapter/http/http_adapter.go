@@ -33,10 +33,12 @@ func NewAdapter(r *uRouter.Router) *Adapter {
 	return &Adapter{router: r}
 }
 
+// Adapter HTTP适配器
 type Adapter struct {
 	router *uRouter.Router
 }
 
+// ServeHTTP 服务HTTP
 func (c *Adapter) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	var r = &uRouter.Request{
 		Raw:    request,

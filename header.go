@@ -65,11 +65,15 @@ func (c *HeaderCodec) setLengthBytes(lb headerLengthEncoding) *HeaderCodec {
 	return c
 }
 
+// SetCodec 设置头部信息编码
+// set the header information code
 func (c *HeaderCodec) SetCodec(codec Codec) *HeaderCodec {
 	c.codec = codec
 	return c
 }
 
+// SetGenerator 设置头部结构生成函数
+// set the header structure generation function
 func (c *HeaderCodec) SetGenerator(generator func() Header) *HeaderCodec {
 	c.generator = generator
 	return c

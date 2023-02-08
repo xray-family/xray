@@ -33,25 +33,37 @@ type (
 	// Request 请求
 	Request struct {
 		// 原始请求结构
+		// original request structure
 		Raw interface{}
+
 		// 请求头
 		Header Header
+
 		// 请求体
 		Body io.Reader
-		// 接口路径定义
+
+		// 接口中定义的虚拟路径
+		// The virtual path defined in the interface
 		VPath string
 	}
 
 	// Context 请求上下文
 	Context struct {
 		// 中间件游标
+		// middleware cursor
 		index int
+
 		// 缓存
+		// session storage
 		storage Any
+
 		// 中间件
+		// handler chains
 		handlers []HandlerFunc
+
 		// 请求
 		Request *Request
+
 		// 响应写入器
 		Writer ResponseWriter
 	}
@@ -66,12 +78,14 @@ type (
 	}
 )
 
-func Close(source interface{}) {
-	if v, ok := source.(io.Closer); ok {
+// Close 关闭资源
+// close the resource
+func Close(resource interface{}) {
+	if v, ok := resource.(io.Closer); ok {
 		_ = v.Close()
 		return
 	}
-	if v, ok := source.(Closer); ok {
+	if v, ok := resource.(Closer); ok {
 		v.Close()
 	}
 }
@@ -151,6 +165,7 @@ func (c *Context) BindJSON(v interface{}) error {
 }
 
 // Param 获取路径中的参数
+// get the parameters in the path
 func (c *Context) Param(key string) string {
 	var list1 = internal.Split(c.Request.VPath, defaultSeparator)
 	var list2 = internal.Split(c.Request.Header.Get(XPath), defaultSeparator)
