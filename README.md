@@ -26,7 +26,7 @@ Hats off to express, koa, gin!
 [10]: https://goreportcard.com/report/github.com/lxzan/uRouter
 
 #### Feature
-- 100% branch coverage for unit tests
+- amazing 100% branch coverage for unit tests
 - no dependence
 - dynamic separation matching request paths, powered by map and trie
 - the onion model middleware, router group 
@@ -239,9 +239,9 @@ uRouter.BinaryHeader: length_encoding=2 byte, max_header_length=65535 byte
 goos: darwin
 goarch: arm64
 pkg: github.com/lxzan/uRouter
-BenchmarkRouteTree_Get
-BenchmarkRouteTree_Get-8   	 5646444	       207.6 ns/op
+BenchmarkRouteTree_Get-8   	 6125818	       172.4 ns/op	      80 B/op	       1 allocs/op
 PASS
+ok  	github.com/lxzan/uRouter	1.640s
 ```
 
 ```go
