@@ -19,6 +19,7 @@ func newContextMocker() *Context {
 
 func newResponseWriterMocker() ResponseWriter {
 	return &responseWriterMocker{
+		protocol:   ProtocolHTTP,
 		statusCode: 0,
 		header:     HttpHeader{Header: http.Header{}},
 		buf:        bytes.NewBuffer(nil),
@@ -26,13 +27,18 @@ func newResponseWriterMocker() ResponseWriter {
 }
 
 type responseWriterMocker struct {
+	protocol   string
 	statusCode int
 	header     HttpHeader
 	buf        *bytes.Buffer
 }
 
+func (c *responseWriterMocker) SetProtocol(p string) {
+	c.protocol = p
+}
+
 func (c *responseWriterMocker) Protocol() string {
-	return ProtocolHTTP
+	return c.protocol
 }
 
 func (c *responseWriterMocker) Header() Header {

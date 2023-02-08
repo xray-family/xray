@@ -9,16 +9,6 @@ import (
 	"time"
 )
 
-// Protocol 协议过滤, 只允许一种协议访问
-func Protocol(protocol string) HandlerFunc {
-	return func(ctx *Context) {
-		if ctx.Writer.Protocol() == protocol {
-			ctx.Next()
-			return
-		}
-	}
-}
-
 // AccessLog 访问日志
 func AccessLog() HandlerFunc {
 	return func(ctx *Context) {
@@ -57,5 +47,36 @@ func Recovery() HandlerFunc {
 			}
 		}()
 		ctx.Next()
+	}
+}
+
+// HTTP 定义了HTTP协议允许通过的请求方法
+func HTTP(methods ...string) HandlerFunc {
+	for i, v := range methods {
+		methods[i] = strings.ToUpper(v)
+	}
+	return func(ctx *Context) {
+		if ctx.Writer.Protocol() != ProtocolHTTP {
+			return
+		}
+
+		r, _ := ctx.Request.Raw.(*http.Request)
+		for _, v := range methods {
+			if r.Method == v {
+				ctx.Next()
+				return
+			}
+		}
+
+		_ = ctx.WriteString(http.StatusForbidden, "method not allowed")
+	}
+}
+
+// WebSocket 只允许WebSocket协议请求通过
+func WebSocket() HandlerFunc {
+	return func(ctx *Context) {
+		if ctx.Writer.Protocol() == ProtocolWebSocket {
+			ctx.Next()
+		}
 	}
 }

@@ -3,7 +3,10 @@ package http
 import (
 	"github.com/lxzan/uRouter"
 	"net/http"
+	"strings"
 )
+
+const defaultIP = "127.0.0.1"
 
 type RootController struct{}
 
@@ -15,4 +18,15 @@ func (c *RootController) GetRequest(ctx *uRouter.Context) *http.Request {
 // GetResponseWriter 获取http响应写入器
 func (c *RootController) GetResponseWriter(ctx *uRouter.Context) http.ResponseWriter {
 	return ctx.Writer.Raw().(http.ResponseWriter)
+}
+
+func (c *RootController) ClientIP(ctx *uRouter.Context) string {
+	if v := ctx.Request.Header.Get(uRouter.XRealIP); v != "" {
+		return v
+	}
+	list := strings.Split(c.GetRequest(ctx).RemoteAddr, ":")
+	if len(list) == 2 {
+		return list[0]
+	}
+	return defaultIP
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"github.com/stretchr/testify/assert"
 	"io"
+	"net/http"
 	"testing"
 )
 
@@ -25,11 +26,11 @@ func TestAccessLog(t *testing.T) {
 	r.Emit(ctx)
 }
 
-func TestProtocol(t *testing.T) {
-	t.Run("", func(t *testing.T) {
+func TestWebSocket(t *testing.T) {
+	t.Run("reject", func(t *testing.T) {
 		var r = New()
 		var sum = 0
-		r.Use(Protocol(ProtocolWebSocket))
+		r.Use(WebSocket())
 		r.On("test", func(ctx *Context) {
 			sum++
 		})
@@ -39,14 +40,63 @@ func TestProtocol(t *testing.T) {
 		assert.Equal(t, 0, sum)
 	})
 
-	t.Run("", func(t *testing.T) {
+	t.Run("pass", func(t *testing.T) {
 		var r = New()
 		var sum = 0
-		r.Use(Protocol(ProtocolHTTP))
+		r.Use(WebSocket())
 		r.On("test", func(ctx *Context) {
 			sum++
 		})
 		var ctx = newContextMocker()
+		ctx.Writer.(*responseWriterMocker).SetProtocol(ProtocolWebSocket)
+		ctx.Request.Header.Set(XPath, "test")
+		r.Emit(ctx)
+		assert.Equal(t, 1, sum)
+	})
+}
+
+func TestHTTP(t *testing.T) {
+	t.Run("reject 1", func(t *testing.T) {
+		var r = New()
+		var sum = 0
+		r.Use(HTTP(http.MethodPost))
+		r.On("test", func(ctx *Context) {
+			sum++
+		})
+
+		var ctx = newContextMocker()
+		ctx.Request.Raw = &http.Request{Method: http.MethodGet}
+		ctx.Request.Header.Set(XPath, "test")
+		r.Emit(ctx)
+		assert.Equal(t, 0, sum)
+	})
+
+	t.Run("reject 2", func(t *testing.T) {
+		var r = New()
+		var sum = 0
+		r.Use(HTTP(http.MethodPost))
+		r.On("test", func(ctx *Context) {
+			sum++
+		})
+
+		var ctx = newContextMocker()
+		ctx.Writer.(*responseWriterMocker).SetProtocol(ProtocolWebSocket)
+		ctx.Request.Raw = &http.Request{Method: http.MethodPost}
+		ctx.Request.Header.Set(XPath, "test")
+		r.Emit(ctx)
+		assert.Equal(t, 0, sum)
+	})
+
+	t.Run("pass", func(t *testing.T) {
+		var r = New()
+		var sum = 0
+		r.Use(HTTP(http.MethodPost))
+		r.On("test", func(ctx *Context) {
+			sum++
+		})
+
+		var ctx = newContextMocker()
+		ctx.Request.Raw = &http.Request{Method: http.MethodPost}
 		ctx.Request.Header.Set(XPath, "test")
 		r.Emit(ctx)
 		assert.Equal(t, 1, sum)
