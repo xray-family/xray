@@ -78,7 +78,9 @@ func (c *responseWriter) Write(p []byte) (n int, err error) {
 }
 
 func (c *responseWriter) Flush() error {
-	c.conn.WriteMessage(c.code, c.buf.Bytes())
+	if err := c.conn.WriteMessage(c.code, c.buf.Bytes()); err != nil {
+		return err
+	}
 	uRouter.BufferPool().Put(c.buf)
 	return nil
 }
@@ -101,6 +103,7 @@ func (c *Adapter) SetHeaderCodec(codec *uRouter.HeaderCodec) *Adapter {
 	return c
 }
 
+// ServeWebSocket 服务WebSocket
 func (c *Adapter) ServeWebSocket(socket *websocket.Conn, opcode int, p []byte) error {
 	var message = &Message{
 		Opcode: opcode,

@@ -20,6 +20,8 @@ func (c *RootController) GetResponseWriter(ctx *uRouter.Context) http.ResponseWr
 	return ctx.Writer.Raw().(http.ResponseWriter)
 }
 
+// ClientIP 获取客户端IP, 优先从X-Real-IP中获取
+// get the client IP, preferably from the X-Real-IP
 func (c *RootController) ClientIP(ctx *uRouter.Context) string {
 	if v := ctx.Request.Header.Get(uRouter.XRealIP); v != "" {
 		return v

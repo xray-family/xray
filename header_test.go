@@ -116,7 +116,7 @@ func TestHeaderCodec(t *testing.T) {
 	t.Run("decode small header 1", func(t *testing.T) {
 		var buf = bytes.NewBufferString("0012xxx")
 		_, err := TextHeader.Decode(buf)
-		as.Equal(true, err == ErrHeaderSize)
+		as.Equal(true, err == errHeaderSize)
 	})
 
 	t.Run("decode small header 2", func(t *testing.T) {

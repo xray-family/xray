@@ -24,8 +24,8 @@ const (
 )
 
 var (
-	ErrHeaderTooLarge = errors.New("header size too large")
-	ErrHeaderSize     = errors.New("header size error")
+	errHeaderTooLarge = errors.New("header size too large")
+	errHeaderSize     = errors.New("header size error")
 )
 
 type (
@@ -83,7 +83,7 @@ func (c *HeaderCodec) Encode(writer *bytes.Buffer, h Header) error {
 
 	var headerLength = writer.Len() - int(c.lengthEncoding)
 	if headerLength > c.lengthEncoding.MaxLength() {
-		return ErrHeaderTooLarge
+		return errHeaderTooLarge
 	}
 
 	var p1 = writer.Bytes()
@@ -117,7 +117,7 @@ func (c *HeaderCodec) Decode(reader *bytes.Buffer) (Header, error) {
 	}
 
 	if reader.Len() < headerLength {
-		return nil, ErrHeaderSize
+		return nil, errHeaderSize
 	}
 
 	if headerLength > 0 {
