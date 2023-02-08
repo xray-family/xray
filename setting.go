@@ -19,18 +19,19 @@ var (
 )
 
 func init() {
-	TextHeader = NewHeaderCodec(TextLengthEncoding, defaultJsonCodec, defaultGenerator)
+	TextHeader = NewHeaderCodec(defaultJsonCodec, defaultGenerator).setLengthBytes(textLengthEncoding)
 
-	BinaryHeader = NewHeaderCodec(BinaryLengthEncoding, defaultJsonCodec, defaultGenerator)
+	BinaryHeader = NewHeaderCodec(defaultJsonCodec, defaultGenerator).setLengthBytes(binaryLengthEncoding)
 }
 
 // SetJsonCodec 设置JSON编码器
+// 如果Header不使用JSON编码, 调用SetJsonCodec后需要开发者重新配置HeaderCodec
 func SetJsonCodec(codec Codec) {
 	defaultJsonCodec = codec
 
-	TextHeader = NewHeaderCodec(TextLengthEncoding, defaultJsonCodec, defaultGenerator)
+	TextHeader = NewHeaderCodec(defaultJsonCodec, defaultGenerator).setLengthBytes(textLengthEncoding)
 
-	BinaryHeader = NewHeaderCodec(BinaryLengthEncoding, defaultJsonCodec, defaultGenerator)
+	BinaryHeader = NewHeaderCodec(defaultJsonCodec, defaultGenerator).setLengthBytes(binaryLengthEncoding)
 }
 
 func SetBufferPool(p BufferPool) {

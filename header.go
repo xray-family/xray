@@ -19,8 +19,8 @@ const (
 	MimeJson   = "application/json; charset=utf-8"
 	MimeStream = "application/octet-stream"
 
-	BinaryLengthEncoding HeaderLengthEncoding = 2
-	TextLengthEncoding   HeaderLengthEncoding = 4
+	binaryLengthEncoding headerLengthEncoding = 2
+	textLengthEncoding   headerLengthEncoding = 4
 )
 
 var (
@@ -39,33 +39,33 @@ type (
 
 	HeaderCodec struct {
 		codec          Codec
-		lengthEncoding HeaderLengthEncoding
+		lengthEncoding headerLengthEncoding
 		generator      func() Header
 	}
 
-	HeaderLengthEncoding uint8
+	headerLengthEncoding uint8
 )
 
-func (c HeaderLengthEncoding) MaxLength() int {
-	if c == BinaryLengthEncoding {
+func (c headerLengthEncoding) MaxLength() int {
+	if c == binaryLengthEncoding {
 		return math.MaxUint16
 	}
-	return 9999
+	return 1e4 - 1
 }
 
-func NewHeaderCodec(lengthEncoding HeaderLengthEncoding, codec Codec, generator func() Header) *HeaderCodec {
+func NewHeaderCodec(codec Codec, generator func() Header) *HeaderCodec {
 	return new(HeaderCodec).
-		setLengthBytes(lengthEncoding).
-		setCodec(codec).
+		setLengthBytes(textLengthEncoding).
+		SetCodec(codec).
 		SetGenerator(generator)
 }
 
-func (c *HeaderCodec) setLengthBytes(lb HeaderLengthEncoding) *HeaderCodec {
+func (c *HeaderCodec) setLengthBytes(lb headerLengthEncoding) *HeaderCodec {
 	c.lengthEncoding = lb
 	return c
 }
 
-func (c *HeaderCodec) setCodec(codec Codec) *HeaderCodec {
+func (c *HeaderCodec) SetCodec(codec Codec) *HeaderCodec {
 	c.codec = codec
 	return c
 }
@@ -92,7 +92,7 @@ func (c *HeaderCodec) Encode(writer *bytes.Buffer, h Header) error {
 
 	var p1 = writer.Bytes()
 	var p2 = p1[:c.lengthEncoding]
-	if c.lengthEncoding == BinaryLengthEncoding {
+	if c.lengthEncoding == binaryLengthEncoding {
 		binary.BigEndian.PutUint16(p2, uint16(headerLength))
 	} else {
 		copy(p2, fmt.Sprintf("%04d", headerLength))
@@ -110,7 +110,7 @@ func (c *HeaderCodec) Decode(reader *bytes.Buffer) (Header, error) {
 	}
 
 	var headerLength = 0
-	if c.lengthEncoding == BinaryLengthEncoding {
+	if c.lengthEncoding == binaryLengthEncoding {
 		headerLength = int(binary.BigEndian.Uint16(p[:c.lengthEncoding]))
 	} else {
 		n, err := strconv.Atoi(string(p[:c.lengthEncoding]))
