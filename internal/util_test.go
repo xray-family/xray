@@ -39,4 +39,7 @@ func TestRandomString(t *testing.T) {
 func TestSplit(t *testing.T) {
 	assert.ElementsMatch(t, []string{"api", "v1"}, Split("/api/v1", "/"))
 	assert.ElementsMatch(t, []string{"api", "v1"}, Split("/api/v1/", "/"))
+	assert.ElementsMatch(t, []string{"ming", "hong", "hu"}, Split("ming, hong, hu", ","))
+	assert.ElementsMatch(t, []string{"ming", "hong", "hu"}, Split(",ming, hong, hu, ", ","))
+	assert.ElementsMatch(t, []string{"ming", "hong", "hu"}, Split("\nming, hong, hu\n", ","))
 }
