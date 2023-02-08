@@ -152,8 +152,8 @@ func (c *Context) BindJSON(v interface{}) error {
 
 // Param 获取路径中的参数
 func (c *Context) Param(key string) string {
-	var list1 = strings.Split(c.Request.VPath, defaultSeparator)
-	var list2 = strings.Split(c.Request.Header.Get(XPath), defaultSeparator)
+	var list1 = internal.Split(c.Request.VPath, defaultSeparator)
+	var list2 = internal.Split(c.Request.Header.Get(XPath), defaultSeparator)
 	var m = len(list1)
 	var n = len(list2)
 	if m != n {

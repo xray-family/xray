@@ -55,13 +55,13 @@ func SelectString(expression bool, a, b string) string {
 }
 
 func Split(s string, sep string) []string {
-	var tmp = strings.Split(s, sep)
-	var arr = make([]string, 0, len(tmp))
-	for _, item := range tmp {
-		var s = strings.TrimSpace(item)
-		if s != "" {
-			arr = append(arr, s)
+	var j = 0
+	var list = strings.Split(s, sep)
+	for i, v := range list {
+		if v != "" {
+			list[j] = list[i]
+			j++
 		}
 	}
-	return arr
+	return list[:j]
 }
