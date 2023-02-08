@@ -67,7 +67,7 @@ func New() *Router {
 }
 
 func (c *Router) showPathConflict(path string) {
-	Logger().Panic("path=%s, msg=path conflict\n", path)
+	Logger().Panic("path=%s, msg=path conflict", path)
 }
 
 // pathExists 检测接口是否存在, 最坏情况O(n)复杂度

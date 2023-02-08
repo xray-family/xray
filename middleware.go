@@ -14,7 +14,7 @@ func AccessLog() HandlerFunc {
 		var startTime = time.Now()
 		ctx.Next()
 		Logger().Info(
-			"access: protocol=%s, path=%s, cost=%s\n",
+			"access: protocol=%s, path=%s, cost=%s",
 			ctx.Writer.Protocol(),
 			ctx.Request.Header.Get(XPath),
 			time.Since(startTime).String(),

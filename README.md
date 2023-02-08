@@ -53,28 +53,33 @@ Hats off to express, koa, gin!
 package main
 
 import (
-	"github.com/lxzan/uRouter"
-	http2 "github.com/lxzan/uRouter/contrib/adapter/http"
-	"net/http"
+    "github.com/lxzan/uRouter"
+    http2 "github.com/lxzan/uRouter/contrib/adapter/http"
+    "github.com/lxzan/uRouter/contrib/codec/jsoniter"
+    "github.com/lxzan/uRouter/contrib/log/zerolog"
+    "net/http"
 )
 
-func main() {
-	var router = uRouter.New()
-	router.Use(uRouter.Recovery(), uRouter.AccessLog())
-	var group = router.Group("/api/v1")
-	
-	group.On("/user/:uid/article/:aid", func(ctx *uRouter.Context) {
-		_ = ctx.WriteJSON(http.StatusOK, uRouter.Any{
-			"uid": ctx.Param("uid"),
-			"aid": ctx.Param("aid"),
-		})
-	})
-
-	router.Display()
-	_ = http.ListenAndServe(":3000", http2.NewAdapter(router))
+func init() {
+    uRouter.SetJsonCodec(jsoniter.JsoniterCodec)
+    uRouter.SetLogger(zerolog.ZeroLogger)
 }
 
+func main() {
+    var router = uRouter.New()
+    router.Use(uRouter.Recovery(), uRouter.AccessLog())
+    var group = router.Group("/api/v1")
 
+    group.On("/user/:uid/article/:aid", func(ctx *uRouter.Context) {
+        _ = ctx.WriteJSON(http.StatusOK, uRouter.Any{
+            "uid": ctx.Param("uid"),
+            "aid": ctx.Param("aid"),
+        })
+    })
+
+    router.Display()
+    _ = http.ListenAndServe(":3000", http2.NewAdapter(router))
+}
 ```
 
 #### Best Practice
