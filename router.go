@@ -3,7 +3,6 @@ package uRouter
 import (
 	_ "embed"
 	"github.com/lxzan/uRouter/internal"
-	"log"
 	"net/http"
 	"reflect"
 	"runtime"
@@ -67,7 +66,7 @@ func New() *Router {
 }
 
 func (c *Router) showPathConflict(path string) {
-	log.Panicf("path=%s, msg=path conflict\n", path)
+	DefaultLogger().Panicf("path=%s, msg=path conflict\n", path)
 }
 
 // pathExists 检测接口是否存在, 最坏情况O(n)复杂度
@@ -193,16 +192,16 @@ var blessMessage string
 // Display 展示接口列表
 // display api list
 func (c *Router) Display() {
-	log.Println(blessMessage)
+	DefaultLogger().Infof(blessMessage)
 
-	log.Println("uRouter is running")
+	DefaultLogger().Infof("uRouter is running")
 	var keys = make([]string, 0, len(c.staticRoutes))
 	for k, _ := range c.staticRoutes {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 
-	log.Printf("API List:")
+	DefaultLogger().Infof("API List:")
 	for _, key := range keys {
 		var handlers = c.staticRoutes[key]
 		var n = len(handlers)
@@ -211,7 +210,7 @@ func (c *Router) Display() {
 		}
 
 		funcName := runtime.FuncForPC(reflect.ValueOf(handlers[n-1]).Pointer()).Name()
-		log.Printf("path=%s, handler=%s", key, funcName)
+		DefaultLogger().Infof("path=%s, handler=%s", key, funcName)
 	}
 
 	c.dynamicRoutes.Range(func(h *apiHandler) {
@@ -219,7 +218,7 @@ func (c *Router) Display() {
 		var n = len(handlers)
 		if n > 0 {
 			funcName := runtime.FuncForPC(reflect.ValueOf(handlers[n-1]).Pointer()).Name()
-			log.Printf("path=%s, handler=%s", h.VPath, funcName)
+			DefaultLogger().Infof("path=%s, handler=%s", h.VPath, funcName)
 		}
 	})
 }

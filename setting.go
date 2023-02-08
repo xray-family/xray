@@ -6,6 +6,8 @@ var (
 	defaultGenerator = func() Header { return &MapHeader{} }
 
 	defaultBufferPool BufferPool = newBufferPool()
+
+	defaultLogger Logger = new(logger)
 )
 
 var (
@@ -40,4 +42,9 @@ func SetJsonCodec(codec Codec) {
 // SetBufferPool 设置buffer池
 func SetBufferPool(p BufferPool) {
 	defaultBufferPool = p
+}
+
+// SetLogger 设置日志工具
+func SetLogger(l Logger) {
+	defaultLogger = l
 }

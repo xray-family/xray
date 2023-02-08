@@ -67,15 +67,6 @@ type (
 		// 响应写入器
 		Writer ResponseWriter
 	}
-
-	BytesReader interface {
-		io.Reader
-		Bytes() []byte
-	}
-
-	Closer interface {
-		Close()
-	}
 )
 
 // Close 关闭资源

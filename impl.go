@@ -2,16 +2,11 @@ package uRouter
 
 import (
 	"bytes"
+	"log"
 	"sync"
 )
 
 const defaultBufferSize = 1024
-
-type BufferPool interface {
-	SetSize(size int)
-	Get() *bytes.Buffer
-	Put(b *bytes.Buffer)
-}
 
 func DefaultBufferPool() BufferPool {
 	return defaultBufferPool
@@ -44,4 +39,18 @@ func (c *bufferPool) Get() *bytes.Buffer {
 
 func (c *bufferPool) Put(b *bytes.Buffer) {
 	c.p.Put(b)
+}
+
+func DefaultLogger() Logger {
+	return defaultLogger
+}
+
+type logger struct{}
+
+func (c *logger) Infof(format string, v ...interface{}) {
+	log.Printf(format, v...)
+}
+
+func (c *logger) Panicf(format string, v ...interface{}) {
+	log.Panicf(format, v...)
 }

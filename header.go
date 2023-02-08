@@ -29,14 +29,6 @@ var (
 )
 
 type (
-	Header interface {
-		Set(key, value string)
-		Get(key string) string
-		Del(key string)
-		Len() int
-		Range(f func(key, value string))
-	}
-
 	HeaderCodec struct {
 		codec          Codec
 		lengthEncoding headerLengthEncoding

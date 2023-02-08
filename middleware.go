@@ -2,7 +2,6 @@ package uRouter
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"runtime"
 	"strings"
@@ -14,7 +13,7 @@ func AccessLog() HandlerFunc {
 	return func(ctx *Context) {
 		var startTime = time.Now()
 		ctx.Next()
-		log.Printf(
+		DefaultLogger().Infof(
 			"access: protocol=%s, path=%s, cost=%s\n",
 			ctx.Writer.Protocol(),
 			ctx.Request.Header.Get(XPath),
@@ -39,7 +38,7 @@ func Recovery() HandlerFunc {
 						msg = append(msg, fmt.Sprintf("caller: %s, line: %d\n", caller, line)...)
 					}
 				}
-				log.Printf(string(msg))
+				DefaultLogger().Infof(string(msg))
 
 				if ctx.Writer.Protocol() == ProtocolHTTP {
 					_ = ctx.WriteString(http.StatusInternalServerError, "internal server error")
