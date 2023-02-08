@@ -66,7 +66,7 @@ func New() *Router {
 }
 
 func (c *Router) showPathConflict(path string) {
-	DefaultLogger().Panicf("path=%s, msg=path conflict\n", path)
+	Logger().Panic("path=%s, msg=path conflict\n", path)
 }
 
 // pathExists 检测接口是否存在, 最坏情况O(n)复杂度
@@ -192,16 +192,16 @@ var blessMessage string
 // Display 展示接口列表
 // display api list
 func (c *Router) Display() {
-	DefaultLogger().Infof(blessMessage)
+	Logger().Info(blessMessage)
 
-	DefaultLogger().Infof("uRouter is running")
+	Logger().Info("uRouter is running")
 	var keys = make([]string, 0, len(c.staticRoutes))
 	for k, _ := range c.staticRoutes {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 
-	DefaultLogger().Infof("API List:")
+	Logger().Info("API List:")
 	for _, key := range keys {
 		var handlers = c.staticRoutes[key]
 		var n = len(handlers)
@@ -210,7 +210,7 @@ func (c *Router) Display() {
 		}
 
 		funcName := runtime.FuncForPC(reflect.ValueOf(handlers[n-1]).Pointer()).Name()
-		DefaultLogger().Infof("path=%s, handler=%s", key, funcName)
+		Logger().Info("path=%s, handler=%s", key, funcName)
 	}
 
 	c.dynamicRoutes.Range(func(h *apiHandler) {
@@ -218,7 +218,7 @@ func (c *Router) Display() {
 		var n = len(handlers)
 		if n > 0 {
 			funcName := runtime.FuncForPC(reflect.ValueOf(handlers[n-1]).Pointer()).Name()
-			DefaultLogger().Infof("path=%s, handler=%s", h.VPath, funcName)
+			Logger().Info("path=%s, handler=%s", h.VPath, funcName)
 		}
 	})
 }

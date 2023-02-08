@@ -8,7 +8,7 @@ import (
 
 const defaultBufferSize = 1024
 
-func DefaultBufferPool() BufferPool {
+func BufferPool() BufferPoolInterface {
 	return defaultBufferPool
 }
 
@@ -41,16 +41,28 @@ func (c *bufferPool) Put(b *bytes.Buffer) {
 	c.p.Put(b)
 }
 
-func DefaultLogger() Logger {
+func Logger() LoggerInterface {
 	return defaultLogger
 }
 
 type logger struct{}
 
-func (c *logger) Infof(format string, v ...interface{}) {
+func (c *logger) Debug(format string, v ...interface{}) {
 	log.Printf(format, v...)
 }
 
-func (c *logger) Panicf(format string, v ...interface{}) {
+func (c *logger) Warn(format string, v ...interface{}) {
+	log.Printf(format, v...)
+}
+
+func (c *logger) Error(format string, v ...interface{}) {
+	log.Printf(format, v...)
+}
+
+func (c *logger) Info(format string, v ...interface{}) {
+	log.Printf(format, v...)
+}
+
+func (c *logger) Panic(format string, v ...interface{}) {
 	log.Panicf(format, v...)
 }

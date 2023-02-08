@@ -10,7 +10,7 @@ import (
 
 func TestBufferPool(t *testing.T) {
 	var as = assert.New(t)
-	var p = DefaultBufferPool()
+	var p = BufferPool()
 	SetBufferPool(newBufferPool())
 	p.SetSize(4 * 1024)
 	as.NotNil(p.Get())
@@ -159,4 +159,17 @@ func TestClose(t *testing.T) {
 		var c = bytes.NewBuffer(nil)
 		Close(c)
 	})
+}
+
+func TestLogger(t *testing.T) {
+	defer func() {
+		recover()
+	}()
+
+	SetLogger(defaultLogger)
+	Logger().Debug("1")
+	Logger().Info("2")
+	Logger().Warn("3")
+	Logger().Error("4")
+	Logger().Panic("5")
 }

@@ -42,7 +42,7 @@ func newResponseWriter(socket websocketWrapper, codec *uRouter.HeaderCodec) *res
 		conn:        socket,
 		headerCodec: codec,
 		header:      codec.Generate(),
-		buf:         uRouter.DefaultBufferPool().Get(),
+		buf:         uRouter.BufferPool().Get(),
 	}
 }
 
@@ -79,7 +79,7 @@ func (c *responseWriter) Write(p []byte) (n int, err error) {
 
 func (c *responseWriter) Flush() error {
 	c.conn.WriteMessage(c.code, c.buf.Bytes())
-	uRouter.DefaultBufferPool().Put(c.buf)
+	uRouter.BufferPool().Put(c.buf)
 	return nil
 }
 

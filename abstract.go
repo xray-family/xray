@@ -6,12 +6,15 @@ import (
 )
 
 type (
-	Logger interface {
-		Infof(format string, v ...interface{})
-		Panicf(format string, v ...interface{})
+	LoggerInterface interface {
+		Debug(format string, v ...interface{})
+		Info(format string, v ...interface{})
+		Warn(format string, v ...interface{})
+		Error(format string, v ...interface{})
+		Panic(format string, v ...interface{})
 	}
 
-	BufferPool interface {
+	BufferPoolInterface interface {
 		SetSize(size int)
 		Get() *bytes.Buffer
 		Put(b *bytes.Buffer)
