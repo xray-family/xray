@@ -13,7 +13,7 @@ import (
 
 const (
 	XPath       = "X-Path"
-	XRealIP     = "X-Real-IP"
+	XRealIP     = "X-Real-Ip"
 	ContentType = "Content-Type"
 
 	MimeJson   = "application/json; charset=utf-8"
