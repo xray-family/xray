@@ -90,7 +90,7 @@ func TestNewAdapter(t *testing.T) {
 			ctx.Next()
 		})
 
-		router.OnNoMatch = func(ctx *uRouter.Context) {
+		router.OnNotFound = func(ctx *uRouter.Context) {
 			v, _ := ctx.Get("sum")
 			as.Equal(0, v.(int))
 		}

@@ -29,27 +29,27 @@ func TestRouteTree_Get(t *testing.T) {
 	)
 
 	{
-		handler := tree.Get("/user")
+		handler, _ := tree.Get("/user")
 		as.Nil(handler)
 	}
 	{
-		handler := tree.Get("")
+		handler, _ := tree.Get("")
 		as.Nil(handler)
 	}
 	{
-		handler := tree.Get("/api/v1/user/1")
+		handler, _ := tree.Get("/api/v1/user/1")
 		as.Equal(handler.VPath, "/api/v1/user/:id")
 	}
 	{
-		handler := tree.Get("/api/v1/user/:id2")
+		handler, _ := tree.Get("/api/v1/user/:id2")
 		as.Equal(handler.VPath, "/api/v1/user/:id")
 	}
 	{
-		handler := tree.Get("/api/v1/user/1/profile")
+		handler, _ := tree.Get("/api/v1/user/1/profile")
 		as.Equal(handler.VPath, "/api/v1/user/:id/profile")
 	}
 	{
-		handler := tree.Get("/api/v1/user/1/article/2")
+		handler, _ := tree.Get("/api/v1/user/1/article/2")
 		as.Equal(handler.VPath, "/api/v1/user/:id/article/:article_id")
 	}
 }

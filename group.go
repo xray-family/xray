@@ -5,7 +5,7 @@ import "github.com/lxzan/uRouter/internal"
 // Group 路由组
 type Group struct {
 	router      *Router
-	separator   string // separator
+	separator   string
 	path        string
 	middlewares []HandlerFunc
 }
@@ -37,9 +37,7 @@ func (c *Group) On(path string, handler HandlerFunc, middlewares ...HandlerFunc)
 	// 检测路径冲突
 	if router.pathExists(path) {
 		router.showPathConflict(path)
-	}
-	if v := router.dynamicRoutes.Get(path); v != nil {
-		router.showPathConflict(path)
+		return
 	}
 
 	if !hasVar(path) {

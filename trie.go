@@ -73,17 +73,17 @@ func (c *routeTree) doSet(node *routeTree, index int, list []string, handler *ap
 	}
 }
 
-func (c *routeTree) Get(path string) *apiHandler {
+func (c *routeTree) Get(path string) (*apiHandler, bool) {
 	var list = internal.Split(path, defaultSeparator)
 	if len(list) == 0 {
-		return nil
+		return nil, false
 	}
 	return c.doGet(c, 0, list)
 }
 
-func (c *routeTree) doGet(node *routeTree, index int, list []string) *apiHandler {
+func (c *routeTree) doGet(node *routeTree, index int, list []string) (*apiHandler, bool) {
 	if index == len(list) {
-		return node.Value
+		return node.Value, true
 	}
 	var segment = list[index]
 	if v, ok := node.Children[segment]; ok {
@@ -92,7 +92,7 @@ func (c *routeTree) doGet(node *routeTree, index int, list []string) *apiHandler
 	if v, ok := node.Children["*"]; ok {
 		return c.doGet(v, index+1, list)
 	}
-	return nil
+	return nil, false
 }
 
 func (c *routeTree) Range(f func(h *apiHandler)) {

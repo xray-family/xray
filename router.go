@@ -13,18 +13,29 @@ import (
 type (
 	// Router 路由器
 	Router struct {
-		// 互斥锁
+		// 互斥锁, 防止有人搞骚操作, 多线程注册路由
 		mu *sync.Mutex
+
 		// 分隔符
 		separator string
+
 		// 全局中间件
-		middlewares []HandlerFunc
+		chainsGlobal []HandlerFunc
+
 		// 静态路由
 		staticRoutes map[string][]HandlerFunc
+
 		// 动态路由
 		dynamicRoutes *routeTree
-		// 路径匹配失败的处理
-		OnNoMatch HandlerFunc
+
+		// 单例, 确保chainsNotFound只构建一次
+		once *sync.Once
+
+		// 路径匹配失败的处理函数链, 全局中间件+OnNotFound
+		chainsNotFound []HandlerFunc
+
+		// 路径匹配失败的处理函数
+		OnNotFound HandlerFunc
 	}
 
 	// HandlerFunc 处理函数
@@ -35,12 +46,13 @@ type (
 func New() *Router {
 	r := &Router{
 		separator:     defaultSeparator,
+		once:          &sync.Once{},
 		mu:            &sync.Mutex{},
-		middlewares:   make([]HandlerFunc, 0),
+		chainsGlobal:  make([]HandlerFunc, 0),
 		staticRoutes:  map[string][]HandlerFunc{},
 		dynamicRoutes: newRouteTree(),
 	}
-	r.OnNoMatch = func(ctx *Context) {
+	r.OnNotFound = func(ctx *Context) {
 		if ctx.Writer.Protocol() == ProtocolHTTP {
 			_ = ctx.WriteString(http.StatusNotFound, "not found")
 		}
@@ -57,23 +69,25 @@ func (c *Router) pathExists(path string) bool {
 	if _, ok := c.staticRoutes[path]; ok {
 		return true
 	}
-	if !hasVar(path) {
-		return false
+	if _, ok := c.dynamicRoutes.Get(path); ok {
+		return true
 	}
 
-	var list1 = internal.Split(path, defaultSeparator)
-	var n = len(list1)
-	for k, _ := range c.staticRoutes {
-		var list2 = internal.Split(k, defaultSeparator)
-		if n == len(list2) {
-			var sum = 0
-			for i, v := range list2 {
-				if v == list1[i] || isVar(list1[i]) {
-					sum++
+	if hasVar(path) {
+		var list1 = internal.Split(path, defaultSeparator)
+		var n = len(list1)
+		for k, _ := range c.staticRoutes {
+			var list2 = internal.Split(k, defaultSeparator)
+			if n == len(list2) {
+				var sum = 0
+				for i, v := range list2 {
+					if v == list1[i] || isVar(list1[i]) {
+						sum++
+					}
 				}
-			}
-			if sum == n {
-				return true
+				if sum == n {
+					return true
+				}
 			}
 		}
 	}
@@ -84,7 +98,7 @@ func (c *Router) pathExists(path string) bool {
 func (c *Router) Use(middlewares ...HandlerFunc) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.middlewares = append(c.middlewares, middlewares...)
+	c.chainsGlobal = append(c.chainsGlobal, middlewares...)
 }
 
 // Group 创建路由组
@@ -96,7 +110,7 @@ func (c *Router) Group(path string, middlewares ...HandlerFunc) *Group {
 		router:      c,
 		separator:   c.separator,
 		path:        internal.Join1(path, c.separator),
-		middlewares: append(c.middlewares, middlewares...),
+		middlewares: append(c.chainsGlobal, middlewares...),
 	}
 	return group
 }
@@ -107,15 +121,13 @@ func (c *Router) On(path string, handler HandlerFunc, middlewares ...HandlerFunc
 	defer c.mu.Unlock()
 
 	path = internal.Join1(path, c.separator)
-	h := append(c.middlewares, middlewares...)
+	h := append(c.chainsGlobal, middlewares...)
 	h = append(h, handler)
 
 	// 检测路径冲突
 	if c.pathExists(path) {
 		c.showPathConflict(path)
-	}
-	if v := c.dynamicRoutes.Get(path); v != nil {
-		c.showPathConflict(path)
+		return
 	}
 
 	if !hasVar(path) {
@@ -128,14 +140,11 @@ func (c *Router) On(path string, handler HandlerFunc, middlewares ...HandlerFunc
 // Emit 分发事件
 func (c *Router) Emit(ctx *Context) {
 	path := internal.Join1(ctx.Request.Header.Get(XPath), c.separator)
-	sum := uint8(0)
 
 	{
 		// 优先匹配静态路由
-		funcs, ok := c.staticRoutes[path]
-		if ok {
+		if funcs, ok := c.staticRoutes[path]; ok {
 			ctx.Request.VPath = path
-			sum++
 			if len(funcs) > 0 {
 				ctx.handlers = funcs
 				ctx.Next()
@@ -146,10 +155,8 @@ func (c *Router) Emit(ctx *Context) {
 
 	{
 		// 匹配动态路由
-		h := c.dynamicRoutes.Get(path)
-		if h != nil {
+		if h, ok := c.dynamicRoutes.Get(path); ok {
 			ctx.Request.VPath = h.VPath
-			sum++
 			if len(h.Funcs) > 0 {
 				ctx.handlers = h.Funcs
 				ctx.Next()
@@ -159,11 +166,11 @@ func (c *Router) Emit(ctx *Context) {
 	}
 
 	// 匹配失败的处理
-	if sum == 0 && c.OnNoMatch != nil {
-		funcs := append(c.middlewares, c.OnNoMatch)
-		ctx.handlers = funcs
-		ctx.Next()
-	}
+	c.once.Do(func() {
+		c.chainsNotFound = append(c.chainsGlobal, c.OnNotFound)
+	})
+	ctx.handlers = c.chainsNotFound
+	ctx.Next()
 }
 
 // Display 展示接口列表

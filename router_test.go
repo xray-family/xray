@@ -187,7 +187,7 @@ func TestNew(t *testing.T) {
 		var r = New()
 		var list []int
 
-		r.OnNoMatch = func(ctx *Context) {
+		r.OnNotFound = func(ctx *Context) {
 			list = append(list, 1)
 		}
 
@@ -223,32 +223,82 @@ func TestNew(t *testing.T) {
 
 func TestRouter_OnNoMatch(t *testing.T) {
 	var as = assert.New(t)
-	var r = New()
-	r.Use(func(ctx *Context) {
-		ctx.Set("sum", 1)
-		ctx.Next()
-	}, func(ctx *Context) {
-		val, _ := ctx.Get("sum")
-		ctx.Set("sum", val.(int)+2)
-		ctx.Next()
+
+	t.Run("", func(t *testing.T) {
+		var r = New()
+		r.Use(func(ctx *Context) {
+			ctx.Set("sum", 1)
+			ctx.Next()
+		}, func(ctx *Context) {
+			val, _ := ctx.Get("sum")
+			ctx.Set("sum", val.(int)+2)
+			ctx.Next()
+		})
+
+		const count = 10
+		var wg = &sync.WaitGroup{}
+		wg.Add(count)
+		for i := 0; i < count; i++ {
+			go func() {
+				var ctx = NewContext(
+					&Request{Header: NewHttpHeader(http.Header{XPath: []string{"test"}})},
+					newResponseWriterMocker(),
+				)
+				r.Emit(ctx)
+				sum, _ := ctx.Get("sum")
+				as.Equal(3, sum.(int))
+				wg.Done()
+			}()
+		}
+		wg.Wait()
 	})
 
-	const count = 10
-	var wg = &sync.WaitGroup{}
-	wg.Add(count)
-	for i := 0; i < count; i++ {
-		go func() {
-			var ctx = NewContext(
-				&Request{Header: NewHttpHeader(http.Header{XPath: []string{"test"}})},
-				newResponseWriterMocker(),
-			)
-			r.Emit(ctx)
-			sum, _ := ctx.Get("sum")
-			as.Equal(3, sum.(int))
-			wg.Done()
-		}()
-	}
-	wg.Wait()
+	t.Run("static router", func(t *testing.T) {
+		var list []int
+		var r = New()
+		r.Use(func(ctx *Context) {
+			list = append(list, 1)
+			ctx.Next()
+			list = append(list, 2)
+		})
+
+		var g0 = r.Group("", func(ctx *Context) {
+			list = append(list, 3)
+			ctx.Next()
+			list = append(list, 4)
+		})
+
+		var g1 = g0.Group("/api/v1", func(ctx *Context) {
+			list = append(list, 5)
+			ctx.Next()
+			list = append(list, 6)
+		})
+
+		g1.On("greet", func(ctx *Context) {
+			list = append(list, 9)
+		}, func(ctx *Context) {
+			list = append(list, 7)
+			ctx.Next()
+			list = append(list, 8)
+		})
+
+		r.OnNotFound = func(ctx *Context) {
+			list = append(list, 10)
+		}
+
+		r.Display()
+
+		ctx := NewContext(
+			&Request{Header: NewHttpHeader(http.Header{"X-Path": []string{"/api/v1/xxx"}})},
+			newResponseWriterMocker(),
+		)
+		r.Emit(ctx)
+
+		as.Equal(3, len(list))
+		as.Equal(1, list[0])
+		as.Equal(10, list[1])
+		as.Equal(2, list[2])
+	})
 }
 
 func TestRouter_Conflict(t *testing.T) {
