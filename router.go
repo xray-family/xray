@@ -1,6 +1,7 @@
 package uRouter
 
 import (
+	_ "embed"
 	"github.com/lxzan/uRouter/internal"
 	"log"
 	"net/http"
@@ -173,8 +174,13 @@ func (c *Router) Emit(ctx *Context) {
 	ctx.Next()
 }
 
+//go:embed asserts/bless.txt
+var blessMessage string
+
 // Display 展示接口列表
 func (c *Router) Display() {
+	log.Println(blessMessage)
+
 	var keys = make([]string, 0, len(c.staticRoutes))
 	for k, _ := range c.staticRoutes {
 		keys = append(keys, k)
