@@ -1,7 +1,5 @@
 package internal
 
-import "strings"
-
 func Join1(a string, sep string) string {
 	if len(a) == 0 {
 		return sep
@@ -45,23 +43,4 @@ func trimRight(path string, sep string) string {
 		return path[:n-1]
 	}
 	return path
-}
-
-func SelectString(expression bool, a, b string) string {
-	if expression {
-		return a
-	}
-	return b
-}
-
-func Split(s string, sep string) []string {
-	var list = strings.Split(s, sep)
-	var j = 0
-	for _, v := range list {
-		if v = strings.TrimSpace(v); v != "" {
-			list[j] = v
-			j++
-		}
-	}
-	return list[:j]
 }

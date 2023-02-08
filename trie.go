@@ -1,6 +1,8 @@
 package uRouter
 
-import "github.com/lxzan/uRouter/internal"
+import (
+	"github.com/lxzan/uRouter/contrib/helper"
+)
 
 const (
 	defaultSeparator = "/" // 默认路径分隔符
@@ -32,7 +34,7 @@ func isVar(s string) bool {
 
 // 判断字符串是否含有变量
 func hasVar(s string) bool {
-	var list = internal.Split(s, defaultSeparator)
+	var list = helper.Split(s, defaultSeparator)
 	for _, item := range list {
 		if isVar(item) {
 			return true
@@ -43,7 +45,7 @@ func hasVar(s string) bool {
 
 func (c *routeTree) Set(vpath string, handlers []HandlerFunc) {
 	var handler = &apiHandler{VPath: vpath, Funcs: handlers}
-	var list = internal.Split(handler.VPath, defaultSeparator)
+	var list = helper.Split(handler.VPath, defaultSeparator)
 	if len(list) == 0 {
 		return
 	}
@@ -74,7 +76,7 @@ func (c *routeTree) doSet(node *routeTree, index int, list []string, handler *ap
 }
 
 func (c *routeTree) Get(path string) (*apiHandler, bool) {
-	var list = internal.Split(path, defaultSeparator)
+	var list = helper.Split(path, defaultSeparator)
 	if len(list) == 0 {
 		return nil, false
 	}

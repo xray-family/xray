@@ -48,3 +48,18 @@ func SetBufferPool(p BufferPoolInterface) {
 func SetLogger(l LoggerInterface) {
 	defaultLogger = l
 }
+
+// BufferPool 获取默认缓冲池
+func BufferPool() BufferPoolInterface {
+	return defaultBufferPool
+}
+
+// Logger 获取默认日志工具
+func Logger() LoggerInterface {
+	return defaultLogger
+}
+
+// JsonCodec 获取默认JSON编码器
+func JsonCodec() Codec {
+	return defaultJsonCodec
+}

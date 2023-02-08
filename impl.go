@@ -8,10 +8,6 @@ import (
 
 const defaultBufferSize = 1024
 
-func BufferPool() BufferPoolInterface {
-	return defaultBufferPool
-}
-
 func newBufferPool() *bufferPool {
 	bp := &bufferPool{
 		size: defaultBufferSize,
@@ -39,10 +35,6 @@ func (c *bufferPool) Get() *bytes.Buffer {
 
 func (c *bufferPool) Put(b *bytes.Buffer) {
 	c.p.Put(b)
-}
-
-func Logger() LoggerInterface {
-	return defaultLogger
 }
 
 type logger struct{}

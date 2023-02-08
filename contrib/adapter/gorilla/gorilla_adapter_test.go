@@ -88,3 +88,9 @@ func TestNewAdapter(t *testing.T) {
 		as.Equal(sum, 2)
 	})
 }
+
+func TestOthers(t *testing.T) {
+	var w = newResponseWriter(&websocket.Conn{}, uRouter.TextHeader)
+	w.RawResponseWriter()
+	assert.Equal(t, uRouter.ProtocolWebSocket, w.Protocol())
+}

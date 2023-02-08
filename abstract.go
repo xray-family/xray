@@ -36,4 +36,19 @@ type (
 	Closer interface {
 		Close()
 	}
+
+	Encoder interface {
+		Encode(v interface{}) error
+	}
+
+	Decoder interface {
+		Decode(v interface{}) error
+	}
+
+	Codec interface {
+		NewEncoder(w io.Writer) Encoder
+		NewDecoder(r io.Reader) Decoder
+		Encode(v interface{}) ([]byte, error)
+		Decode(data []byte, v interface{}) error
+	}
 )

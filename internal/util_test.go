@@ -25,21 +25,8 @@ func TestJoin2(t *testing.T) {
 	as.Equal("/api/v1", Join2("/api/", "/v1/", sep))
 }
 
-func TestSelectString(t *testing.T) {
-	assert.Equal(t, "1", SelectString(true, "1", "0"))
-	assert.Equal(t, "0", SelectString(false, "1", "0"))
-}
-
 func TestRandomString(t *testing.T) {
 	var s = AlphabetNumeric.Generate(16)
 	assert.Equal(t, 16, len(s))
 	assert.Less(t, AlphabetNumeric.Intn(16), 16)
-}
-
-func TestSplit(t *testing.T) {
-	assert.ElementsMatch(t, []string{"api", "v1"}, Split("/api/v1", "/"))
-	assert.ElementsMatch(t, []string{"api", "v1"}, Split("/api/v1/", "/"))
-	assert.ElementsMatch(t, []string{"ming", "hong", "hu"}, Split("ming, hong, hu", ","))
-	assert.ElementsMatch(t, []string{"ming", "hong", "hu"}, Split(",ming, hong, hu, ", ","))
-	assert.ElementsMatch(t, []string{"ming", "hong", "hu"}, Split("\nming, hong, hu\n", ","))
 }

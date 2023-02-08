@@ -2,6 +2,7 @@ package uRouter
 
 import (
 	_ "embed"
+	"github.com/lxzan/uRouter/contrib/helper"
 	"github.com/lxzan/uRouter/internal"
 	"net/http"
 	"reflect"
@@ -80,10 +81,10 @@ func (c *Router) pathExists(path string) bool {
 	}
 
 	if hasVar(path) {
-		var list1 = internal.Split(path, defaultSeparator)
+		var list1 = helper.Split(path, defaultSeparator)
 		var n = len(list1)
 		for k, _ := range c.staticRoutes {
-			var list2 = internal.Split(k, defaultSeparator)
+			var list2 = helper.Split(k, defaultSeparator)
 			if n == len(list2) {
 				var sum = 0
 				for i, v := range list2 {
