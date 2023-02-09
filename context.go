@@ -44,9 +44,17 @@ type (
 		// 请求体
 		Body io.Reader
 
-		// 接口中定义的虚拟路径
+		// 请求动作修饰词
+		// 在HTTP里它是必选的; 其它协议中可选;
+		Action string
+
+		// 接口定义的虚拟路径
 		// The virtual path defined in the interface
 		VPath string
+
+		// 实际请求的真实路径
+		// Real Path
+		RPath string
 	}
 
 	// Context 请求上下文
@@ -161,7 +169,7 @@ func (c *Context) BindJSON(v interface{}) error {
 // get the parameters in the path
 func (c *Context) Param(key string) string {
 	var list1 = helper.Split(c.Request.VPath, defaultSeparator)
-	var list2 = helper.Split(c.Request.Header.Get(constant.XPath), defaultSeparator)
+	var list2 = helper.Split(c.Request.RPath, defaultSeparator)
 	var m = len(list1)
 	var n = len(list2)
 	if m != n {

@@ -2,13 +2,13 @@ package uRouter
 
 import (
 	_ "embed"
-	"github.com/lxzan/uRouter/constant"
 	"github.com/lxzan/uRouter/helper"
 	"github.com/lxzan/uRouter/internal"
 	"net/http"
 	"reflect"
 	"runtime"
 	"sort"
+	"strings"
 	"sync"
 )
 
@@ -148,10 +148,18 @@ func (c *Router) On(path string, handler HandlerFunc, middlewares ...HandlerFunc
 	}
 }
 
+// OnAction 类似On方法, 多了一个动作修饰词
+func (c *Router) OnAction(action string, path string, handler HandlerFunc, middlewares ...HandlerFunc) {
+	path = internal.Join2(strings.ToLower(action), path, c.separator)
+	c.On(path, handler, middlewares...)
+}
+
 // Emit 分发事件
 // emit event
-func (c *Router) Emit(ctx *Context) {
-	path := internal.Join1(ctx.Request.Header.Get(constant.XPath), c.separator)
+func (c *Router) Emit(action string, path string, ctx *Context) {
+	path = internal.Join2(strings.ToLower(action), path, c.separator)
+	path = internal.Join1(path, c.separator)
+	ctx.Request.RPath = path
 
 	{
 		// 优先匹配静态路由

@@ -11,6 +11,7 @@ func TestJoin1(t *testing.T) {
 	as.Equal("/", Join1("", sep))
 	as.Equal("/api", Join1("api", sep))
 	as.Equal("/api", Join1("/api", sep))
+	as.Equal("/api", Join1("/api/", sep))
 }
 
 func TestJoin2(t *testing.T) {
