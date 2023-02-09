@@ -218,12 +218,10 @@ func (c *Router) Display() {
 	for _, key := range keys {
 		var handlers = c.staticRoutes[key]
 		var n = len(handlers)
-		if n == 0 {
-			continue
+		if n > 0 {
+			funcName := runtime.FuncForPC(reflect.ValueOf(handlers[n-1]).Pointer()).Name()
+			Logger().Info("path=%s, handler=%s", key, funcName)
 		}
-
-		funcName := runtime.FuncForPC(reflect.ValueOf(handlers[n-1]).Pointer()).Name()
-		Logger().Info("path=%s, handler=%s", key, funcName)
 	}
 
 	c.dynamicRoutes.Range(func(h *apiHandler) {

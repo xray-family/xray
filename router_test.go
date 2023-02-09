@@ -208,12 +208,13 @@ func TestNew(t *testing.T) {
 		r.Group("test")
 
 		path := "/test"
-		r.Emit(path, &Context{
-			Request: &Request{
+		ctx := NewContext(
+			&Request{
 				Header: NewHttpHeader(http.Header{constant.XPath: []string{path}}), Body: nil,
 			},
-			Writer: newResponseWriterMocker(),
-		})
+			newResponseWriterMocker(),
+		)
+		r.Emit(path, ctx)
 
 		r.staticRoutes["404"] = nil
 
@@ -349,5 +350,75 @@ func TestRouter_Conflict(t *testing.T) {
 		r.On("user/1", AccessLog())
 		var g = r.Group("user")
 		g.On(":id", AccessLog())
+	})
+}
+
+func TestRouter_Display(t *testing.T) {
+	r := New()
+	r.OnAction(http.MethodGet, "/user/list", func(ctx *Context) {})
+	r.OnAction(http.MethodPost, "/user/:id", func(ctx *Context) {})
+	r.Display()
+}
+
+func TestRouter_Dynamic(t *testing.T) {
+	var as = assert.New(t)
+
+	t.Run("", func(t *testing.T) {
+		defer func() {
+			e := recover()
+			as.NotNil(e)
+		}()
+		r := New()
+		r.OnAction(http.MethodGet, "/user/list", func(ctx *Context) {})
+		r.OnAction(http.MethodGet, "/user/:id", func(ctx *Context) {})
+	})
+
+	t.Run("", func(t *testing.T) {
+		defer func() {
+			e := recover()
+			as.Nil(e)
+		}()
+		r := New()
+		r.OnAction(http.MethodGet, "/user/list", func(ctx *Context) {})
+		r.OnAction(http.MethodDelete, "/user/:id", func(ctx *Context) {})
+		r.OnAction(http.MethodPost, "/user/:id", func(ctx *Context) {})
+	})
+
+	t.Run("", func(t *testing.T) {
+		defer func() {
+			e := recover()
+			as.Nil(e)
+		}()
+		r := New()
+
+		sum := 0
+		r.OnAction(http.MethodGet, "/user/:id/profile", func(ctx *Context) {
+			sum++
+		})
+		r.OnAction(http.MethodGet, "/user/:id", func(ctx *Context) {
+
+		})
+		ctx := NewContext(&Request{}, newResponseWriterMocker())
+		r.EmitAction(http.MethodGet, "/user/1/profile", ctx)
+		as.Equal(1, sum)
+	})
+
+	t.Run("", func(t *testing.T) {
+		defer func() {
+			e := recover()
+			as.Nil(e)
+		}()
+		r := New()
+
+		sum := 0
+		r.OnAction(http.MethodGet, "/user/:id/profile", func(ctx *Context) {
+			sum++
+		})
+		r.OnAction(http.MethodGet, "/user/:id", func(ctx *Context) {
+
+		})
+		ctx := NewContext(&Request{}, newResponseWriterMocker())
+		r.EmitAction(http.MethodPost, "/user/1/profile", ctx)
+		as.Equal(0, sum)
 	})
 }

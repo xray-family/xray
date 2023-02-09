@@ -17,7 +17,7 @@ func init() {
 
 func main() {
 	router := uRouter.New()
-	router.Use(uRouter.AccessLog())
+	router.Use(uRouter.Recovery(), uRouter.AccessLog())
 
 	upgrader := gws.NewUpgrader(func(c *gws.Upgrader) {
 		c.EventHandler = &WebSocketHandler{adapter: gwsAdapter.NewAdapter(router)}

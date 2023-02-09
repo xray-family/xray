@@ -85,7 +85,7 @@ func (c *routeTree) Get(path string) (*apiHandler, bool) {
 
 func (c *routeTree) doGet(node *routeTree, index int, list []string) (*apiHandler, bool) {
 	if index == len(list) {
-		return node.Value, true
+		return node.Value, node.Value != nil
 	}
 	var segment = list[index]
 	if v, ok := node.Children[segment]; ok {
