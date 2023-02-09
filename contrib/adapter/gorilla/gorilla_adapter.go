@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"github.com/gorilla/websocket"
 	"github.com/lxzan/uRouter"
-	"github.com/lxzan/uRouter/codec"
 	"sync"
 )
 
@@ -48,7 +47,7 @@ func newResponseWriter(socket websocketWrapper, codec *uRouter.HeaderCodec) *res
 }
 
 func (c *responseWriter) Protocol() string {
-	return codec.ProtocolWebSocket
+	return uRouter.ProtocolWebSocket
 }
 
 func (c *responseWriter) Raw() interface{} {

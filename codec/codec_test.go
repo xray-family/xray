@@ -1,21 +1,28 @@
 package codec
 
 import (
-	"github.com/lxzan/uRouter"
+	"bytes"
+	"github.com/lxzan/uRouter/constant"
 	"github.com/stretchr/testify/assert"
+	"net/http"
 	"testing"
 )
 
 func TestStdJsonCodec_Encode(t *testing.T) {
-	var v = uRouter.MapHeader{}
-	v.Set(uRouter.ContentType, uRouter.MimeJson)
-	_, err := uRouter.StdJsonCodec.Encode(v)
+	var v = http.Header{}
+	v.Set(constant.ContentType, constant.MimeJson)
+	_, err := StdJsonCodec.Encode(v)
 	assert.NoError(t, err)
 }
 
 func TestStdJsonCodec_Decode(t *testing.T) {
-	var d = `{"xpath":"/api"}`
-	var v = uRouter.MapHeader{}
-	err := uRouter.StdJsonCodec.Decode([]byte(d), &v)
+	var d = `{"xpath":["/api"]}`
+	var v = http.Header{}
+	err := StdJsonCodec.Decode([]byte(d), &v)
 	assert.NoError(t, err)
+}
+
+func TestStdJsonCodec(t *testing.T) {
+	StdJsonCodec.NewEncoder(bytes.NewBufferString(""))
+	StdJsonCodec.NewDecoder(bytes.NewBufferString(""))
 }

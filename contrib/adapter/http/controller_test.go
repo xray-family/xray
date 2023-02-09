@@ -2,6 +2,7 @@ package http
 
 import (
 	"github.com/lxzan/uRouter"
+	"github.com/lxzan/uRouter/constant"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
@@ -14,7 +15,7 @@ func TestRootController_ClientIP(t *testing.T) {
 		ctx := uRouter.NewContext(&uRouter.Request{
 			Header: uRouter.HttpHeader{Header: map[string][]string{}},
 		}, nil)
-		ctx.Request.Header.Set(uRouter.XRealIP, "127.0.0.2")
+		ctx.Request.Header.Set(constant.XRealIP, "127.0.0.2")
 		assert.Equal(t, "127.0.0.2", ctl.ClientIP(ctx))
 	})
 

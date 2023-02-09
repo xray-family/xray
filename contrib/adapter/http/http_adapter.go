@@ -2,7 +2,7 @@ package http
 
 import (
 	"github.com/lxzan/uRouter"
-	"github.com/lxzan/uRouter/codec"
+	"github.com/lxzan/uRouter/constant"
 	"net/http"
 )
 
@@ -11,7 +11,7 @@ type responseWriter struct {
 }
 
 func (c *responseWriter) Protocol() string {
-	return codec.ProtocolHTTP
+	return uRouter.ProtocolHTTP
 }
 
 func (c *responseWriter) Header() uRouter.Header {
@@ -46,7 +46,7 @@ func (c *Adapter) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 		Header: uRouter.NewHttpHeader(request.Header),
 		Body:   request.Body,
 	}
-	request.Header.Set(uRouter.XPath, request.URL.Path)
+	request.Header.Set(constant.XPath, request.URL.Path)
 	var ctx = uRouter.NewContext(r, &responseWriter{ResponseWriter: writer})
 	c.router.Emit(ctx)
 }

@@ -2,6 +2,7 @@ package http
 
 import (
 	"github.com/lxzan/uRouter"
+	"github.com/lxzan/uRouter/constant"
 	"net/http"
 	"strings"
 )
@@ -23,7 +24,7 @@ func (c *RootController) GetResponseWriter(ctx *uRouter.Context) http.ResponseWr
 // ClientIP 获取客户端IP, 优先从X-Real-IP中获取
 // get the client IP, preferably from the X-Real-IP
 func (c *RootController) ClientIP(ctx *uRouter.Context) string {
-	if v := ctx.Request.Header.Get(uRouter.XRealIP); v != "" {
+	if v := ctx.Request.Header.Get(constant.XRealIP); v != "" {
 		return v
 	}
 	list := strings.Split(c.GetRequest(ctx).RemoteAddr, ":")

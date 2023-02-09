@@ -2,28 +2,28 @@ package jsoniter
 
 import (
 	json "github.com/json-iterator/go"
-	"github.com/lxzan/uRouter"
+	"github.com/lxzan/uRouter/codec"
 	"io"
 )
 
-var JsoniterCodec = &codec{caller: json.ConfigFastest}
+var JsoniterCodec = &jsonCodec{caller: json.ConfigFastest}
 
-func (c codec) Encode(v interface{}) ([]byte, error) {
-	return c.caller.Marshal(v)
-}
-
-func (c codec) Decode(data []byte, v interface{}) error {
-	return c.caller.Unmarshal(data, v)
-}
-
-type codec struct {
+type jsonCodec struct {
 	caller json.API
 }
 
-func (c codec) NewEncoder(w io.Writer) uRouter.Encoder {
+func (c jsonCodec) Encode(v interface{}) ([]byte, error) {
+	return c.caller.Marshal(v)
+}
+
+func (c jsonCodec) Decode(data []byte, v interface{}) error {
+	return c.caller.Unmarshal(data, v)
+}
+
+func (c jsonCodec) NewEncoder(w io.Writer) codec.Encoder {
 	return c.caller.NewEncoder(w)
 }
 
-func (c codec) NewDecoder(r io.Reader) uRouter.Decoder {
+func (c jsonCodec) NewDecoder(r io.Reader) codec.Decoder {
 	return c.caller.NewDecoder(r)
 }
