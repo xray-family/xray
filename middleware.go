@@ -49,8 +49,8 @@ func Recovery() HandlerFunc {
 	}
 }
 
-// HTTP 定义了HTTP协议允许通过的请求方法
-func HTTP(methods ...string) HandlerFunc {
+// HttpRequired 定义了HTTP协议允许通过的请求方法
+func HttpRequired(methods ...string) HandlerFunc {
 	for i, v := range methods {
 		methods[i] = strings.ToUpper(v)
 	}
@@ -71,8 +71,8 @@ func HTTP(methods ...string) HandlerFunc {
 	}
 }
 
-// WebSocket 只允许WebSocket协议请求通过
-func WebSocket() HandlerFunc {
+// WebSocketRequired 只允许WebSocket协议请求通过
+func WebSocketRequired() HandlerFunc {
 	return func(ctx *Context) {
 		if ctx.Writer.Protocol() == ProtocolWebSocket {
 			ctx.Next()

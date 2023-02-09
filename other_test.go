@@ -30,7 +30,7 @@ func TestWebSocket(t *testing.T) {
 	t.Run("reject", func(t *testing.T) {
 		var r = New()
 		var sum = 0
-		r.Use(WebSocket())
+		r.Use(WebSocketRequired())
 		r.On("test", func(ctx *Context) {
 			sum++
 		})
@@ -43,7 +43,7 @@ func TestWebSocket(t *testing.T) {
 	t.Run("pass", func(t *testing.T) {
 		var r = New()
 		var sum = 0
-		r.Use(WebSocket())
+		r.Use(WebSocketRequired())
 		r.On("test", func(ctx *Context) {
 			sum++
 		})
@@ -59,7 +59,7 @@ func TestHTTP(t *testing.T) {
 	t.Run("reject 1", func(t *testing.T) {
 		var r = New()
 		var sum = 0
-		r.Use(HTTP(http.MethodPost))
+		r.Use(HttpRequired(http.MethodPost))
 		r.On("test", func(ctx *Context) {
 			sum++
 		})
@@ -74,7 +74,7 @@ func TestHTTP(t *testing.T) {
 	t.Run("reject 2", func(t *testing.T) {
 		var r = New()
 		var sum = 0
-		r.Use(HTTP(http.MethodPost))
+		r.Use(HttpRequired(http.MethodPost))
 		r.On("test", func(ctx *Context) {
 			sum++
 		})
@@ -90,7 +90,7 @@ func TestHTTP(t *testing.T) {
 	t.Run("pass", func(t *testing.T) {
 		var r = New()
 		var sum = 0
-		r.Use(HTTP(http.MethodPost))
+		r.Use(HttpRequired(http.MethodPost))
 		r.On("test", func(ctx *Context) {
 			sum++
 		})
