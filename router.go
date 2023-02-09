@@ -119,7 +119,7 @@ func (c *Router) Group(path string, middlewares ...HandlerFunc) *Group {
 	var group = &Group{
 		router:      c,
 		separator:   c.separator,
-		path:        internal.Join1(path, c.separator),
+		path:        internal.JoinPath(c.separator, path),
 		middlewares: append(c.chainsGlobal, middlewares...),
 	}
 	return group
@@ -128,44 +128,47 @@ func (c *Router) Group(path string, middlewares ...HandlerFunc) *Group {
 // On 监听事件
 // listen to event
 func (c *Router) On(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	path = internal.Join1(path, c.separator)
-	h := append(c.chainsGlobal, middlewares...)
-	h = append(h, handler)
-
-	// 检测路径冲突
-	if c.pathExists(path) {
-		c.showPathConflict(path)
-		return
-	}
-
-	if !hasVar(path) {
-		c.staticRoutes[path] = h
-	} else {
-		c.dynamicRoutes.Set(path, h)
-	}
+	c.OnAction("", path, handler, middlewares...)
 }
 
 // OnAction 类似On方法, 多了一个动作修饰词
 func (c *Router) OnAction(action string, path string, handler HandlerFunc, middlewares ...HandlerFunc) {
-	path = internal.Join2(strings.ToLower(action), path, c.separator)
-	c.On(path, handler, middlewares...)
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	vpath := internal.JoinPath(c.separator, strings.ToLower(action), path)
+	h := append(c.chainsGlobal, middlewares...)
+	h = append(h, handler)
+
+	// 检测路径冲突
+	if c.pathExists(vpath) {
+		c.showPathConflict(vpath)
+		return
+	}
+
+	if !hasVar(vpath) {
+		c.staticRoutes[vpath] = h
+	} else {
+		c.dynamicRoutes.Set(vpath, h)
+	}
 }
 
 // Emit 分发事件
 // emit event
-func (c *Router) Emit(action string, path string, ctx *Context) {
-	path = internal.Join2(strings.ToLower(action), path, c.separator)
-	path = internal.Join1(path, c.separator)
-	ctx.Request.RPath = path
+func (c *Router) Emit(path string, ctx *Context) {
+	c.EmitAction("", path, ctx)
+}
+
+// EmitAction 分发事件
+// emit event
+func (c *Router) EmitAction(action string, path string, ctx *Context) {
+	ctx.Request.RPath = internal.JoinPath(c.separator, strings.ToLower(action), path)
 
 	{
 		// 优先匹配静态路由
 		// preferred match for static routes
-		if funcs, ok := c.staticRoutes[path]; ok {
-			ctx.Request.VPath = path
+		if funcs, ok := c.staticRoutes[ctx.Request.RPath]; ok {
+			ctx.Request.VPath = ctx.Request.RPath
 			if len(funcs) > 0 {
 				ctx.handlers = funcs
 				ctx.Next()
@@ -177,7 +180,7 @@ func (c *Router) Emit(action string, path string, ctx *Context) {
 	{
 		// 匹配动态路由
 		// matching dynamic routes
-		if h, ok := c.dynamicRoutes.Get(path); ok {
+		if h, ok := c.dynamicRoutes.Get(ctx.Request.RPath); ok {
 			ctx.Request.VPath = h.VPath
 			if len(h.Funcs) > 0 {
 				ctx.handlers = h.Funcs

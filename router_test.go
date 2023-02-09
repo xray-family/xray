@@ -42,11 +42,12 @@ func TestNew(t *testing.T) {
 
 		r.Display()
 
+		path := "/api/v1/greet"
 		ctx := NewContext(
-			&Request{Header: NewHttpHeader(http.Header{"X-Path": []string{"/api/v1/greet"}})},
+			&Request{},
 			newResponseWriterMocker(),
 		)
-		r.Emit(ctx)
+		r.Emit(path, ctx)
 
 		as.Equal(9, len(list))
 		as.Equal(1, list[0])
@@ -92,11 +93,12 @@ func TestNew(t *testing.T) {
 
 		r.Display()
 
+		path := "/api/v1/greet/1"
 		ctx := NewContext(
-			&Request{Header: NewHttpHeader(http.Header{"X-Path": []string{"/api/v1/greet/1"}})},
+			&Request{Header: NewHttpHeader(http.Header{"X-Path": []string{path}})},
 			newResponseWriterMocker(),
 		)
-		r.Emit(ctx)
+		r.Emit(path, ctx)
 
 		as.Equal(9, len(list))
 		as.Equal(1, list[0])
@@ -142,11 +144,12 @@ func TestNew(t *testing.T) {
 
 		r.Display()
 
+		path := "/api/v1/greet"
 		ctx := NewContext(
-			&Request{Header: NewHttpHeader(http.Header{"X-Path": []string{"/api/v1/greet"}})},
+			&Request{Header: NewHttpHeader(http.Header{"X-Path": []string{path}})},
 			newResponseWriterMocker(),
 		)
-		r.Emit(ctx)
+		r.Emit(path, ctx)
 
 		as.Equal(9, len(list))
 		as.Equal(1, list[0])
@@ -172,11 +175,12 @@ func TestNew(t *testing.T) {
 			list = append(list, 2)
 		})
 
+		path := "/test"
 		ctx := NewContext(
-			&Request{Header: NewHttpHeader(http.Header{"X-Path": []string{"/test"}}), Body: nil},
+			&Request{Header: NewHttpHeader(http.Header{"X-Path": []string{path}}), Body: nil},
 			newResponseWriterMocker(),
 		)
-		r.Emit(ctx)
+		r.Emit(path, ctx)
 
 		as.Equal(len(list), 3)
 		as.Equal(1, list[0])
@@ -192,11 +196,12 @@ func TestNew(t *testing.T) {
 			list = append(list, 1)
 		}
 
+		path := "/test"
 		ctx := NewContext(
-			&Request{Header: NewHttpHeader(http.Header{"X-Path": []string{"/test"}}), Body: nil},
+			&Request{Header: NewHttpHeader(http.Header{"X-Path": []string{}}), Body: nil},
 			newResponseWriterMocker(),
 		)
-		r.Emit(ctx)
+		r.Emit(path, ctx)
 
 		as.Equal(len(list), 1)
 		as.Equal(1, list[0])
@@ -208,9 +213,10 @@ func TestNew(t *testing.T) {
 
 		r.Group("test")
 
-		r.Emit(&Context{
+		path := "/test"
+		r.Emit(path, &Context{
 			Request: &Request{
-				Header: NewHttpHeader(http.Header{constant.XPath: []string{"/test"}}), Body: nil,
+				Header: NewHttpHeader(http.Header{constant.XPath: []string{path}}), Body: nil,
 			},
 			Writer: newResponseWriterMocker(),
 		})
@@ -241,11 +247,12 @@ func TestRouter_OnNoMatch(t *testing.T) {
 		wg.Add(count)
 		for i := 0; i < count; i++ {
 			go func() {
+				var path = "test"
 				var ctx = NewContext(
-					&Request{Header: NewHttpHeader(http.Header{constant.XPath: []string{"test"}})},
+					&Request{Header: NewHttpHeader(http.Header{constant.XPath: []string{path}})},
 					newResponseWriterMocker(),
 				)
-				r.Emit(ctx)
+				r.Emit(path, ctx)
 				sum, _ := ctx.Get("sum")
 				as.Equal(3, sum.(int))
 				wg.Done()
@@ -289,11 +296,12 @@ func TestRouter_OnNoMatch(t *testing.T) {
 
 		r.Display()
 
+		path := "/api/v1/xxx"
 		ctx := NewContext(
-			&Request{Header: NewHttpHeader(http.Header{"X-Path": []string{"/api/v1/xxx"}})},
+			&Request{Header: NewHttpHeader(http.Header{"X-Path": []string{path}})},
 			newResponseWriterMocker(),
 		)
-		r.Emit(ctx)
+		r.Emit(path, ctx)
 
 		as.Equal(3, len(list))
 		as.Equal(1, list[0])

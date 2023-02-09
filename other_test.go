@@ -23,8 +23,8 @@ func TestAccessLog(t *testing.T) {
 	var r = New()
 	r.On("test", AccessLog())
 	var ctx = newContextMocker()
-	ctx.Request.Header.Set(constant.XPath, "test")
-	r.Emit(ctx)
+	//ctx.Request.Header.Set(constant.XPath, "test")
+	r.Emit("test", ctx)
 }
 
 func TestWebSocket(t *testing.T) {
@@ -37,7 +37,7 @@ func TestWebSocket(t *testing.T) {
 		})
 		var ctx = newContextMocker()
 		ctx.Request.Header.Set(constant.XPath, "test")
-		r.Emit(ctx)
+		r.Emit("test", ctx)
 		assert.Equal(t, 0, sum)
 	})
 
@@ -51,7 +51,7 @@ func TestWebSocket(t *testing.T) {
 		var ctx = newContextMocker()
 		ctx.Writer.(*responseWriterMocker).SetProtocol(ProtocolWebSocket)
 		ctx.Request.Header.Set(constant.XPath, "test")
-		r.Emit(ctx)
+		r.Emit("test", ctx)
 		assert.Equal(t, 1, sum)
 	})
 }
@@ -68,7 +68,7 @@ func TestHTTP(t *testing.T) {
 		var ctx = newContextMocker()
 		ctx.Request.Raw = &http.Request{Method: http.MethodGet}
 		ctx.Request.Header.Set(constant.XPath, "test")
-		r.Emit(ctx)
+		r.Emit("test", ctx)
 		assert.Equal(t, 0, sum)
 	})
 
@@ -84,7 +84,7 @@ func TestHTTP(t *testing.T) {
 		ctx.Writer.(*responseWriterMocker).SetProtocol(ProtocolWebSocket)
 		ctx.Request.Raw = &http.Request{Method: http.MethodPost}
 		ctx.Request.Header.Set(constant.XPath, "test")
-		r.Emit(ctx)
+		r.Emit("test", ctx)
 		assert.Equal(t, 0, sum)
 	})
 
@@ -99,7 +99,7 @@ func TestHTTP(t *testing.T) {
 		var ctx = newContextMocker()
 		ctx.Request.Raw = &http.Request{Method: http.MethodPost}
 		ctx.Request.Header.Set(constant.XPath, "test")
-		r.Emit(ctx)
+		r.Emit("test", ctx)
 		assert.Equal(t, 1, sum)
 	})
 }
@@ -121,7 +121,7 @@ func TestRecovery(t *testing.T) {
 		})
 		var ctx = newContextMocker()
 		ctx.Request.Header.Set(constant.XPath, "test")
-		r.Emit(ctx)
+		r.Emit("test", ctx)
 	})
 
 	t.Run("without recovery", func(t *testing.T) {
@@ -137,7 +137,7 @@ func TestRecovery(t *testing.T) {
 		})
 		var ctx = newContextMocker()
 		ctx.Request.Header.Set(constant.XPath, "test")
-		r.Emit(ctx)
+		r.Emit("test", ctx)
 	})
 }
 

@@ -23,39 +23,38 @@ func (c *Group) Group(path string, middlewares ...HandlerFunc) *Group {
 	group := &Group{
 		router:      c.router,
 		separator:   c.separator,
-		path:        internal.Join2(c.path, path, c.separator),
+		path:        internal.JoinPath(c.separator, c.path, path),
 		middlewares: append(c.middlewares, middlewares...),
 	}
 	return group
 }
 
-// On 监听事件
+// OnAction 监听事件
 // listen to event
-func (c *Group) On(action string, path string, handler HandlerFunc, middlewares ...HandlerFunc) {
+func (c *Group) OnAction(action string, path string, handler HandlerFunc, middlewares ...HandlerFunc) {
 	action = strings.ToLower(action)
 	router := c.router
 	router.mu.Lock()
 	defer router.mu.Unlock()
 
-	path = internal.Join2(c.path, path, c.separator)
-	path = internal.Join2(internal.Join1(action, c.separator), path, c.separator)
+	p := internal.JoinPath(c.separator, action, c.path, path)
 	h := append(c.middlewares, middlewares...)
 	h = append(h, handler)
 
 	// 检测路径冲突
-	if router.pathExists(path) {
-		router.showPathConflict(path)
+	if router.pathExists(p) {
+		router.showPathConflict(p)
 		return
 	}
 
-	if !hasVar(path) {
-		router.staticRoutes[path] = h
+	if !hasVar(p) {
+		router.staticRoutes[p] = h
 	} else {
-		router.dynamicRoutes.Set(path, h)
+		router.dynamicRoutes.Set(p, h)
 	}
 }
 
-// OnEvent 类似On方法, 但是没有动作修饰词
-func (c *Group) OnEvent(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
-	c.On("", path, handler, middlewares...)
+// On  类似OnAction方法, 但是没有动作修饰词
+func (c *Group) On(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
+	c.OnAction("", path, handler, middlewares...)
 }
