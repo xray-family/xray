@@ -3,6 +3,7 @@ package uRouter
 import (
 	"bytes"
 	"errors"
+	"github.com/lxzan/uRouter/constant"
 	"github.com/lxzan/uRouter/helper"
 	"github.com/lxzan/uRouter/internal"
 	"io"
@@ -114,7 +115,7 @@ func (c *Context) Get(key string) (interface{}, bool) {
 // WriteJSON 写入JSON
 func (c *Context) WriteJSON(code int, v interface{}) error {
 	if c.Writer.Protocol() == ProtocolHTTP {
-		c.Writer.Header().Set(ContentType, MimeJson)
+		c.Writer.Header().Set(constant.ContentType, constant.MimeJson)
 	}
 	c.Writer.Code(code)
 	if err := JsonCodec().NewEncoder(c.Writer).Encode(v); err != nil {
@@ -160,7 +161,7 @@ func (c *Context) BindJSON(v interface{}) error {
 // get the parameters in the path
 func (c *Context) Param(key string) string {
 	var list1 = helper.Split(c.Request.VPath, defaultSeparator)
-	var list2 = helper.Split(c.Request.Header.Get(XPath), defaultSeparator)
+	var list2 = helper.Split(c.Request.Header.Get(constant.XPath), defaultSeparator)
 	var m = len(list1)
 	var n = len(list2)
 	if m != n {

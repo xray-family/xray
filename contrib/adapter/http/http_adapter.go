@@ -2,6 +2,7 @@ package http
 
 import (
 	"github.com/lxzan/uRouter"
+	"github.com/lxzan/uRouter/codec"
 	"net/http"
 )
 
@@ -10,7 +11,7 @@ type responseWriter struct {
 }
 
 func (c *responseWriter) Protocol() string {
-	return uRouter.ProtocolHTTP
+	return codec.ProtocolHTTP
 }
 
 func (c *responseWriter) Header() uRouter.Header {

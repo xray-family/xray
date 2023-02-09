@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"github.com/lxzan/gws"
 	"github.com/lxzan/uRouter"
+	"github.com/lxzan/uRouter/codec"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -81,7 +82,7 @@ func TestNewAdapter(t *testing.T) {
 
 func TestOthers(t *testing.T) {
 	var w = newResponseWriter(&gws.Conn{}, uRouter.TextHeader)
-	assert.Equal(t, uRouter.ProtocolWebSocket, w.Protocol())
+	assert.Equal(t, codec.ProtocolWebSocket, w.Protocol())
 
 	w.RawResponseWriter()
 }

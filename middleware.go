@@ -2,6 +2,7 @@ package uRouter
 
 import (
 	"fmt"
+	"github.com/lxzan/uRouter/constant"
 	"net/http"
 	"runtime"
 	"strings"
@@ -16,7 +17,7 @@ func AccessLog() HandlerFunc {
 		Logger().Info(
 			"access: protocol=%s, path=%s, cost=%s",
 			ctx.Writer.Protocol(),
-			ctx.Request.Header.Get(XPath),
+			ctx.Request.Header.Get(constant.XPath),
 			time.Since(startTime).String(),
 		)
 	}

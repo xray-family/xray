@@ -2,6 +2,8 @@ package uRouter
 
 import (
 	"bytes"
+	"github.com/lxzan/uRouter/codec"
+	"github.com/lxzan/uRouter/constant"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
@@ -105,7 +107,7 @@ func TestContext_Write(t *testing.T) {
 		}
 		var writer = ctx.Writer.(*responseWriterMocker)
 		as.Equal(http.StatusOK, writer.statusCode)
-		as.Equal(MimeJson, writer.header.Get(ContentType))
+		as.Equal(constant.MimeJson, writer.header.Get(constant.ContentType))
 		var buf = bytes.NewBufferString("")
 		defaultJsonCodec.NewEncoder(buf).Encode(params)
 		as.Equal(buf.Len(), writer.buf.Len())
@@ -114,7 +116,7 @@ func TestContext_Write(t *testing.T) {
 	t.Run("write json 2", func(t *testing.T) {
 		var ctx = newContextMocker()
 		var header = &headerMocker{MapHeader{}}
-		header.Set(ContentType, MimeJson)
+		header.Set(constant.ContentType, constant.MimeJson)
 		as.Error(ctx.WriteJSON(http.StatusOK, header))
 	})
 
@@ -127,7 +129,7 @@ func TestContext_Write(t *testing.T) {
 		}
 		var writer = ctx.Writer.(*responseWriterMocker)
 		as.Equal(http.StatusOK, writer.statusCode)
-		as.Equal("", writer.header.Get(ContentType))
+		as.Equal("", writer.header.Get(constant.ContentType))
 		as.Equal(params, writer.buf.String())
 	})
 
@@ -140,14 +142,14 @@ func TestContext_Write(t *testing.T) {
 		}
 		var writer = ctx.Writer.(*responseWriterMocker)
 		as.Equal(http.StatusOK, writer.statusCode)
-		as.Equal("", writer.header.Get(ContentType))
+		as.Equal("", writer.header.Get(constant.ContentType))
 		as.Equal(string(params), writer.buf.String())
 	})
 
 	t.Run("write reader", func(t *testing.T) {
 		var ctx = newContextMocker()
 		var header = &headerMocker{MapHeader{}}
-		header.Set(ContentType, MimeJson)
+		header.Set(constant.ContentType, constant.MimeJson)
 		as.Error(ctx.WriteReader(http.StatusOK, header))
 	})
 }
@@ -170,9 +172,8 @@ func TestContext_Storage(t *testing.T) {
 func TestContext_Others(t *testing.T) {
 	var as = assert.New(t)
 	var ctx = newContextMocker()
-	SetJsonCodec(StdJsonCodec)
+	SetJsonCodec(codec.StdJsonCodec)
 	SetBufferPool(newBufferPool())
-	defaultGenerator()
 	as.Nil(ctx.Request.Raw)
 	as.Nil(ctx.Writer.Raw())
 }
@@ -183,7 +184,7 @@ func TestContext_Param(t *testing.T) {
 	t.Run("", func(t *testing.T) {
 		var ctx = NewContext(&Request{
 			Header: NewHttpHeader(http.Header{
-				XPath: []string{""},
+				constant.XPath: []string{""},
 			}),
 			VPath: "/:id",
 		}, newResponseWriterMocker())
@@ -194,7 +195,7 @@ func TestContext_Param(t *testing.T) {
 	t.Run("", func(t *testing.T) {
 		var ctx = NewContext(&Request{
 			Header: NewHttpHeader(http.Header{
-				XPath: []string{"/api/v1"},
+				constant.XPath: []string{"/api/v1"},
 			}),
 			VPath: "/api/v1",
 		}, newResponseWriterMocker())

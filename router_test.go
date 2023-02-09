@@ -1,6 +1,7 @@
 package uRouter
 
 import (
+	"github.com/lxzan/uRouter/constant"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"sync"
@@ -209,7 +210,7 @@ func TestNew(t *testing.T) {
 
 		r.Emit(&Context{
 			Request: &Request{
-				Header: NewHttpHeader(http.Header{XPath: []string{"/test"}}), Body: nil,
+				Header: NewHttpHeader(http.Header{constant.XPath: []string{"/test"}}), Body: nil,
 			},
 			Writer: newResponseWriterMocker(),
 		})
@@ -241,7 +242,7 @@ func TestRouter_OnNoMatch(t *testing.T) {
 		for i := 0; i < count; i++ {
 			go func() {
 				var ctx = NewContext(
-					&Request{Header: NewHttpHeader(http.Header{XPath: []string{"test"}})},
+					&Request{Header: NewHttpHeader(http.Header{constant.XPath: []string{"test"}})},
 					newResponseWriterMocker(),
 				)
 				r.Emit(ctx)

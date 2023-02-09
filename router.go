@@ -2,6 +2,7 @@ package uRouter
 
 import (
 	_ "embed"
+	"github.com/lxzan/uRouter/constant"
 	"github.com/lxzan/uRouter/helper"
 	"github.com/lxzan/uRouter/internal"
 	"net/http"
@@ -150,7 +151,7 @@ func (c *Router) On(path string, handler HandlerFunc, middlewares ...HandlerFunc
 // Emit 分发事件
 // emit event
 func (c *Router) Emit(ctx *Context) {
-	path := internal.Join1(ctx.Request.Header.Get(XPath), c.separator)
+	path := internal.Join1(ctx.Request.Header.Get(constant.XPath), c.separator)
 
 	{
 		// 优先匹配静态路由

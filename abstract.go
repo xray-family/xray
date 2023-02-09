@@ -20,14 +20,6 @@ type (
 		Put(b *bytes.Buffer)
 	}
 
-	Header interface {
-		Set(key, value string)
-		Get(key string) string
-		Del(key string)
-		Len() int
-		Range(f func(key, value string))
-	}
-
 	BytesReader interface {
 		io.Reader
 		Bytes() []byte
@@ -35,20 +27,5 @@ type (
 
 	Closer interface {
 		Close()
-	}
-
-	Encoder interface {
-		Encode(v interface{}) error
-	}
-
-	Decoder interface {
-		Decode(v interface{}) error
-	}
-
-	Codec interface {
-		NewEncoder(w io.Writer) Encoder
-		NewDecoder(r io.Reader) Decoder
-		Encode(v interface{}) ([]byte, error)
-		Decode(data []byte, v interface{}) error
 	}
 )

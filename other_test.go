@@ -2,6 +2,7 @@ package uRouter
 
 import (
 	"bytes"
+	"github.com/lxzan/uRouter/constant"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
@@ -22,7 +23,7 @@ func TestAccessLog(t *testing.T) {
 	var r = New()
 	r.On("test", AccessLog())
 	var ctx = newContextMocker()
-	ctx.Request.Header.Set(XPath, "test")
+	ctx.Request.Header.Set(constant.XPath, "test")
 	r.Emit(ctx)
 }
 
@@ -35,7 +36,7 @@ func TestWebSocket(t *testing.T) {
 			sum++
 		})
 		var ctx = newContextMocker()
-		ctx.Request.Header.Set(XPath, "test")
+		ctx.Request.Header.Set(constant.XPath, "test")
 		r.Emit(ctx)
 		assert.Equal(t, 0, sum)
 	})
@@ -49,7 +50,7 @@ func TestWebSocket(t *testing.T) {
 		})
 		var ctx = newContextMocker()
 		ctx.Writer.(*responseWriterMocker).SetProtocol(ProtocolWebSocket)
-		ctx.Request.Header.Set(XPath, "test")
+		ctx.Request.Header.Set(constant.XPath, "test")
 		r.Emit(ctx)
 		assert.Equal(t, 1, sum)
 	})
@@ -66,7 +67,7 @@ func TestHTTP(t *testing.T) {
 
 		var ctx = newContextMocker()
 		ctx.Request.Raw = &http.Request{Method: http.MethodGet}
-		ctx.Request.Header.Set(XPath, "test")
+		ctx.Request.Header.Set(constant.XPath, "test")
 		r.Emit(ctx)
 		assert.Equal(t, 0, sum)
 	})
@@ -82,7 +83,7 @@ func TestHTTP(t *testing.T) {
 		var ctx = newContextMocker()
 		ctx.Writer.(*responseWriterMocker).SetProtocol(ProtocolWebSocket)
 		ctx.Request.Raw = &http.Request{Method: http.MethodPost}
-		ctx.Request.Header.Set(XPath, "test")
+		ctx.Request.Header.Set(constant.XPath, "test")
 		r.Emit(ctx)
 		assert.Equal(t, 0, sum)
 	})
@@ -97,7 +98,7 @@ func TestHTTP(t *testing.T) {
 
 		var ctx = newContextMocker()
 		ctx.Request.Raw = &http.Request{Method: http.MethodPost}
-		ctx.Request.Header.Set(XPath, "test")
+		ctx.Request.Header.Set(constant.XPath, "test")
 		r.Emit(ctx)
 		assert.Equal(t, 1, sum)
 	})
@@ -119,7 +120,7 @@ func TestRecovery(t *testing.T) {
 			panic("1")
 		})
 		var ctx = newContextMocker()
-		ctx.Request.Header.Set(XPath, "test")
+		ctx.Request.Header.Set(constant.XPath, "test")
 		r.Emit(ctx)
 	})
 
@@ -135,7 +136,7 @@ func TestRecovery(t *testing.T) {
 			panic("1")
 		})
 		var ctx = newContextMocker()
-		ctx.Request.Header.Set(XPath, "test")
+		ctx.Request.Header.Set(constant.XPath, "test")
 		r.Emit(ctx)
 	})
 }
@@ -172,4 +173,21 @@ func TestLogger(t *testing.T) {
 	Logger().Warn("3")
 	Logger().Error("4")
 	Logger().Panic("5")
+}
+
+func TestAny(t *testing.T) {
+	var as = assert.New(t)
+	var m = Any{
+		"num1": 1,
+		"num2": int64(2),
+		"str":  "3",
+	}
+	as.Equal(1, m.ToInt("num1"))
+	as.Equal(int64(2), m.ToInt64("num2"))
+	as.Equal("3", m.ToString("str"))
+
+	as.Equal(false, m.Exists("xxx"))
+	as.Equal(0, m.ToInt("xxx"))
+	as.Equal(int64(0), m.ToInt64("xxx"))
+	as.Equal("", m.ToString("xxx"))
 }
