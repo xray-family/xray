@@ -34,9 +34,9 @@ func isVar(s string) bool {
 
 // 判断字符串是否含有变量
 func hasVar(s string) bool {
-	var list = helper.Split(s, defaultSeparator)
-	for _, item := range list {
-		if isVar(item) {
+	var n = len(s)
+	for i := 0; i < n-1; i++ {
+		if s[i] == defaultSeparator[0] && s[i+1] == defaultVarPrefix {
 			return true
 		}
 	}

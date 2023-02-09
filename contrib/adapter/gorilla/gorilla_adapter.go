@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"github.com/gorilla/websocket"
 	"github.com/lxzan/uRouter"
+	"github.com/lxzan/uRouter/constant"
 	"sync"
 )
 
@@ -85,16 +86,16 @@ func (c *responseWriter) Flush() error {
 	return nil
 }
 
-func NewAdapter(r *uRouter.Router) *Adapter {
+func NewAdapter() *Adapter {
 	return &Adapter{
-		router: r,
+		Router: uRouter.New(),
 		codec:  uRouter.TextHeader,
 	}
 }
 
 type Adapter struct {
-	router *uRouter.Router
-	codec  *uRouter.HeaderCodec
+	*uRouter.Router
+	codec *uRouter.HeaderCodec
 }
 
 // SetHeaderCodec 设置头部编码方式
@@ -105,14 +106,16 @@ func (c *Adapter) SetHeaderCodec(codec *uRouter.HeaderCodec) *Adapter {
 
 // ServeWebSocket 服务WebSocket
 func (c *Adapter) ServeWebSocket(socket *websocket.Conn, opcode int, p []byte) error {
-	var message = &Message{
+	message := &Message{
 		Opcode: opcode,
 		Data:   bytes.NewBuffer(p),
 	}
-	ctx := uRouter.NewContext(
-		&uRouter.Request{Raw: message, Body: message},
-		newResponseWriter(socket, c.codec),
-	)
+	r := &uRouter.Request{
+		Raw:    message,
+		Body:   message,
+		Action: "",
+	}
+	ctx := uRouter.NewContext(r, newResponseWriter(socket, c.codec))
 
 	header, err := c.codec.Decode(message.Data)
 	if err != nil {
@@ -120,7 +123,6 @@ func (c *Adapter) ServeWebSocket(socket *websocket.Conn, opcode int, p []byte) e
 	}
 
 	ctx.Request.Header = header
-	c.router.Emit(ctx)
+	c.Router.EmitAction(r.Action, header.Get(constant.XPath), ctx)
 	return nil
-
 }

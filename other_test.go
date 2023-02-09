@@ -23,7 +23,6 @@ func TestAccessLog(t *testing.T) {
 	var r = New()
 	r.On("test", AccessLog())
 	var ctx = newContextMocker()
-	//ctx.Request.Header.Set(constant.XPath, "test")
 	r.Emit("test", ctx)
 }
 

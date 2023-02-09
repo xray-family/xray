@@ -40,8 +40,6 @@ func TestNew(t *testing.T) {
 			list = append(list, 8)
 		})
 
-		r.Display()
-
 		path := "/api/v1/greet"
 		ctx := NewContext(
 			&Request{},
@@ -91,8 +89,6 @@ func TestNew(t *testing.T) {
 			list = append(list, 8)
 		})
 
-		r.Display()
-
 		path := "/api/v1/greet/1"
 		ctx := NewContext(
 			&Request{Header: NewHttpHeader(http.Header{"X-Path": []string{path}})},
@@ -141,8 +137,6 @@ func TestNew(t *testing.T) {
 			ctx.Next()
 			list = append(list, 8)
 		})
-
-		r.Display()
 
 		path := "/api/v1/greet"
 		ctx := NewContext(
@@ -223,7 +217,6 @@ func TestNew(t *testing.T) {
 
 		r.staticRoutes["404"] = nil
 
-		r.Display()
 		as.Equal(len(list), 0)
 	})
 }
@@ -293,8 +286,6 @@ func TestRouter_OnNoMatch(t *testing.T) {
 		r.OnNotFound = func(ctx *Context) {
 			list = append(list, 10)
 		}
-
-		r.Display()
 
 		path := "/api/v1/xxx"
 		ctx := NewContext(

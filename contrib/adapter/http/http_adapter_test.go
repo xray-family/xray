@@ -140,8 +140,6 @@ func TestNewAdapter(t *testing.T) {
 			as.Equal(1, v.(int))
 		})
 
-		router.Display()
-
 		router.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/0123abc"}})
 		router.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/t1"}})
 		router.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/t2"}})

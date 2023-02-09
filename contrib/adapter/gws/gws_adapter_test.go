@@ -26,8 +26,7 @@ func TestNewAdapter(t *testing.T) {
 		const requestPayload = "hello"
 		const responsePayload = "world"
 		var sum = 0
-		var router = uRouter.New()
-		var adapter = NewAdapter(router).SetHeaderCodec(uRouter.TextHeader)
+		var router = NewAdapter().SetHeaderCodec(uRouter.TextHeader)
 
 		router.On("testEncode", func(ctx *uRouter.Context) {
 			ctx.Writer = newResponseWriter(&connMocker{buf: bytes.NewBufferString("")}, uRouter.TextHeader)
@@ -47,7 +46,7 @@ func TestNewAdapter(t *testing.T) {
 			as.Equal(requestPayload, ctx.Request.Body.(*gws.Message).Data.String())
 
 			var writer = ctx.Writer.Raw().(*connMocker)
-			if err := adapter.ServeWebSocket(nil, &gws.Message{Data: writer.buf}); err != nil {
+			if err := router.ServeWebSocket(nil, &gws.Message{Data: writer.buf}); err != nil {
 				as.NoError(err)
 				return
 			}
@@ -67,12 +66,12 @@ func TestNewAdapter(t *testing.T) {
 			constant.ContentType: constant.MimeJson,
 			constant.XPath:       "/testEncode",
 		}
-		if err := adapter.codec.Encode(b.Data, header); err != nil {
+		if err := router.codec.Encode(b.Data, header); err != nil {
 			as.NoError(err)
 			return
 		}
 		b.Data.WriteString(requestPayload)
-		if err := adapter.ServeWebSocket(nil, b); err != nil {
+		if err := router.ServeWebSocket(nil, b); err != nil {
 			as.NoError(err)
 			return
 		}
