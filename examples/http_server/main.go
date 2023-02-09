@@ -14,13 +14,13 @@ func init() {
 }
 
 func main() {
-	r := httpAdapter.NewAdapter()
+	r := uRouter.New()
 	r.Use(uRouter.Recovery(), uRouter.AccessLog())
 	group := r.Group("/api/v1")
 	NewController().Mapping(group)
 	r.Display()
 
-	if err := http.ListenAndServe(":3000", r); err != nil {
+	if err := http.ListenAndServe(":3000", httpAdapter.NewAdapter(r)); err != nil {
 		uRouter.Logger().Panic(err.Error())
 	}
 }

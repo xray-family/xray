@@ -29,13 +29,19 @@ func (c *responseWriter) Flush() error {
 	return nil
 }
 
-func NewAdapter() *Adapter {
-	return &Adapter{Router: uRouter.New()}
+func NewAdapter(router *uRouter.Router) *Adapter {
+	return &Adapter{router: router}
 }
 
 // Adapter HTTP适配器
 type Adapter struct {
-	*uRouter.Router
+	router *uRouter.Router
+}
+
+// SetRouter 设置路由器
+func (c *Adapter) SetRouter(r *uRouter.Router) *Adapter {
+	c.router = r
+	return c
 }
 
 // ServeHTTP 服务HTTP
@@ -47,5 +53,5 @@ func (c *Adapter) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 		Action: request.Method,
 	}
 	var ctx = uRouter.NewContext(r, &responseWriter{ResponseWriter: writer})
-	c.Router.EmitAction(r.Action, request.URL.Path, ctx)
+	c.router.EmitAction(r.Action, request.URL.Path, ctx)
 }

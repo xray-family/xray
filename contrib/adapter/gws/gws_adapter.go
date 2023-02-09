@@ -71,16 +71,16 @@ func (c *responseWriter) Flush() error {
 	return nil
 }
 
-func NewAdapter() *Adapter {
+func NewAdapter(router *uRouter.Router) *Adapter {
 	return &Adapter{
-		Router: uRouter.New(),
+		router: router,
 		codec:  uRouter.TextHeader,
 	}
 }
 
 type Adapter struct {
-	*uRouter.Router
-	codec *uRouter.HeaderCodec
+	router *uRouter.Router
+	codec  *uRouter.HeaderCodec
 }
 
 // SetHeaderCodec 设置头部编码方式
@@ -104,6 +104,6 @@ func (c *Adapter) ServeWebSocket(socket *gws.Conn, message *gws.Message) error {
 	}
 
 	ctx.Request.Header = header
-	c.Router.EmitAction(r.Action, header.Get(constant.XPath), ctx)
+	c.router.EmitAction(r.Action, header.Get(constant.XPath), ctx)
 	return nil
 }
