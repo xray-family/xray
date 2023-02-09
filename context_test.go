@@ -202,4 +202,13 @@ func TestContext_Param(t *testing.T) {
 		id := ctx.Param("id")
 		as.Equal("", id)
 	})
+
+	t.Run("", func(t *testing.T) {
+		var ctx = NewContext(&Request{
+			VPath: "/api/v1",
+			RPath: "/api/v1",
+		}, newResponseWriterMocker())
+		id := ctx.Param("id")
+		as.Equal("", id)
+	})
 }

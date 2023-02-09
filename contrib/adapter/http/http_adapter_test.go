@@ -40,7 +40,7 @@ func TestNewAdapter(t *testing.T) {
 
 	t.Run("abort", func(t *testing.T) {
 		var sum = int64(0)
-		var router = uRouter.New()
+		var router = NewAdapter()
 
 		router.Use(func(ctx *uRouter.Context) {
 			return
@@ -50,8 +50,7 @@ func TestNewAdapter(t *testing.T) {
 			sum++
 		})
 
-		var adapter = NewAdapter(router)
-		adapter.ServeHTTP(nil, &http.Request{
+		router.ServeHTTP(nil, &http.Request{
 			Header: http.Header{},
 			URL: &url.URL{
 				Path: "/test",
@@ -61,7 +60,7 @@ func TestNewAdapter(t *testing.T) {
 
 	t.Run("next", func(t *testing.T) {
 		var sum = int64(0)
-		var router = uRouter.New()
+		var router = NewAdapter()
 
 		router.Use(func(ctx *uRouter.Context) {
 			ctx.Next()
@@ -72,8 +71,7 @@ func TestNewAdapter(t *testing.T) {
 			sum++
 		})
 
-		var adapter = NewAdapter(router)
-		adapter.ServeHTTP(nil, &http.Request{
+		router.ServeHTTP(nil, &http.Request{
 			Header: http.Header{},
 			URL: &url.URL{
 				Path: "/test",
@@ -83,8 +81,7 @@ func TestNewAdapter(t *testing.T) {
 	})
 
 	t.Run("complex", func(t *testing.T) {
-		var router = uRouter.New()
-		var adapter = NewAdapter(router)
+		var router = NewAdapter()
 
 		router.Use(func(ctx *uRouter.Context) {
 			ctx.Set("sum", 0)
@@ -145,16 +142,16 @@ func TestNewAdapter(t *testing.T) {
 
 		router.Display()
 
-		adapter.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/0123abc"}})
-		adapter.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/t1"}})
-		adapter.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/t2"}})
-		adapter.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/user/t3"}})
-		adapter.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/session/t4"}})
+		router.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/0123abc"}})
+		router.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/t1"}})
+		router.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/t2"}})
+		router.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/user/t3"}})
+		router.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/session/t4"}})
 
-		adapter.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/0123abc"}})
-		adapter.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/t1"}})
-		adapter.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/t2"}})
-		adapter.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/user/t3"}})
-		adapter.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/session/t4"}})
+		router.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/0123abc"}})
+		router.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/t1"}})
+		router.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/t2"}})
+		router.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/user/t3"}})
+		router.ServeHTTP(newWriterMocker(), &http.Request{Header: http.Header{}, URL: &url.URL{Path: "/api/v1/session/t4"}})
 	})
 }

@@ -18,3 +18,4 @@ bin/
 examples/debug/
 
 go.work
+go.work.sum
