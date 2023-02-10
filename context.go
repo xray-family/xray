@@ -93,7 +93,7 @@ func Close(resource interface{}) {
 
 func NewContext(request *Request, writer ResponseWriter) *Context {
 	return &Context{
-		index:    -1,
+		index:    0,
 		storage:  Any{},
 		handlers: []HandlerFunc{},
 		Request:  request,
@@ -104,8 +104,8 @@ func NewContext(request *Request, writer ResponseWriter) *Context {
 // Next 执行下一个中间件
 func (c *Context) Next() {
 	c.index++
-	if c.index < len(c.handlers) {
-		c.handlers[c.index](c)
+	if c.index <= len(c.handlers) {
+		c.handlers[c.index-1](c)
 	}
 }
 
