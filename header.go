@@ -18,11 +18,11 @@ var (
 
 	// TextMapHeader 文本类型头部编码, 4字节, 最大长度=9999
 	// text type header code, 4 bytes, max length = 9999
-	TextMapHeader = NewHeaderCodec(&MapHeader{}, codec.StdJsonCodec).setLengthBytes(textLengthEncoding)
+	TextMapHeader = NewHeaderCodec(NewMapHeader(), codec.StdJsonCodec).setLengthBytes(textLengthEncoding)
 
 	// BinaryMapHeader 二进制类型头部编码, 2字节, 最大长度=65535
 	// binary type header code, 2 bytes, max length = 65535
-	BinaryMapHeader = NewHeaderCodec(&MapHeader{}, codec.StdJsonCodec).setLengthBytes(binaryLengthEncoding)
+	BinaryMapHeader = NewHeaderCodec(NewMapHeader(), codec.StdJsonCodec).setLengthBytes(binaryLengthEncoding)
 )
 
 type (
@@ -41,56 +41,56 @@ type (
 	headerLengthEncoding uint8
 )
 
+func NewMapHeader() *MapHeader {
+	return &MapHeader{}
+}
+
 type MapHeader map[string]string
 
-func (c MapHeader) Reset() {
-	for k, _ := range c {
-		delete(c, k)
+func (c *MapHeader) Reset() {
+	for k, _ := range *c {
+		delete(*c, k)
 	}
 }
 
-func (c MapHeader) Generate() Header {
+func (c *MapHeader) Generate() Header {
 	return defaultHeaderPool.Get(c.Number())
 }
 
-func (c MapHeader) Close() {
+func (c *MapHeader) Close() {
 	defaultHeaderPool.Put(c)
 }
 
-func (c MapHeader) Number() uint8 {
+func (c *MapHeader) Number() uint8 {
 	return constant.MapHeaderNumber
 }
 
-func (c MapHeader) Len() int {
-	return len(c)
+func (c *MapHeader) Len() int {
+	return len(*c)
 }
 
-func (c MapHeader) Range(f func(key string, value string)) {
-	for k, v := range c {
+func (c *MapHeader) Range(f func(key string, value string)) {
+	for k, v := range *c {
 		f(k, v)
 	}
 }
 
-func (c MapHeader) Set(key, value string) {
+func (c *MapHeader) Set(key, value string) {
 	key = c.formatKey(key)
-	c[key] = value
+	(*c)[key] = value
 }
 
-func (c MapHeader) Get(key string) string {
+func (c *MapHeader) Get(key string) string {
 	key = c.formatKey(key)
-	return c[key]
+	return (*c)[key]
 }
 
-func (c MapHeader) Del(key string) {
+func (c *MapHeader) Del(key string) {
 	key = c.formatKey(key)
-	delete(c, key)
+	delete(*c, key)
 }
 
-func NewHttpHeader(h http.Header) HttpHeader {
-	return HttpHeader{Header: h}
-}
-
-func (c MapHeader) formatKey(key string) string {
+func (c *MapHeader) formatKey(key string) string {
 	var b = []byte(key)
 	var n = len(b)
 	for i := 0; i < n-1; i++ {
@@ -99,6 +99,10 @@ func (c MapHeader) formatKey(key string) string {
 		}
 	}
 	return string(b)
+}
+
+func NewHttpHeader(h http.Header) HttpHeader {
+	return HttpHeader{Header: h}
 }
 
 type HttpHeader struct {

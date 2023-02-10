@@ -94,6 +94,8 @@ func Close(resource interface{}) {
 func (c *Request) Close() {
 	c.Header.Close()
 	Close(c.Body)
+	c.Header = nil
+	c.Body = nil
 }
 
 func NewContext(request *Request, writer ResponseWriter) *Context {

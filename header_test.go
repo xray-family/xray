@@ -11,7 +11,7 @@ import (
 )
 
 type headerMocker struct {
-	MapHeader
+	*MapHeader
 }
 
 func (h headerMocker) Read(p []byte) (n int, err error) {
@@ -98,7 +98,7 @@ func TestHeaderCodec(t *testing.T) {
 	})
 
 	t.Run("encode header error", func(t *testing.T) {
-		var header = &headerMocker{MapHeader{}}
+		var header = &headerMocker{NewMapHeader()}
 		header.Set(constant.ContentType, constant.MimeJson)
 		var w = bytes.NewBufferString("")
 		as.Error(TextMapHeader.Encode(w, header))
@@ -159,7 +159,7 @@ func TestHttpHeader(t *testing.T) {
 
 func TestMapHeader(t *testing.T) {
 	var as = assert.New(t)
-	var header = MapHeader{}
+	var header = mapHeaderInstance.Generate().(*MapHeader)
 	header.Set(constant.ContentType, constant.MimeJson)
 	header.Set(constant.XPath, "")
 	as.Equal(2, header.Len())
@@ -175,4 +175,31 @@ func TestMapHeader(t *testing.T) {
 	as.Equal(constant.ContentType, header.formatKey("content-type"))
 	as.Equal("Ct", header.formatKey("ct"))
 	as.Equal("", header.formatKey(""))
+}
+
+func TestHeader_Reset(t *testing.T) {
+
+	t.Run("map header", func(t *testing.T) {
+		var m = NewMapHeader()
+		for i := 0; i < 64; i++ {
+			key := internal.AlphabetNumeric.Generate(16)
+			m.Set(string(key), "1")
+		}
+		m.Reset()
+		assert.Equal(t, 0, m.Len())
+		m.Close()
+	})
+
+	t.Run("http header", func(t *testing.T) {
+		var m = &HttpHeader{Header: http.Header{}}
+		for i := 0; i < 64; i++ {
+			key := internal.AlphabetNumeric.Generate(16)
+			m.Set(string(key), "1")
+		}
+		m.Reset()
+		assert.Equal(t, 0, m.Len())
+		m.Close()
+		m.Generate()
+	})
+
 }

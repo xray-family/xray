@@ -18,6 +18,7 @@ const (
 const (
 	KiB           = 1024
 	BufferLeveL1  = KiB
+	BufferLeveL2  = 2 * KiB
 	BufferLeveL4  = 4 * KiB
 	BufferLeveL8  = 8 * KiB
 	BufferLeveL16 = 16 * KiB

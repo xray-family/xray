@@ -72,7 +72,7 @@ func TestNewAdapter(t *testing.T) {
 		})
 
 		var b = &messageMocker{b: bytes.NewBufferString("")}
-		var header = uRouter.MapHeader{
+		var header = &uRouter.MapHeader{
 			constant.ContentType: constant.MimeJson,
 			constant.XPath:       "/testEncode",
 		}

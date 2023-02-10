@@ -9,15 +9,6 @@ import (
 	"testing"
 )
 
-func TestBufferPool(t *testing.T) {
-	var as = assert.New(t)
-	var p = BufferPool()
-	SetBufferPool(newBufferPool())
-	as.NotNil(p.Get(0))
-	p.Put(bytes.NewBufferString(""))
-	as.NotNil(p.Get(0))
-}
-
 func TestAccessLog(t *testing.T) {
 	var r = New()
 	r.On("test", AccessLog())

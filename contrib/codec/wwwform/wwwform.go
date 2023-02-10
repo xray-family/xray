@@ -35,6 +35,14 @@ func (c *Codec) EncodeToString(v interface{}) (string, error) {
 	return values.Encode(), nil
 }
 
+func (c *Codec) DecodeFromString(data string, v interface{}) error {
+	values, err := url.ParseQuery(data)
+	if err != nil {
+		return err
+	}
+	return form.NewDecoder().Decode(v, values)
+}
+
 func (c *Codec) Decode(data []byte, v interface{}) error {
 	values, err := url.ParseQuery(string(data))
 	if err != nil {

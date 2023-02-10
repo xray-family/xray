@@ -12,6 +12,8 @@ var (
 	defaultLogger LoggerInterface = new(logger)
 
 	defaultHeaderPool = newHeaderPool()
+
+	mapHeaderInstance = new(MapHeader)
 )
 
 // SetJsonCodec 设置JSON编码器
@@ -20,9 +22,9 @@ var (
 func SetJsonCodec(codec codec.Codec) {
 	defaultJsonCodec = codec
 
-	TextMapHeader = NewHeaderCodec(&MapHeader{}, codec).setLengthBytes(textLengthEncoding)
+	TextMapHeader = NewHeaderCodec(mapHeaderInstance, codec).setLengthBytes(textLengthEncoding)
 
-	BinaryMapHeader = NewHeaderCodec(&MapHeader{}, codec).setLengthBytes(binaryLengthEncoding)
+	BinaryMapHeader = NewHeaderCodec(mapHeaderInstance, codec).setLengthBytes(binaryLengthEncoding)
 }
 
 // SetBufferPool 设置buffer池

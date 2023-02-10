@@ -10,12 +10,16 @@ import (
 func newBufferPool() *bufferPool {
 	bp := &bufferPool{
 		p1:  &sync.Pool{},
+		p2:  &sync.Pool{},
 		p4:  &sync.Pool{},
 		p8:  &sync.Pool{},
 		p16: &sync.Pool{},
 	}
 	bp.p1.New = func() interface{} {
 		return bytes.NewBuffer(make([]byte, 0, constant.BufferLeveL1))
+	}
+	bp.p2.New = func() interface{} {
+		return bytes.NewBuffer(make([]byte, 0, constant.BufferLeveL2))
 	}
 	bp.p4.New = func() interface{} {
 		return bytes.NewBuffer(make([]byte, 0, constant.BufferLeveL4))
@@ -31,6 +35,7 @@ func newBufferPool() *bufferPool {
 
 type bufferPool struct {
 	p1  *sync.Pool
+	p2  *sync.Pool
 	p4  *sync.Pool
 	p8  *sync.Pool
 	p16 *sync.Pool
@@ -40,6 +45,8 @@ func (c *bufferPool) Get(n int) *bytes.Buffer {
 	var b *bytes.Buffer
 	if n <= constant.BufferLeveL1 {
 		b = c.p1.Get().(*bytes.Buffer)
+	} else if n <= constant.BufferLeveL2 {
+		b = c.p2.Get().(*bytes.Buffer)
 	} else if n <= constant.BufferLeveL4 {
 		b = c.p4.Get().(*bytes.Buffer)
 	} else if n <= constant.BufferLeveL8 {
@@ -57,10 +64,12 @@ func (c *bufferPool) Put(b *bytes.Buffer) {
 		return
 	}
 
-	n := b.Len()
+	n := b.Cap()
 	b.Reset()
 	if n <= constant.BufferLeveL1 {
 		c.p1.Put(b)
+	} else if n <= constant.BufferLeveL2 {
+		c.p2.Put(b)
 	} else if n <= constant.BufferLeveL4 {
 		c.p4.Put(b)
 	} else if n <= constant.BufferLeveL8 {
@@ -77,10 +86,10 @@ func HeaderPool() *headerPool {
 func newHeaderPool() *headerPool {
 	var c = new(headerPool)
 	c.Register(constant.HttpHeaderNumber, func() Header {
-		return &HttpHeader{Header: http.Header{}}
+		return HttpHeader{Header: http.Header{}}
 	})
 	c.Register(constant.MapHeaderNumber, func() Header {
-		return &MapHeader{}
+		return NewMapHeader()
 	})
 	return c
 }

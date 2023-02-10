@@ -63,10 +63,9 @@ func TestNewAdapter(t *testing.T) {
 			Opcode: gws.OpcodeText,
 			Data:   bytes.NewBufferString(""),
 		}
-		var header = uRouter.MapHeader{
-			constant.ContentType: constant.MimeJson,
-			constant.XPath:       "/testEncode",
-		}
+		var header = uRouter.NewMapHeader()
+		header.Set(constant.ContentType, constant.MimeJson)
+		header.Set(constant.XPath, "/testEncode")
 		if err := adapter.codec.Encode(b.Data, header); err != nil {
 			as.NoError(err)
 			return

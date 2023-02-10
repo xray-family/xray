@@ -115,7 +115,7 @@ func TestContext_Write(t *testing.T) {
 
 	t.Run("write json 2", func(t *testing.T) {
 		var ctx = newContextMocker()
-		var header = &headerMocker{MapHeader{}}
+		var header = &headerMocker{NewMapHeader()}
 		header.Set(constant.ContentType, constant.MimeJson)
 		as.Error(ctx.WriteJSON(http.StatusOK, header))
 	})
@@ -148,7 +148,7 @@ func TestContext_Write(t *testing.T) {
 
 	t.Run("write reader", func(t *testing.T) {
 		var ctx = newContextMocker()
-		var header = &headerMocker{MapHeader{}}
+		var header = &headerMocker{NewMapHeader()}
 		header.Set(constant.ContentType, constant.MimeJson)
 		as.Error(ctx.WriteReader(http.StatusOK, header))
 	})
@@ -207,4 +207,11 @@ func TestContext_Param(t *testing.T) {
 		id := ctx.Param("id")
 		as.Equal("", id)
 	})
+}
+
+func TestRequest_Close(t *testing.T) {
+	var r = &Request{Header: NewHttpHeader(http.Header{}), Body: bytes.NewBufferString("")}
+	r.Close()
+	assert.Nil(t, r.Body)
+	assert.Nil(t, r.Header)
 }
