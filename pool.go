@@ -68,3 +68,37 @@ func (c *bufferPool) Put(b *bytes.Buffer) {
 		c.p16.Put(b)
 	}
 }
+
+var defaultHeaderPool = newHeaderPool()
+
+func HeaderPool() *headerPool {
+	return defaultHeaderPool
+}
+
+func newHeaderPool() *headerPool {
+	var c = new(headerPool)
+	c.Register(HttpHeader{})
+	c.Register(MapHeader{})
+	return c
+}
+
+type headerPool struct {
+	pools [8]*sync.Pool
+}
+
+func (c *headerPool) Register(h Header) {
+	var id = h.Number()
+	c.pools[id] = &sync.Pool{New: func() interface{} {
+		return h.Generate()
+	}}
+}
+
+func (c *headerPool) Get(id uint8) Header {
+	return c.pools[id].Get().(Header)
+}
+
+func (c *headerPool) Put(h Header) {
+	h.Reset()
+	var id = h.Number()
+	c.pools[id].Put(h)
+}

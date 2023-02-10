@@ -39,10 +39,10 @@ func TestNewAdapter(t *testing.T) {
 		const requestPayload = "hello"
 		const responsePayload = "world"
 		var sum = 0
-		var router = NewAdapter().SetHeaderCodec(uRouter.TextHeader)
+		var router = NewAdapter().SetHeaderCodec(uRouter.TextMapHeader)
 
 		router.On("testEncode", func(ctx *uRouter.Context) {
-			ctx.Writer = newResponseWriter(&connMocker{buf: bytes.NewBufferString("")}, uRouter.TextHeader)
+			ctx.Writer = newResponseWriter(&connMocker{buf: bytes.NewBufferString("")}, uRouter.TextMapHeader)
 
 			sum++
 			ctx.Writer.Header().Set(constant.ContentType, constant.MimeStream)
@@ -90,7 +90,7 @@ func TestNewAdapter(t *testing.T) {
 }
 
 func TestOthers(t *testing.T) {
-	var w = newResponseWriter(&websocket.Conn{}, uRouter.TextHeader)
+	var w = newResponseWriter(&websocket.Conn{}, uRouter.TextMapHeader)
 	w.RawResponseWriter()
 	assert.Equal(t, uRouter.ProtocolWebSocket, w.Protocol())
 }

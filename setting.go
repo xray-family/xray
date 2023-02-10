@@ -16,9 +16,9 @@ var (
 func SetJsonCodec(codec codec.Codec) {
 	defaultJsonCodec = codec
 
-	TextHeader = NewHeaderCodec(codec, defaultGenerator).setLengthBytes(textLengthEncoding)
+	TextMapHeader = NewHeaderCodec(codec, MapHeader{}).setLengthBytes(textLengthEncoding)
 
-	BinaryHeader = NewHeaderCodec(codec, defaultGenerator).setLengthBytes(binaryLengthEncoding)
+	BinaryMapHeader = NewHeaderCodec(codec, MapHeader{}).setLengthBytes(binaryLengthEncoding)
 }
 
 // SetBufferPool 设置buffer池

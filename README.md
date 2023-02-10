@@ -216,12 +216,12 @@ uRouter.SetJsonCodec(jsoniter.JsoniterCodec)
 #### Header Codec (Not applicable to HTTP)
 
 ```
-uRouter.TextHeader: length_encoding=4 byte, max_header_length=9999 byte
-uRouter.BinaryHeader: length_encoding=2 byte, max_header_length=65535 byte
+uRouter.TextMapHeader: length_encoding=4 byte, max_header_length=9999 byte
+uRouter.BinaryMapHeader: length_encoding=2 byte, max_header_length=65535 byte
 ```
 
 ```
-// TextHeader Example
+// TextMapHeader Example
 // header length => header payload => body
 0019{"X-Path":"/greet"}{"hello":"world!"}
 ```

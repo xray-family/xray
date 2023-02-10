@@ -1,5 +1,9 @@
 package constant
 
+/*
+定义了内部使用的一些常量
+*/
+
 const (
 	XPath       = "X-Path"
 	XRealIP     = "X-Real-Ip"
@@ -17,4 +21,9 @@ const (
 	BufferLeveL4  = 4 * KiB
 	BufferLeveL8  = 8 * KiB
 	BufferLeveL16 = 16 * KiB
+)
+
+const (
+	HttpHeaderNumber = iota
+	MapHeaderNumber
 )

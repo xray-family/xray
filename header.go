@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lxzan/uRouter/codec"
+	"github.com/lxzan/uRouter/constant"
 	"github.com/lxzan/uRouter/internal"
 	"math"
 	"net/http"
@@ -19,36 +20,45 @@ var (
 	binaryLengthEncoding headerLengthEncoding = 2
 	textLengthEncoding   headerLengthEncoding = 4
 
-	defaultGenerator = func() Header { return &MapHeader{} }
-
-	// TextHeader 文本类型头部编码, 4字节, 最大长度=9999
+	// TextMapHeader 文本类型头部编码, 4字节, 最大长度=9999
 	// text type header code, 4 bytes, max length = 9999
-	TextHeader = NewHeaderCodec(codec.StdJsonCodec, defaultGenerator).setLengthBytes(textLengthEncoding)
+	TextMapHeader = NewHeaderCodec(codec.StdJsonCodec, MapHeader{}).setLengthBytes(textLengthEncoding)
 
-	// BinaryHeader 二进制类型头部编码, 2字节, 最大长度=65535
+	// BinaryMapHeader 二进制类型头部编码, 2字节, 最大长度=65535
 	// binary type header code, 2 bytes, max length = 65535
-	BinaryHeader = NewHeaderCodec(codec.StdJsonCodec, defaultGenerator).setLengthBytes(binaryLengthEncoding)
+	BinaryMapHeader = NewHeaderCodec(codec.StdJsonCodec, MapHeader{}).setLengthBytes(binaryLengthEncoding)
 )
 
 type (
 	Header interface {
-		Set(key, value string)
-		Get(key string) string
-		Del(key string)
-		Len() int
-		Range(f func(key, value string))
-	}
-
-	HeaderCodec struct {
-		codec          codec.Codec
-		lengthEncoding headerLengthEncoding
-		generator      func() Header
+		Number() uint8                   // 用于区分Header的不同实现, 唯一的序列号
+		Generate() Header                // 构建方法
+		Reset()                          // 重置
+		Set(key, value string)           // 设置键值对
+		Get(key string) string           // 获取一个值
+		Del(key string)                  // 删除
+		Len() int                        // 获取长度
+		Range(f func(key, value string)) // 遍历
 	}
 
 	headerLengthEncoding uint8
 )
 
 type MapHeader map[string]string
+
+func (c MapHeader) Reset() {
+	for k, _ := range c {
+		delete(c, k)
+	}
+}
+
+func (c MapHeader) Generate() Header {
+	return MapHeader{}
+}
+
+func (c MapHeader) Number() uint8 {
+	return constant.MapHeaderNumber
+}
 
 func (c MapHeader) Len() int {
 	return len(c)
@@ -94,6 +104,20 @@ type HttpHeader struct {
 	http.Header
 }
 
+func (c HttpHeader) Reset() {
+	for k, _ := range c.Header {
+		delete(c.Header, k)
+	}
+}
+
+func (c HttpHeader) Generate() Header {
+	return HttpHeader{Header: http.Header{}}
+}
+
+func (c HttpHeader) Number() uint8 {
+	return constant.HttpHeaderNumber
+}
+
 func (c HttpHeader) Len() int {
 	return len(c.Header)
 }
@@ -111,11 +135,17 @@ func (c headerLengthEncoding) MaxLength() int {
 	return 1e4 - 1
 }
 
-func NewHeaderCodec(codec codec.Codec, generator func() Header) *HeaderCodec {
+type HeaderCodec struct {
+	codec          codec.Codec
+	lengthEncoding headerLengthEncoding
+	template       Header
+}
+
+func NewHeaderCodec(codec codec.Codec, template Header) *HeaderCodec {
 	return new(HeaderCodec).
 		setLengthBytes(textLengthEncoding).
-		SetCodec(codec).
-		SetGenerator(generator)
+		SetTemplate(template).
+		SetCodec(codec)
 }
 
 func (c *HeaderCodec) setLengthBytes(lb headerLengthEncoding) *HeaderCodec {
@@ -130,10 +160,9 @@ func (c *HeaderCodec) SetCodec(codec codec.Codec) *HeaderCodec {
 	return c
 }
 
-// SetGenerator 设置头部结构生成函数
-// set the header structure generation function
-func (c *HeaderCodec) SetGenerator(generator func() Header) *HeaderCodec {
-	c.generator = generator
+// SetTemplate 设置header模板
+func (c *HeaderCodec) SetTemplate(h Header) *HeaderCodec {
+	c.template = h
 	return c
 }
 
@@ -164,7 +193,7 @@ func (c *HeaderCodec) Encode(writer *bytes.Buffer, h Header) error {
 }
 
 func (c *HeaderCodec) Decode(reader *bytes.Buffer) (Header, error) {
-	var v = c.Generate()
+	var v = c.template.Generate()
 	var p [4]byte
 
 	if err := internal.Read(reader, p[:c.lengthEncoding]); err != nil {
@@ -195,5 +224,5 @@ func (c *HeaderCodec) Decode(reader *bytes.Buffer) (Header, error) {
 }
 
 func (c *HeaderCodec) Generate() Header {
-	return c.generator()
+	return c.template.Generate()
 }

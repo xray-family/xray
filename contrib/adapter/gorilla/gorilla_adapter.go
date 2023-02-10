@@ -89,7 +89,7 @@ func (c *responseWriter) Flush() error {
 func NewAdapter() *Adapter {
 	return &Adapter{
 		Router: uRouter.New(),
-		codec:  uRouter.TextHeader,
+		codec:  uRouter.TextMapHeader,
 	}
 }
 
