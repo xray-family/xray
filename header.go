@@ -3,7 +3,6 @@ package uRouter
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"github.com/lxzan/uRouter/codec"
 	"github.com/lxzan/uRouter/constant"
@@ -14,25 +13,23 @@ import (
 )
 
 var (
-	errHeaderTooLarge = errors.New("header size too large")
-	errHeaderSize     = errors.New("header size error")
-
 	binaryLengthEncoding headerLengthEncoding = 2
 	textLengthEncoding   headerLengthEncoding = 4
 
 	// TextMapHeader 文本类型头部编码, 4字节, 最大长度=9999
 	// text type header code, 4 bytes, max length = 9999
-	TextMapHeader = NewHeaderCodec(codec.StdJsonCodec, MapHeader{}).setLengthBytes(textLengthEncoding)
+	TextMapHeader = NewHeaderCodec(&MapHeader{}, codec.StdJsonCodec).setLengthBytes(textLengthEncoding)
 
 	// BinaryMapHeader 二进制类型头部编码, 2字节, 最大长度=65535
 	// binary type header code, 2 bytes, max length = 65535
-	BinaryMapHeader = NewHeaderCodec(codec.StdJsonCodec, MapHeader{}).setLengthBytes(binaryLengthEncoding)
+	BinaryMapHeader = NewHeaderCodec(&MapHeader{}, codec.StdJsonCodec).setLengthBytes(binaryLengthEncoding)
 )
 
 type (
 	Header interface {
 		Number() uint8                   // 用于区分Header的不同实现, 唯一的序列号
-		Generate() Header                // 构建方法
+		Generate() Header                // 初始化一个Header, 需要返回指针类型
+		Close()                          // 回收资源
 		Reset()                          // 重置
 		Set(key, value string)           // 设置键值对
 		Get(key string) string           // 获取一个值
@@ -53,7 +50,11 @@ func (c MapHeader) Reset() {
 }
 
 func (c MapHeader) Generate() Header {
-	return MapHeader{}
+	return defaultHeaderPool.Get(c.Number())
+}
+
+func (c MapHeader) Close() {
+	defaultHeaderPool.Put(c)
 }
 
 func (c MapHeader) Number() uint8 {
@@ -111,7 +112,13 @@ func (c HttpHeader) Reset() {
 }
 
 func (c HttpHeader) Generate() Header {
-	return HttpHeader{Header: http.Header{}}
+	return &HttpHeader{Header: http.Header{}}
+}
+
+// Close
+// HttpHeader不回收资源
+func (c HttpHeader) Close() {
+	defaultHeaderPool.Put(c)
 }
 
 func (c HttpHeader) Number() uint8 {
@@ -141,7 +148,9 @@ type HeaderCodec struct {
 	template       Header
 }
 
-func NewHeaderCodec(codec codec.Codec, template Header) *HeaderCodec {
+// NewHeaderCodec
+// templateId必须是已注册的模板类型
+func NewHeaderCodec(template Header, codec codec.Codec) *HeaderCodec {
 	return new(HeaderCodec).
 		setLengthBytes(textLengthEncoding).
 		SetTemplate(template).
@@ -161,8 +170,8 @@ func (c *HeaderCodec) SetCodec(codec codec.Codec) *HeaderCodec {
 }
 
 // SetTemplate 设置header模板
-func (c *HeaderCodec) SetTemplate(h Header) *HeaderCodec {
-	c.template = h
+func (c *HeaderCodec) SetTemplate(template Header) *HeaderCodec {
+	c.template = template
 	return c
 }
 
@@ -178,7 +187,7 @@ func (c *HeaderCodec) Encode(writer *bytes.Buffer, h Header) error {
 
 	var headerLength = writer.Len() - int(c.lengthEncoding)
 	if headerLength > c.lengthEncoding.MaxLength() {
-		return errHeaderTooLarge
+		return internal.ErrHeaderTooLarge
 	}
 
 	var p1 = writer.Bytes()
@@ -193,7 +202,7 @@ func (c *HeaderCodec) Encode(writer *bytes.Buffer, h Header) error {
 }
 
 func (c *HeaderCodec) Decode(reader *bytes.Buffer) (Header, error) {
-	var v = c.template.Generate()
+	var v = c.Generate()
 	var p [4]byte
 
 	if err := internal.Read(reader, p[:c.lengthEncoding]); err != nil {
@@ -212,7 +221,7 @@ func (c *HeaderCodec) Decode(reader *bytes.Buffer) (Header, error) {
 	}
 
 	if reader.Len() < headerLength {
-		return nil, errHeaderSize
+		return nil, internal.ErrParseHeader
 	}
 
 	if headerLength > 0 {

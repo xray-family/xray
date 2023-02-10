@@ -117,7 +117,7 @@ func TestHeaderCodec(t *testing.T) {
 	t.Run("decode small header 1", func(t *testing.T) {
 		var buf = bytes.NewBufferString("0012xxx")
 		_, err := TextMapHeader.Decode(buf)
-		as.Equal(true, err == errHeaderSize)
+		as.Equal(true, err == internal.ErrParseHeader)
 	})
 
 	t.Run("decode small header 2", func(t *testing.T) {

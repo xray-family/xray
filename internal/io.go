@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"errors"
 	"io"
 )
 
@@ -11,7 +10,7 @@ func Write(w io.Writer, p []byte) error {
 		return err
 	}
 	if num != len(p) {
-		return errors.New("io size error")
+		return ErrIOBytesUnexpected
 	}
 	return nil
 }
@@ -22,7 +21,7 @@ func Read(r io.Reader, p []byte) error {
 		return err
 	}
 	if num != len(p) {
-		return errors.New("io size error")
+		return ErrIOBytesUnexpected
 	}
 	return nil
 }

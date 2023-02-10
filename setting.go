@@ -1,6 +1,8 @@
 package uRouter
 
-import "github.com/lxzan/uRouter/codec"
+import (
+	"github.com/lxzan/uRouter/codec"
+)
 
 var (
 	defaultJsonCodec codec.Codec = codec.StdJsonCodec
@@ -8,6 +10,8 @@ var (
 	defaultBufferPool BufferPoolInterface = newBufferPool()
 
 	defaultLogger LoggerInterface = new(logger)
+
+	defaultHeaderPool = newHeaderPool()
 )
 
 // SetJsonCodec 设置JSON编码器
@@ -16,9 +20,9 @@ var (
 func SetJsonCodec(codec codec.Codec) {
 	defaultJsonCodec = codec
 
-	TextMapHeader = NewHeaderCodec(codec, MapHeader{}).setLengthBytes(textLengthEncoding)
+	TextMapHeader = NewHeaderCodec(&MapHeader{}, codec).setLengthBytes(textLengthEncoding)
 
-	BinaryMapHeader = NewHeaderCodec(codec, MapHeader{}).setLengthBytes(binaryLengthEncoding)
+	BinaryMapHeader = NewHeaderCodec(&MapHeader{}, codec).setLengthBytes(binaryLengthEncoding)
 }
 
 // SetBufferPool 设置buffer池

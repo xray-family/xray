@@ -3,6 +3,7 @@ package uRouter
 import (
 	"bytes"
 	"github.com/lxzan/uRouter/constant"
+	"net/http"
 	"sync"
 )
 
@@ -69,16 +70,18 @@ func (c *bufferPool) Put(b *bytes.Buffer) {
 	}
 }
 
-var defaultHeaderPool = newHeaderPool()
-
 func HeaderPool() *headerPool {
 	return defaultHeaderPool
 }
 
 func newHeaderPool() *headerPool {
 	var c = new(headerPool)
-	c.Register(HttpHeader{})
-	c.Register(MapHeader{})
+	c.Register(constant.HttpHeaderNumber, func() Header {
+		return &HttpHeader{Header: http.Header{}}
+	})
+	c.Register(constant.MapHeaderNumber, func() Header {
+		return &MapHeader{}
+	})
 	return c
 }
 
@@ -86,10 +89,9 @@ type headerPool struct {
 	pools [8]*sync.Pool
 }
 
-func (c *headerPool) Register(h Header) {
-	var id = h.Number()
+func (c *headerPool) Register(id int, generate func() Header) {
 	c.pools[id] = &sync.Pool{New: func() interface{} {
-		return h.Generate()
+		return generate()
 	}}
 }
 

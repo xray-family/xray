@@ -2,7 +2,6 @@ package uRouter
 
 import (
 	"bytes"
-	"errors"
 	"github.com/lxzan/uRouter/constant"
 	"github.com/lxzan/uRouter/helper"
 	"github.com/lxzan/uRouter/internal"
@@ -91,6 +90,12 @@ func Close(resource interface{}) {
 	}
 }
 
+// Close 关闭请求, 回收Header和Body资源
+func (c *Request) Close() {
+	c.Header.Close()
+	Close(c.Body)
+}
+
 func NewContext(request *Request, writer ResponseWriter) *Context {
 	return &Context{
 		index:    0,
@@ -158,11 +163,10 @@ func (c *Context) WriteReader(code int, r io.Reader) (err error) {
 
 // BindJSON 绑定请求数据
 func (c *Context) BindJSON(v interface{}) error {
-	defer Close(c.Request.Body)
 	if c.Request.Body != nil {
 		return defaultJsonCodec.NewDecoder(c.Request.Body).Decode(v)
 	}
-	return errors.New("request body cannot be nil")
+	return internal.ErrNilRequestBody
 }
 
 // Param 获取路径中的参数
