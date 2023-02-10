@@ -355,8 +355,8 @@ func TestRouter_Conflict(t *testing.T) {
 
 func TestRouter_Display(t *testing.T) {
 	r := New()
-	r.OnAction(http.MethodGet, "/user/list", func(ctx *Context) {})
-	r.OnAction(http.MethodPost, "/user/:id", func(ctx *Context) {})
+	r.OnEvent(http.MethodGet, "/user/list", func(ctx *Context) {})
+	r.OnEvent(http.MethodPost, "/user/:id", func(ctx *Context) {})
 	r.Display()
 }
 
@@ -369,8 +369,8 @@ func TestRouter_Dynamic(t *testing.T) {
 			as.NotNil(e)
 		}()
 		r := New()
-		r.OnAction(http.MethodGet, "/user/list", func(ctx *Context) {})
-		r.OnAction(http.MethodGet, "/user/:id", func(ctx *Context) {})
+		r.OnEvent(http.MethodGet, "/user/list", func(ctx *Context) {})
+		r.OnEvent(http.MethodGet, "/user/:id", func(ctx *Context) {})
 	})
 
 	t.Run("", func(t *testing.T) {
@@ -379,9 +379,9 @@ func TestRouter_Dynamic(t *testing.T) {
 			as.Nil(e)
 		}()
 		r := New()
-		r.OnAction(http.MethodGet, "/user/list", func(ctx *Context) {})
-		r.OnAction(http.MethodDelete, "/user/:id", func(ctx *Context) {})
-		r.OnAction(http.MethodPost, "/user/:id", func(ctx *Context) {})
+		r.OnEvent(http.MethodGet, "/user/list", func(ctx *Context) {})
+		r.OnEvent(http.MethodDelete, "/user/:id", func(ctx *Context) {})
+		r.OnEvent(http.MethodPost, "/user/:id", func(ctx *Context) {})
 	})
 
 	t.Run("", func(t *testing.T) {
@@ -392,14 +392,14 @@ func TestRouter_Dynamic(t *testing.T) {
 		r := New()
 
 		sum := 0
-		r.OnAction(http.MethodGet, "/user/:id/profile", func(ctx *Context) {
+		r.OnEvent(http.MethodGet, "/user/:id/profile", func(ctx *Context) {
 			sum++
 		})
-		r.OnAction(http.MethodGet, "/user/:id", func(ctx *Context) {
+		r.OnEvent(http.MethodGet, "/user/:id", func(ctx *Context) {
 
 		})
 		ctx := NewContext(&Request{}, newResponseWriterMocker())
-		r.EmitAction(http.MethodGet, "/user/1/profile", ctx)
+		r.EmitEvent(http.MethodGet, "/user/1/profile", ctx)
 		as.Equal(1, sum)
 	})
 
@@ -411,14 +411,14 @@ func TestRouter_Dynamic(t *testing.T) {
 		r := New()
 
 		sum := 0
-		r.OnAction(http.MethodGet, "/user/:id/profile", func(ctx *Context) {
+		r.OnEvent(http.MethodGet, "/user/:id/profile", func(ctx *Context) {
 			sum++
 		})
-		r.OnAction(http.MethodGet, "/user/:id", func(ctx *Context) {
+		r.OnEvent(http.MethodGet, "/user/:id", func(ctx *Context) {
 
 		})
 		ctx := NewContext(&Request{}, newResponseWriterMocker())
-		r.EmitAction(http.MethodPost, "/user/1/profile", ctx)
+		r.EmitEvent(http.MethodPost, "/user/1/profile", ctx)
 		as.Equal(0, sum)
 	})
 }

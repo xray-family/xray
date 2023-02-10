@@ -29,9 +29,9 @@ func (c *Group) Group(path string, middlewares ...HandlerFunc) *Group {
 	return group
 }
 
-// OnAction 监听事件
+// OnEvent 监听事件
 // listen to event
-func (c *Group) OnAction(action string, path string, handler HandlerFunc, middlewares ...HandlerFunc) {
+func (c *Group) OnEvent(action string, path string, handler HandlerFunc, middlewares ...HandlerFunc) {
 	action = strings.ToLower(action)
 	router := c.router
 	router.mu.Lock()
@@ -54,7 +54,7 @@ func (c *Group) OnAction(action string, path string, handler HandlerFunc, middle
 	}
 }
 
-// On  类似OnAction方法, 但是没有动作修饰词
+// On  类似OnEvent方法, 但是没有动作修饰词
 func (c *Group) On(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
-	c.OnAction("", path, handler, middlewares...)
+	c.OnEvent("", path, handler, middlewares...)
 }

@@ -128,11 +128,11 @@ func (c *Router) Group(path string, middlewares ...HandlerFunc) *Group {
 // On 监听事件
 // listen to event
 func (c *Router) On(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
-	c.OnAction("", path, handler, middlewares...)
+	c.OnEvent("", path, handler, middlewares...)
 }
 
-// OnAction 类似On方法, 多了一个动作修饰词
-func (c *Router) OnAction(action string, path string, handler HandlerFunc, middlewares ...HandlerFunc) {
+// OnEvent 类似On方法, 多了一个动作修饰词
+func (c *Router) OnEvent(action string, path string, handler HandlerFunc, middlewares ...HandlerFunc) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -156,12 +156,12 @@ func (c *Router) OnAction(action string, path string, handler HandlerFunc, middl
 // Emit 分发事件
 // emit event
 func (c *Router) Emit(path string, ctx *Context) {
-	c.EmitAction("", path, ctx)
+	c.EmitEvent("", path, ctx)
 }
 
-// EmitAction 分发事件
+// EmitEvent 分发事件
 // emit event
-func (c *Router) EmitAction(action string, path string, ctx *Context) {
+func (c *Router) EmitEvent(action string, path string, ctx *Context) {
 	ctx.Request.RPath = internal.JoinPath(c.separator, strings.ToLower(action), path)
 
 	{

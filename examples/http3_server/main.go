@@ -19,7 +19,7 @@ func main() {
 	router.Use(uRouter.Recovery())
 	var group = router.Group("/api/v1")
 
-	group.OnAction(http.MethodGet, "/user/:uid/article/:aid", func(ctx *uRouter.Context) {
+	group.OnEvent(http.MethodGet, "/user/:uid/article/:aid", func(ctx *uRouter.Context) {
 		_ = ctx.WriteJSON(http.StatusOK, uRouter.Any{
 			"uid": ctx.Param("uid"),
 			"aid": ctx.Param("aid"),

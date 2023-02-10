@@ -30,7 +30,7 @@ func newResponseWriter(socket websocketWrapper, codec *uRouter.HeaderCodec) *res
 		conn:        socket,
 		headerCodec: codec,
 		header:      codec.Generate(),
-		buf:         uRouter.BufferPool().Get(),
+		buf:         uRouter.BufferPool().Get(0),
 	}
 }
 
@@ -104,6 +104,6 @@ func (c *Adapter) ServeWebSocket(socket *gws.Conn, message *gws.Message) error {
 	}
 
 	ctx.Request.Header = header
-	c.router.EmitAction(r.Action, header.Get(constant.XPath), ctx)
+	c.router.EmitEvent(r.Action, header.Get(constant.XPath), ctx)
 	return nil
 }

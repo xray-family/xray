@@ -15,7 +15,7 @@ func NewController() *Controller {
 }
 
 func (c *Controller) Mapping(group *uRouter.Group) *Controller {
-	group.OnAction(http.MethodGet, "/greet/:name", c.Greet)
+	group.OnEvent(http.MethodGet, "/greet/:name", c.Greet)
 	return c
 }
 

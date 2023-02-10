@@ -69,14 +69,14 @@ func main() {
     router.Use(uRouter.Recovery(), uRouter.AccessLog())
     var group = router.Group("")
 
-    group.OnAction(http.MethodGet, "/user/:uid/article/:aid", func(ctx *uRouter.Context) {
+    group.OnEvent(http.MethodGet, "/user/:uid/article/:aid", func(ctx *uRouter.Context) {
         _ = ctx.WriteJSON(http.StatusOK, uRouter.Any{
             "uid": ctx.Param("uid"),
             "aid": ctx.Param("aid"),
         })
     })
 
-    group.OnAction(http.MethodPost, "/user/:uid", func(ctx *uRouter.Context) {
+    group.OnEvent(http.MethodPost, "/user/:uid", func(ctx *uRouter.Context) {
         _ = ctx.WriteString(http.StatusOK, "hello!")
     })
 
@@ -117,7 +117,7 @@ func main() {
         c.EventHandler = &WebSocketHandler{adapter: gwsAdapter.NewAdapter(router)}
     })
 
-    router.OnAction(http.MethodGet, "/connect", func(ctx *uRouter.Context) {
+    router.OnEvent(http.MethodGet, "/connect", func(ctx *uRouter.Context) {
         socket, err := upgrader.Accept(ctx.Writer.Raw().(http.ResponseWriter), ctx.Request.Raw.(*http.Request))
         if err != nil {
             uRouter.Logger().Error(err.Error())
