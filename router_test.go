@@ -32,7 +32,7 @@ func TestNew(t *testing.T) {
 			list = append(list, 6)
 		})
 
-		g1.On("greet", func(ctx *Context) {
+		g1.OnEvent(http.MethodGet, "greet", func(ctx *Context) {
 			list = append(list, 9)
 		}, func(ctx *Context) {
 			list = append(list, 7)
@@ -40,12 +40,11 @@ func TestNew(t *testing.T) {
 			list = append(list, 8)
 		})
 
+		r.Start()
+
 		path := "/api/v1/greet"
-		ctx := NewContext(
-			&Request{},
-			newResponseWriterMocker(),
-		)
-		r.Emit(path, ctx)
+		ctx := NewContext(&Request{}, newResponseWriterMocker())
+		r.EmitEvent(http.MethodGet, path, ctx)
 
 		as.Equal(9, len(list))
 		as.Equal(1, list[0])
@@ -357,7 +356,7 @@ func TestRouter_Display(t *testing.T) {
 	r := New()
 	r.OnEvent(http.MethodGet, "/user/list", func(ctx *Context) {})
 	r.OnEvent(http.MethodPost, "/user/:id", func(ctx *Context) {})
-	r.Display()
+	r.Start()
 }
 
 func TestRouter_Dynamic(t *testing.T) {

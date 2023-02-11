@@ -9,7 +9,6 @@ import (
 // route group
 type Group struct {
 	router      *Router
-	separator   string
 	path        string
 	middlewares []HandlerFunc
 }
@@ -22,8 +21,7 @@ func (c *Group) Group(path string, middlewares ...HandlerFunc) *Group {
 
 	group := &Group{
 		router:      c.router,
-		separator:   c.separator,
-		path:        internal.JoinPath(c.separator, c.path, path),
+		path:        internal.JoinPath(SEP, c.path, path),
 		middlewares: append(c.middlewares, middlewares...),
 	}
 	return group
@@ -41,8 +39,8 @@ func (c *Group) OnEvent(action string, path string, handler HandlerFunc, middlew
 	h = append(h, handler)
 	router.apis = append(router.apis, &apiHandler{
 		Action:   action,
-		Path:     internal.JoinPath(c.separator, c.path, path),
-		FullPath: internal.JoinPath(c.separator, action, c.path, path),
+		Path:     internal.JoinPath(SEP, c.path, path),
+		FullPath: internal.JoinPath(SEP, action, c.path, path),
 		Funcs:    h,
 	})
 

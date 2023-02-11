@@ -2,6 +2,7 @@ package internal
 
 import "strings"
 
+// TODO: 直接返回合法的path
 func JoinPath(sep string, ss ...string) string {
 	var ch = sep[0]
 	var cursor = 0

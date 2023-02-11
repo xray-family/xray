@@ -174,8 +174,8 @@ func (c *Context) BindJSON(v interface{}) error {
 // Param 获取路径中的参数
 // get the parameters in the path
 func (c *Context) Param(key string) string {
-	var list1 = helper.Split(c.Request.VPath, defaultSeparator)
-	var list2 = helper.Split(c.Request.RPath, defaultSeparator)
+	var list1 = helper.Split(c.Request.VPath, SEP)
+	var list2 = helper.Split(c.Request.RPath, SEP)
 	var m = len(list1)
 	var n = len(list2)
 	if m != n {

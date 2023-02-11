@@ -3,6 +3,7 @@ package http
 import (
 	"github.com/lxzan/uRouter"
 	"net/http"
+	"strings"
 )
 
 type responseWriter struct {
@@ -50,7 +51,7 @@ func (c *Adapter) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 		Raw:    request,
 		Header: uRouter.NewHttpHeader(request.Header),
 		Body:   request.Body,
-		Action: request.Method,
+		Action: strings.ToLower(request.Method),
 	}
 	var ctx = uRouter.NewContext(r, &responseWriter{ResponseWriter: writer})
 	c.router.EmitEvent(r.Action, request.URL.Path, ctx)

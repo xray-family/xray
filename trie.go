@@ -4,10 +4,7 @@ import (
 	"github.com/lxzan/uRouter/helper"
 )
 
-const (
-	defaultSeparator = "/" // 默认路径分隔符
-	defaultVarPrefix = ':' // 默认变量前缀
-)
+const defaultVarPrefix = ':' // 默认变量前缀
 
 type (
 	routeTree struct {
@@ -31,7 +28,7 @@ func isVar(s string) bool {
 func hasVar(s string) bool {
 	var n = len(s)
 	for i := 0; i < n-1; i++ {
-		if s[i] == defaultSeparator[0] && s[i+1] == defaultVarPrefix {
+		if s[i] == SEP[0] && s[i+1] == defaultVarPrefix {
 			return true
 		}
 	}
@@ -39,7 +36,7 @@ func hasVar(s string) bool {
 }
 
 func (c *routeTree) Set(handler *apiHandler) {
-	var list = helper.Split(handler.FullPath, defaultSeparator)
+	var list = helper.Split(handler.FullPath, SEP)
 	if len(list) == 0 {
 		return
 	}
@@ -70,7 +67,7 @@ func (c *routeTree) doSet(node *routeTree, index int, list []string, handler *ap
 }
 
 func (c *routeTree) Get(path string) (*apiHandler, bool) {
-	var list = helper.Split(path, defaultSeparator)
+	var list = helper.Split(path, SEP)
 	if len(list) == 0 {
 		return nil, false
 	}

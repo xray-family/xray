@@ -11,13 +11,13 @@ func TestRouteTree_Get(t *testing.T) {
 	var as = assert.New(t)
 
 	var tree = newRouteTree()
-	tree.Set("/api/v1/user/:id", []HandlerFunc{AccessLog()})
-	tree.Set("/api/v1/user/:id/profile", []HandlerFunc{AccessLog()})
-	tree.Set("/api/v1/user/:id/article/:article_id", []HandlerFunc{AccessLog()})
+	tree.Set(&apiHandler{FullPath: "/api/v1/user/:id", Funcs: []HandlerFunc{AccessLog()}})
+	tree.Set(&apiHandler{FullPath: "/api/v1/user/:id/profile", Funcs: []HandlerFunc{AccessLog()}})
+	tree.Set(&apiHandler{FullPath: "/api/v1/user/:id/article/:article_id", Funcs: []HandlerFunc{AccessLog()}})
 
 	var list []string
 	tree.Range(func(h *apiHandler) {
-		list = append(list, h.VPath)
+		list = append(list, h.FullPath)
 	})
 	as.ElementsMatch(
 		[]string{
@@ -38,26 +38,26 @@ func TestRouteTree_Get(t *testing.T) {
 	}
 	{
 		handler, _ := tree.Get("/api/v1/user/1")
-		as.Equal(handler.VPath, "/api/v1/user/:id")
+		as.Equal(handler.FullPath, "/api/v1/user/:id")
 	}
 	{
 		handler, _ := tree.Get("/api/v1/user/:id2")
-		as.Equal(handler.VPath, "/api/v1/user/:id")
+		as.Equal(handler.FullPath, "/api/v1/user/:id")
 	}
 	{
 		handler, _ := tree.Get("/api/v1/user/1/profile")
-		as.Equal(handler.VPath, "/api/v1/user/:id/profile")
+		as.Equal(handler.FullPath, "/api/v1/user/:id/profile")
 	}
 	{
 		handler, _ := tree.Get("/api/v1/user/1/article/2")
-		as.Equal(handler.VPath, "/api/v1/user/:id/article/:article_id")
+		as.Equal(handler.FullPath, "/api/v1/user/:id/article/:article_id")
 	}
 }
 
 func TestRouteTree_Set(t *testing.T) {
 	var tree = newRouteTree()
-	tree.Set("", []HandlerFunc{AccessLog()})
-	tree.Set("/api/", []HandlerFunc{AccessLog()})
+	tree.Set(&apiHandler{FullPath: "", Funcs: []HandlerFunc{AccessLog()}})
+	tree.Set(&apiHandler{FullPath: "/api/", Funcs: []HandlerFunc{AccessLog()}})
 }
 
 func TestRouteTree_Range(t *testing.T) {
@@ -80,13 +80,15 @@ func BenchmarkRouteTree_Get(b *testing.B) {
 			}
 			list = append(list, ele)
 		}
-		tree.Set(strings.Join(list, defaultSeparator), []HandlerFunc{})
+
+		api := &apiHandler{FullPath: strings.Join(list, SEP)}
+		tree.Set(api)
 	}
 
 	var paths []string
 	for i := 0; i < count; i++ {
 		var path = r.Generate(12)
-		path[0], path[3], path[6], path[9] = defaultSeparator[0], defaultSeparator[0], defaultSeparator[0], defaultSeparator[0]
+		path[0], path[3], path[6], path[9] = SEP[0], SEP[0], SEP[0], SEP[0]
 		paths = append(paths, string(path))
 	}
 

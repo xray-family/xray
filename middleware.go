@@ -15,7 +15,7 @@ func AccessLog() HandlerFunc {
 		var startTime = time.Now()
 		ctx.Next()
 
-		action, path := internal.SplitPath(defaultSeparator, ctx.Request.Action, ctx.Request.RPath)
+		action, path := internal.SplitPath(SEP, ctx.Request.Action, ctx.Request.RPath)
 		Logger().Info(
 			"access: protocol=%s, action=%s, path=%s, cost=%s",
 			ctx.Writer.Protocol(),
