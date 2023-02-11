@@ -237,7 +237,7 @@ func (c *Router) Start() {
 
 // StartSilently 仅启动路由器, 不打印问候语和API列表
 func (c *Router) StartSilently() {
-	c.chainsNotFound = append(c.chainsGlobal, c.OnNotFound)
+	c.chainsNotFound = append(c.cloneMiddlewares(c.chainsGlobal), c.OnNotFound)
 
 	var staticAPIs []*apiHandler
 	var dynamicAPIs []*apiHandler

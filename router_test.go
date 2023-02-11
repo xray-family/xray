@@ -1,6 +1,7 @@
 package uRouter
 
 import (
+	"github.com/lxzan/uRouter/internal"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"sync"
@@ -440,5 +441,204 @@ func TestRouter_Dynamic(t *testing.T) {
 		ctx := NewContext(&Request{}, newResponseWriterMocker())
 		r.EmitEvent(http.MethodPost, "/user/1/profile", ctx)
 		as.Equal(0, sum)
+	})
+}
+
+func TestRouter_EmitRandom(t *testing.T) {
+	var as = assert.New(t)
+
+	var count = 1024
+	var paths []string
+	for i := 0; i < count; i++ {
+		s0 := string(internal.AlphabetNumeric.Generate(4))
+		s1 := string(internal.AlphabetNumeric.Generate(4))
+		s2 := string(internal.AlphabetNumeric.Generate(4))
+		s3 := string(internal.AlphabetNumeric.Generate(4))
+
+		flag := internal.AlphabetNumeric.Intn(32)
+		switch flag {
+		case 1:
+			s0 = ":" + s0
+		case 3:
+			s1 = ":" + s1
+		case 5:
+			s2 = ":" + s2
+		case 7:
+			s3 = ":" + s3
+		}
+
+		paths = append(paths, internal.JoinPath(SEP, s0, s1, s2, s3))
+	}
+
+	var mapping = map[string]uint8{}
+	var r = New()
+	var g0 = r.Group("api")
+	var g1 = g0.Group("v1")
+	for _, v := range paths {
+		g1.OnGET(v, func(ctx *Context) {
+			mapping[ctx.Request.VPath] = 1
+		})
+	}
+	r.StartSilently()
+
+	var prefix = "/api/v1"
+	for i := 0; i < count; i++ {
+		ctx := newContextMocker()
+		r.EmitEvent(http.MethodGet, prefix+paths[i], ctx)
+	}
+	as.Equal(count, len(mapping))
+
+	var exists = func(p string) bool {
+		for _, v := range r.apis {
+			if v.Path == p {
+				return true
+			}
+
+			list1 := internal.Split(v.Path, SEP)
+			list2 := internal.Split(p, SEP)
+			if len(list1) != len(list2) {
+				continue
+			}
+
+			var counter = 0
+			for i, seg := range list1 {
+				if seg == list2[i] || isVar(seg) {
+					counter++
+				}
+			}
+			if counter == len(list1) {
+				return true
+			}
+		}
+		return false
+	}
+
+	//遍历去验证
+	var expected = 0
+	for k, _ := range mapping {
+		delete(mapping, k)
+	}
+	for i := 0; i < count; i++ {
+		ctx := newContextMocker()
+		segments := internal.Split(paths[i], SEP)
+		flag := internal.AlphabetNumeric.Intn(32)
+		switch flag {
+		case 2:
+			segments[0] = string(internal.Numeric.Generate(4))
+		case 4:
+			segments[1] = string(internal.Numeric.Generate(4))
+		case 6:
+			segments[2] = string(internal.Numeric.Generate(4))
+		case 8:
+			segments[3] = string(internal.Numeric.Generate(4))
+		}
+		var arr = []string{prefix}
+		arr = append(arr, segments...)
+		path := internal.JoinPath(SEP, arr...)
+		if exists(path) {
+			expected++
+		}
+		r.EmitEvent(http.MethodGet, path, ctx)
+	}
+	as.Equal(expected, len(mapping))
+}
+
+func TestRouter_Actions(t *testing.T) {
+	var as = assert.New(t)
+
+	t.Run("get", func(t *testing.T) {
+		var r = New()
+		var sum = 0
+		r.OnGET("/test", func(ctx *Context) {
+			sum++
+		})
+		r.StartSilently()
+		r.EmitEvent(http.MethodGet, "/test", newContextMocker())
+		as.Equal(1, sum)
+	})
+
+	t.Run("post", func(t *testing.T) {
+		var r = New()
+		var sum = 0
+		r.OnPOST("/test", func(ctx *Context) {
+			sum++
+		})
+		r.StartSilently()
+		r.EmitEvent(http.MethodPost, "/test", newContextMocker())
+		as.Equal(1, sum)
+	})
+
+	t.Run("put", func(t *testing.T) {
+		var r = New()
+		var sum = 0
+		r.OnPUT("/test", func(ctx *Context) {
+			sum++
+		})
+		r.StartSilently()
+		r.EmitEvent(http.MethodPut, "/test", newContextMocker())
+		as.Equal(1, sum)
+	})
+
+	t.Run("delete", func(t *testing.T) {
+		var r = New()
+		var sum = 0
+		r.OnDELETE("/test", func(ctx *Context) {
+			sum++
+		})
+		r.StartSilently()
+		r.EmitEvent(http.MethodDelete, "/test", newContextMocker())
+		as.Equal(1, sum)
+	})
+}
+
+func TestGroup_Actions(t *testing.T) {
+	var as = assert.New(t)
+
+	t.Run("get", func(t *testing.T) {
+		var r = New()
+		var g = r.Group("api/v1")
+		var sum = 0
+		g.OnGET("/test", func(ctx *Context) {
+			sum++
+		})
+		r.StartSilently()
+		r.EmitEvent(http.MethodGet, "/api/v1/test", newContextMocker())
+		as.Equal(1, sum)
+	})
+
+	t.Run("post", func(t *testing.T) {
+		var r = New()
+		var g = r.Group("api/v1")
+		var sum = 0
+		g.OnPOST("/test", func(ctx *Context) {
+			sum++
+		})
+		r.StartSilently()
+		r.EmitEvent(http.MethodPost, "/api/v1/test", newContextMocker())
+		as.Equal(1, sum)
+	})
+
+	t.Run("put", func(t *testing.T) {
+		var r = New()
+		var g = r.Group("api/v1")
+		var sum = 0
+		g.OnPUT("/test", func(ctx *Context) {
+			sum++
+		})
+		r.StartSilently()
+		r.EmitEvent(http.MethodPut, "/api/v1/test", newContextMocker())
+		as.Equal(1, sum)
+	})
+
+	t.Run("delete", func(t *testing.T) {
+		var r = New()
+		var g = r.Group("api/v1")
+		var sum = 0
+		g.OnDELETE("/test", func(ctx *Context) {
+			sum++
+		})
+		r.StartSilently()
+		r.EmitEvent(http.MethodDelete, "/api/v1/test", newContextMocker())
+		as.Equal(1, sum)
 	})
 }
