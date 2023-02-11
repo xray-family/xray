@@ -32,7 +32,7 @@ Hats off to express, koa, gin!
 - no dependence
 - dynamic separation matching request paths, powered by map and trie
 - the onion model middleware, router group
-- adapt to `http`, `http3`, `lxzan/gws`, `gorilla/websocket` ...
+- adapt to `http`, `http2`, `http3`, `lxzan/gws`, `gorilla/websocket` ...
 
 #### Index
 
