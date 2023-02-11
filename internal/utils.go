@@ -1,5 +1,7 @@
 package internal
 
+import "strings"
+
 func JoinPath(sep string, ss ...string) string {
 	var ch = sep[0]
 	var cursor = 0
@@ -29,4 +31,13 @@ func JoinPath(sep string, ss ...string) string {
 		return string(b[:cursor-1])
 	}
 	return string(b)
+}
+
+func SplitPath(sep string, p string, vpath string) (action string, path string) {
+	action = strings.ToLower(p)
+	if action == "" {
+		return action, vpath
+	}
+	path = strings.Replace(vpath, sep+action, "", 1)
+	return action, path
 }

@@ -22,12 +22,15 @@ type (
 		// 分隔符
 		separator string
 
+		// 注册好的接口
+		apis []*apiHandler
+
 		// 全局中间件
 		// global middlewares
 		chainsGlobal []HandlerFunc
 
 		// 静态路由
-		staticRoutes map[string][]HandlerFunc
+		staticRoutes map[string]*apiHandler
 
 		// 动态路由
 		dynamicRoutes *routeTree
@@ -45,6 +48,13 @@ type (
 		OnNotFound HandlerFunc
 	}
 
+	apiHandler struct {
+		Action   string        // 动作修饰词
+		Path     string        // 接口路径
+		FullPath string        // 接口路径, 包含action和name
+		Funcs    []HandlerFunc // 处理链
+	}
+
 	// HandlerFunc 处理函数
 	HandlerFunc func(ctx *Context)
 )
@@ -53,10 +63,11 @@ type (
 func New() *Router {
 	r := &Router{
 		separator:     defaultSeparator,
+		apis:          []*apiHandler{},
 		once:          &sync.Once{},
 		mu:            &sync.Mutex{},
 		chainsGlobal:  make([]HandlerFunc, 0),
-		staticRoutes:  map[string][]HandlerFunc{},
+		staticRoutes:  map[string]*apiHandler{},
 		dynamicRoutes: newRouteTree(),
 	}
 	r.OnNotFound = func(ctx *Context) {
@@ -136,21 +147,31 @@ func (c *Router) OnEvent(action string, path string, handler HandlerFunc, middle
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	vpath := internal.JoinPath(c.separator, strings.ToLower(action), path)
+	action = strings.ToLower(action)
 	h := append(c.chainsGlobal, middlewares...)
 	h = append(h, handler)
+	c.apis = append(c.apis, &apiHandler{
+		Action:   action,
+		Path:     internal.JoinPath(c.separator, path),
+		FullPath: internal.JoinPath(c.separator, action, path),
+		Funcs:    h,
+	})
 
-	// 检测路径冲突
-	if c.pathExists(vpath) {
-		c.showPathConflict(vpath)
-		return
-	}
-
-	if !hasVar(vpath) {
-		c.staticRoutes[vpath] = h
-	} else {
-		c.dynamicRoutes.Set(vpath, h)
-	}
+	//vpath := internal.JoinPath(c.separator, strings.ToLower(action), path)
+	//h := append(c.chainsGlobal, middlewares...)
+	//h = append(h, handler)
+	//
+	//// 检测路径冲突
+	//if c.pathExists(vpath) {
+	//	c.showPathConflict(vpath)
+	//	return
+	//}
+	//
+	//if !hasVar(vpath) {
+	//	c.staticRoutes[vpath] = h
+	//} else {
+	//	c.dynamicRoutes.Set(vpath, h)
+	//}
 }
 
 // Emit 分发事件
@@ -162,41 +183,41 @@ func (c *Router) Emit(path string, ctx *Context) {
 // EmitEvent 分发事件
 // emit event
 func (c *Router) EmitEvent(action string, path string, ctx *Context) {
-	ctx.Request.RPath = internal.JoinPath(c.separator, strings.ToLower(action), path)
-
-	{
-		// 优先匹配静态路由
-		// preferred match for static routes
-		if funcs, ok := c.staticRoutes[ctx.Request.RPath]; ok {
-			ctx.Request.VPath = ctx.Request.RPath
-			if len(funcs) > 0 {
-				ctx.handlers = funcs
-				ctx.Next()
-			}
-			return
-		}
-	}
-
-	{
-		// 匹配动态路由
-		// matching dynamic routes
-		if h, ok := c.dynamicRoutes.Get(ctx.Request.RPath); ok {
-			ctx.Request.VPath = h.VPath
-			if len(h.Funcs) > 0 {
-				ctx.handlers = h.Funcs
-				ctx.Next()
-			}
-			return
-		}
-	}
-
-	// 匹配失败的处理
-	// handling of failed matches
-	c.once.Do(func() {
-		c.chainsNotFound = append(c.chainsGlobal, c.OnNotFound)
-	})
-	ctx.handlers = c.chainsNotFound
-	ctx.Next()
+	//ctx.Request.RPath = internal.JoinPath(c.separator, strings.ToLower(action), path)
+	//
+	//{
+	//	// 优先匹配静态路由
+	//	// preferred match for static routes
+	//	if funcs, ok := c.staticRoutes[ctx.Request.RPath]; ok {
+	//		ctx.Request.VPath = ctx.Request.RPath
+	//		if len(funcs) > 0 {
+	//			ctx.handlers = funcs
+	//			ctx.Next()
+	//		}
+	//		return
+	//	}
+	//}
+	//
+	//{
+	//	// 匹配动态路由
+	//	// matching dynamic routes
+	//	if h, ok := c.dynamicRoutes.Get(ctx.Request.RPath); ok {
+	//		ctx.Request.VPath = h.VPath
+	//		if len(h.Funcs) > 0 {
+	//			ctx.handlers = h.Funcs
+	//			ctx.Next()
+	//		}
+	//		return
+	//	}
+	//}
+	//
+	//// 匹配失败的处理
+	//// handling of failed matches
+	//c.once.Do(func() {
+	//	c.chainsNotFound = append(c.chainsGlobal, c.OnNotFound)
+	//})
+	//ctx.handlers = c.chainsNotFound
+	//ctx.Next()
 }
 
 //go:embed asserts/bless.txt
@@ -205,31 +226,81 @@ var blessMessage string
 // Display 展示接口列表
 // display api list
 func (c *Router) Display() {
-	Logger().Info(blessMessage)
+	//Logger().Info(blessMessage)
+	//
+	//Logger().Info("uRouter is running")
+	//var keys = make([]string, 0, len(c.staticRoutes))
+	//for k, _ := range c.staticRoutes {
+	//	keys = append(keys, k)
+	//}
+	//sort.Strings(keys)
+	//
+	//Logger().Info("API List:")
+	//for _, key := range keys {
+	//	var handlers = c.staticRoutes[key]
+	//	var n = len(handlers)
+	//	if n > 0 {
+	//		funcName := runtime.FuncForPC(reflect.ValueOf(handlers[n-1]).Pointer()).Name()
+	//		Logger().Info("path=%s, handler=%s", key, funcName)
+	//	}
+	//}
+	//
+	//c.dynamicRoutes.Range(func(h *apiHandler) {
+	//	var handlers = h.Funcs
+	//	var n = len(handlers)
+	//	if n > 0 {
+	//		funcName := runtime.FuncForPC(reflect.ValueOf(handlers[n-1]).Pointer()).Name()
+	//		Logger().Info("path=%s, handler=%s", h.VPath, funcName)
+	//	}
+	//})
 
-	Logger().Info("uRouter is running")
-	var keys = make([]string, 0, len(c.staticRoutes))
-	for k, _ := range c.staticRoutes {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
-	Logger().Info("API List:")
-	for _, key := range keys {
-		var handlers = c.staticRoutes[key]
-		var n = len(handlers)
-		if n > 0 {
-			funcName := runtime.FuncForPC(reflect.ValueOf(handlers[n-1]).Pointer()).Name()
-			Logger().Info("path=%s, handler=%s", key, funcName)
+	sort.Slice(c.apis, func(i, j int) bool {
+		a := c.apis[i]
+		b := c.apis[j]
+		if a.Path != b.Path {
+			return a.Path < b.Path
 		}
-	}
-
-	c.dynamicRoutes.Range(func(h *apiHandler) {
-		var handlers = h.Funcs
-		var n = len(handlers)
-		if n > 0 {
-			funcName := runtime.FuncForPC(reflect.ValueOf(handlers[n-1]).Pointer()).Name()
-			Logger().Info("path=%s, handler=%s", h.VPath, funcName)
-		}
+		return a.Action < b.Action
 	})
+
+	Logger().Info(blessMessage + "\n\n")
+	Logger().Info("uRouter is running")
+	Logger().Info("API List:")
+	for _, v := range c.apis {
+		n := len(v.Funcs)
+		funcName := runtime.FuncForPC(reflect.ValueOf(v.Funcs[n-1]).Pointer()).Name()
+		Logger().Info("action=%s, path=%s, handler=%s", v.Action, v.Path, funcName)
+	}
+}
+
+// Start 启动路由器
+// 0, 1: false -1 true
+func (c *Router) Start() {
+	var staticAPIs []*apiHandler
+	var dynamicAPIs []*apiHandler
+	for i, v := range c.apis {
+		if hasVar(v.Path) {
+			dynamicAPIs = append(dynamicAPIs, c.apis[i])
+		} else {
+			staticAPIs = append(staticAPIs, c.apis[i])
+		}
+	}
+
+	for i, v := range dynamicAPIs {
+		if _, exist := c.dynamicRoutes.Get(v.FullPath); exist {
+			Logger().Panic("action=%s, path=%s, msg=api path conflict", v.Action, v.Path)
+			return
+		}
+		c.dynamicRoutes.Set(dynamicAPIs[i])
+	}
+
+	for i, v := range staticAPIs {
+		if _, exist := c.staticRoutes[v.FullPath]; exist {
+			Logger().Panic("action=%s, path=%s, msg=api path conflict", v.Action, v.Path)
+			return
+		}
+		c.staticRoutes[v.FullPath] = staticAPIs[i]
+	}
+
+	c.Display()
 }

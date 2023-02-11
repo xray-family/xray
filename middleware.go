@@ -2,6 +2,7 @@ package uRouter
 
 import (
 	"fmt"
+	"github.com/lxzan/uRouter/internal"
 	"net/http"
 	"runtime"
 	"strings"
@@ -13,10 +14,13 @@ func AccessLog() HandlerFunc {
 	return func(ctx *Context) {
 		var startTime = time.Now()
 		ctx.Next()
+
+		action, path := internal.SplitPath(defaultSeparator, ctx.Request.Action, ctx.Request.RPath)
 		Logger().Info(
-			"access: protocol=%s, path=%s, cost=%s",
+			"access: protocol=%s, action=%s, path=%s, cost=%s",
 			ctx.Writer.Protocol(),
-			ctx.Request.RPath,
+			action,
+			path,
 			time.Since(startTime).String(),
 		)
 	}

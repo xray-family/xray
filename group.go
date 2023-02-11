@@ -32,26 +32,35 @@ func (c *Group) Group(path string, middlewares ...HandlerFunc) *Group {
 // OnEvent 监听事件
 // listen to event
 func (c *Group) OnEvent(action string, path string, handler HandlerFunc, middlewares ...HandlerFunc) {
-	action = strings.ToLower(action)
 	router := c.router
 	router.mu.Lock()
 	defer router.mu.Unlock()
 
-	p := internal.JoinPath(c.separator, action, c.path, path)
+	action = strings.ToLower(action)
 	h := append(c.middlewares, middlewares...)
 	h = append(h, handler)
+	router.apis = append(router.apis, &apiHandler{
+		Action:   action,
+		Path:     internal.JoinPath(c.separator, c.path, path),
+		FullPath: internal.JoinPath(c.separator, action, c.path, path),
+		Funcs:    h,
+	})
 
-	// 检测路径冲突
-	if router.pathExists(p) {
-		router.showPathConflict(p)
-		return
-	}
-
-	if !hasVar(p) {
-		router.staticRoutes[p] = h
-	} else {
-		router.dynamicRoutes.Set(p, h)
-	}
+	//p := internal.JoinPath(c.separator, action, c.path, path)
+	//h := append(c.middlewares, middlewares...)
+	//h = append(h, handler)
+	//
+	//// 检测路径冲突
+	//if router.pathExists(p) {
+	//	router.showPathConflict(p)
+	//	return
+	//}
+	//
+	//if !hasVar(p) {
+	//	router.staticRoutes[p] = h
+	//} else {
+	//	router.dynamicRoutes.Set(p, h)
+	//}
 }
 
 // On  类似OnEvent方法, 但是没有动作修饰词

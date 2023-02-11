@@ -10,11 +10,6 @@ const (
 )
 
 type (
-	apiHandler struct {
-		VPath string
-		Funcs []HandlerFunc
-	}
-
 	routeTree struct {
 		Value    *apiHandler
 		Children map[string]*routeTree
@@ -43,9 +38,8 @@ func hasVar(s string) bool {
 	return false
 }
 
-func (c *routeTree) Set(vpath string, handlers []HandlerFunc) {
-	var handler = &apiHandler{VPath: vpath, Funcs: handlers}
-	var list = helper.Split(handler.VPath, defaultSeparator)
+func (c *routeTree) Set(handler *apiHandler) {
+	var list = helper.Split(handler.FullPath, defaultSeparator)
 	if len(list) == 0 {
 		return
 	}
