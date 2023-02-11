@@ -26,7 +26,7 @@ func main() {
 		})
 	})
 
-	router.Display()
+	router.Start()
 	if err := http3.ListenAndServe(":3000", "cert/server.pem", "cert/server-key.pem", httpAdapter.NewAdapter(router)); err != nil {
 		uRouter.Logger().Panic(err.Error())
 	}

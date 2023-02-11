@@ -73,6 +73,15 @@ func New() *Router {
 	return r
 }
 
+// cloneMiddlewares deep clone
+func (c *Router) cloneMiddlewares(chains []HandlerFunc) []HandlerFunc {
+	var results []HandlerFunc
+	for i, _ := range chains {
+		results = append(results, chains[i])
+	}
+	return results
+}
+
 // Use 设置全局中间件
 // set global middlewares
 func (c *Router) Use(middlewares ...HandlerFunc) {
@@ -90,7 +99,7 @@ func (c *Router) Group(path string, middlewares ...HandlerFunc) *Group {
 	var group = &Group{
 		router:      c,
 		path:        internal.JoinPath(SEP, path),
-		middlewares: append(c.chainsGlobal, middlewares...),
+		middlewares: append(c.cloneMiddlewares(c.chainsGlobal), middlewares...),
 	}
 	return group
 }
@@ -101,13 +110,29 @@ func (c *Router) On(path string, handler HandlerFunc, middlewares ...HandlerFunc
 	c.OnEvent("", path, handler, middlewares...)
 }
 
+func (c *Router) OnGET(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
+	c.OnEvent(http.MethodGet, path, handler, middlewares...)
+}
+
+func (c *Router) OnPOST(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
+	c.OnEvent(http.MethodPost, path, handler, middlewares...)
+}
+
+func (c *Router) OnPUT(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
+	c.OnEvent(http.MethodPut, path, handler, middlewares...)
+}
+
+func (c *Router) OnDELETE(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
+	c.OnEvent(http.MethodDelete, path, handler, middlewares...)
+}
+
 // OnEvent 类似On方法, 多了一个动作修饰词
 func (c *Router) OnEvent(action string, path string, handler HandlerFunc, middlewares ...HandlerFunc) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	action = strings.ToLower(action)
-	h := append(c.chainsGlobal, middlewares...)
+	h := append(c.cloneMiddlewares(c.chainsGlobal), middlewares...)
 	h = append(h, handler)
 	c.apis = append(c.apis, &apiHandler{
 		Action:   action,
