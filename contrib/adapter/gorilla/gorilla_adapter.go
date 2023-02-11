@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"github.com/gorilla/websocket"
 	"github.com/lxzan/uRouter"
-	"github.com/lxzan/uRouter/constant"
 	"sync"
 )
 
@@ -123,6 +122,6 @@ func (c *Adapter) ServeWebSocket(socket *websocket.Conn, opcode int, p []byte) e
 	}
 
 	ctx.Request.Header = header
-	c.Router.EmitEvent(r.Action, header.Get(constant.XPath), ctx)
+	c.Router.EmitEvent(r.Action, header.Get(uRouter.UPath), ctx)
 	return nil
 }

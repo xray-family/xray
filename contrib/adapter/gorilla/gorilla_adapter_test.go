@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"github.com/gorilla/websocket"
 	"github.com/lxzan/uRouter"
-	"github.com/lxzan/uRouter/constant"
+	"github.com/lxzan/uRouter/internal"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -45,8 +45,8 @@ func TestNewAdapter(t *testing.T) {
 			ctx.Writer = newResponseWriter(&connMocker{buf: bytes.NewBufferString("")}, uRouter.TextMapHeader)
 
 			sum++
-			ctx.Writer.Header().Set(constant.ContentType, constant.MimeStream)
-			ctx.Writer.Header().Set(constant.XPath, "/testDecode")
+			ctx.Writer.Header().Set(internal.ContentType, internal.MimeStream)
+			ctx.Writer.Header().Set(uRouter.UPath, "/testDecode")
 			ctx.Writer.Code(websocket.TextMessage)
 			_, _ = ctx.Writer.Write([]byte(responsePayload))
 			ctx.Writer.Raw()
@@ -74,8 +74,8 @@ func TestNewAdapter(t *testing.T) {
 
 		var b = &messageMocker{b: bytes.NewBufferString("")}
 		var header = &uRouter.MapHeader{
-			constant.ContentType: constant.MimeJson,
-			constant.XPath:       "/testEncode",
+			internal.ContentType: internal.MimeJson,
+			uRouter.UPath:        "/testEncode",
 		}
 		if err := router.codec.Encode(b.b, header); err != nil {
 			as.NoError(err)

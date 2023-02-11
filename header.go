@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/lxzan/uRouter/codec"
-	"github.com/lxzan/uRouter/constant"
 	"github.com/lxzan/uRouter/internal"
 	"math"
 	"net/http"
@@ -62,7 +61,7 @@ func (c *MapHeader) Close() {
 }
 
 func (c *MapHeader) Number() uint8 {
-	return constant.MapHeaderNumber
+	return internal.MapHeaderNumber
 }
 
 func (c *MapHeader) Len() int {
@@ -124,7 +123,7 @@ func (c HttpHeader) Generate() Header {
 func (c HttpHeader) Close() {}
 
 func (c HttpHeader) Number() uint8 {
-	return constant.HttpHeaderNumber
+	return internal.HttpHeaderNumber
 }
 
 func (c HttpHeader) Len() int {

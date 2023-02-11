@@ -2,7 +2,6 @@ package uRouter
 
 import (
 	"bytes"
-	"github.com/lxzan/uRouter/constant"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
@@ -25,7 +24,7 @@ func TestWebSocket(t *testing.T) {
 			sum++
 		})
 		var ctx = newContextMocker()
-		ctx.Request.Header.Set(constant.XPath, "test")
+		ctx.Request.Header.Set(UPath, "test")
 		r.Emit("test", ctx)
 		assert.Equal(t, 0, sum)
 	})
@@ -47,7 +46,7 @@ func TestWebSocket(t *testing.T) {
 
 		var ctx = newContextMocker()
 		ctx.Writer.(*responseWriterMocker).SetProtocol(ProtocolWebSocket)
-		ctx.Request.Header.Set(constant.XPath, "test")
+		ctx.Request.Header.Set(UPath, "test")
 		r.EmitEvent(http.MethodGet, "test", ctx)
 		assert.Equal(t, 1, sum)
 	})
@@ -81,7 +80,7 @@ func TestHTTP(t *testing.T) {
 
 		var ctx = newContextMocker()
 		ctx.Request.Raw = &http.Request{Method: http.MethodGet}
-		ctx.Request.Header.Set(constant.XPath, "test")
+		ctx.Request.Header.Set(UPath, "test")
 		r.Emit("test", ctx)
 		assert.Equal(t, 0, sum)
 	})
@@ -97,7 +96,7 @@ func TestHTTP(t *testing.T) {
 		var ctx = newContextMocker()
 		ctx.Writer.(*responseWriterMocker).SetProtocol(ProtocolWebSocket)
 		ctx.Request.Raw = &http.Request{Method: http.MethodPost}
-		ctx.Request.Header.Set(constant.XPath, "test")
+		ctx.Request.Header.Set(UPath, "test")
 		r.Emit("test", ctx)
 		assert.Equal(t, 0, sum)
 	})
@@ -146,7 +145,7 @@ func TestHTTP(t *testing.T) {
 
 		var ctx = newContextMocker()
 		ctx.Request.Raw = &http.Request{Method: http.MethodPost}
-		ctx.Request.Header.Set(constant.XPath, "test")
+		ctx.Request.Header.Set(UPath, "test")
 		r.Emit("test", ctx)
 		assert.Equal(t, 1, sum)
 	})
@@ -168,7 +167,7 @@ func TestRecovery(t *testing.T) {
 			panic("1")
 		})
 		var ctx = newContextMocker()
-		ctx.Request.Header.Set(constant.XPath, "test")
+		ctx.Request.Header.Set(UPath, "test")
 		r.Emit("test", ctx)
 	})
 
@@ -186,7 +185,7 @@ func TestRecovery(t *testing.T) {
 		r.doStart()
 
 		var ctx = newContextMocker()
-		ctx.Request.Header.Set(constant.XPath, "test")
+		ctx.Request.Header.Set(UPath, "test")
 		r.Emit("test", ctx)
 		println(1)
 	})

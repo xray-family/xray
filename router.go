@@ -11,12 +11,15 @@ import (
 	"sync"
 )
 
-const SEP = "/"
+const (
+	SEP   = "/"
+	UPath = "U-Path"
+)
 
 type (
 	// Router 路由器
 	Router struct {
-		// 互斥锁, 防止有人搞骚操作, 多线程注册路由
+		// 互斥锁, 防止有人搞骚操作, 开启多线程来注册路由
 		// mutual exclusion locks, prevent people from tampering, multi-thread registration routes
 		mu *sync.Mutex
 

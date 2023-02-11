@@ -1,7 +1,7 @@
 package uRouter
 
 import (
-	"github.com/lxzan/uRouter/helper"
+	"github.com/lxzan/uRouter/internal"
 )
 
 const defaultVarPrefix = ':' // 默认变量前缀
@@ -36,7 +36,7 @@ func hasVar(s string) bool {
 }
 
 func (c *routeTree) Set(handler *apiHandler) {
-	var list = helper.Split(handler.FullPath, SEP)
+	var list = internal.Split(handler.FullPath, SEP)
 	if len(list) == 0 {
 		return
 	}
@@ -67,7 +67,7 @@ func (c *routeTree) doSet(node *routeTree, index int, list []string, handler *ap
 }
 
 func (c *routeTree) Get(path string) (*apiHandler, bool) {
-	var list = helper.Split(path, SEP)
+	var list = internal.Split(path, SEP)
 	if len(list) == 0 {
 		return nil, false
 	}

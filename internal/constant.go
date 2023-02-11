@@ -1,11 +1,10 @@
-package constant
+package internal
 
 /*
 定义了内部使用的一些常量
 */
 
 const (
-	XPath       = "X-Path"
 	XRealIP     = "X-Real-Ip"
 	ContentType = "Content-Type"
 )

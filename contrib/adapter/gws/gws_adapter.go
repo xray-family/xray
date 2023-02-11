@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"github.com/lxzan/gws"
 	"github.com/lxzan/uRouter"
-	"github.com/lxzan/uRouter/constant"
 	"sync"
 )
 
@@ -104,6 +103,6 @@ func (c *Adapter) ServeWebSocket(socket *gws.Conn, message *gws.Message) error {
 	}
 
 	ctx.Request.Header = header
-	c.router.EmitEvent(r.Action, header.Get(constant.XPath), ctx)
+	c.router.EmitEvent(r.Action, header.Get(uRouter.UPath), ctx)
 	return nil
 }

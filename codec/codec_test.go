@@ -2,7 +2,7 @@ package codec
 
 import (
 	"bytes"
-	"github.com/lxzan/uRouter/constant"
+	"github.com/lxzan/uRouter/internal"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
@@ -10,13 +10,13 @@ import (
 
 func TestStdJsonCodec_Encode(t *testing.T) {
 	var v = http.Header{}
-	v.Set(constant.ContentType, constant.MimeJson)
+	v.Set(internal.ContentType, internal.MimeJson)
 	_, err := StdJsonCodec.Encode(v)
 	assert.NoError(t, err)
 }
 
 func TestStdJsonCodec_Decode(t *testing.T) {
-	var d = `{"xpath":["/api"]}`
+	var d = `{"UPath":["/api"]}`
 	var v = http.Header{}
 	err := StdJsonCodec.Decode([]byte(d), &v)
 	assert.NoError(t, err)

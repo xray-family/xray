@@ -3,7 +3,6 @@ package uRouter
 import (
 	"bytes"
 	"errors"
-	"github.com/lxzan/uRouter/constant"
 	"github.com/lxzan/uRouter/internal"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -29,8 +28,8 @@ func TestHeaderCodec(t *testing.T) {
 		var ip = "127.0.0.1"
 		var path = "/api/v1"
 		var header1 = TextMapHeader.Generate()
-		header1.Set(constant.XRealIP, ip)
-		header1.Set(constant.XPath, path)
+		header1.Set(internal.XRealIP, ip)
+		header1.Set(UPath, path)
 		var result = bytes.NewBuffer(nil)
 		if err := TextMapHeader.Encode(result, header1); err != nil {
 			as.NoError(err)
@@ -42,8 +41,8 @@ func TestHeaderCodec(t *testing.T) {
 			as.NoError(err)
 			return
 		}
-		as.Equal(ip, header2.Get(constant.XRealIP))
-		as.Equal(path, header2.Get(constant.XPath))
+		as.Equal(ip, header2.Get(internal.XRealIP))
+		as.Equal(path, header2.Get(UPath))
 	})
 
 	t.Run("empty text", func(t *testing.T) {
@@ -65,8 +64,8 @@ func TestHeaderCodec(t *testing.T) {
 		var ip = "127.0.0.1"
 		var path = "/api/v1"
 		var header1 = BinaryMapHeader.Generate()
-		header1.Set(constant.XRealIP, ip)
-		header1.Set(constant.XPath, path)
+		header1.Set(internal.XRealIP, ip)
+		header1.Set(UPath, path)
 		var result = bytes.NewBuffer(nil)
 		if err := BinaryMapHeader.Encode(result, header1); err != nil {
 			as.NoError(err)
@@ -78,8 +77,8 @@ func TestHeaderCodec(t *testing.T) {
 			as.NoError(err)
 			return
 		}
-		as.Equal(ip, header2.Get(constant.XRealIP))
-		as.Equal(path, header2.Get(constant.XPath))
+		as.Equal(ip, header2.Get(internal.XRealIP))
+		as.Equal(path, header2.Get(UPath))
 	})
 
 	t.Run("empty binary", func(t *testing.T) {
@@ -99,7 +98,7 @@ func TestHeaderCodec(t *testing.T) {
 
 	t.Run("encode header error", func(t *testing.T) {
 		var header = &headerMocker{NewMapHeader()}
-		header.Set(constant.ContentType, constant.MimeJson)
+		header.Set(internal.ContentType, internal.MimeJson)
 		var w = bytes.NewBufferString("")
 		as.Error(TextMapHeader.Encode(w, header))
 	})
@@ -145,12 +144,12 @@ func TestHeaderCodec(t *testing.T) {
 func TestHttpHeader(t *testing.T) {
 	var as = assert.New(t)
 	var header = HttpHeader{Header: http.Header{}}
-	header.Set(constant.ContentType, constant.MimeJson)
-	header.Set(constant.XPath, "")
+	header.Set(internal.ContentType, internal.MimeJson)
+	header.Set(UPath, "")
 	as.Equal(2, header.Len())
 
 	var keys []string
-	header.Del(constant.XPath)
+	header.Del(UPath)
 	header.Range(func(key string, value string) {
 		keys = append(keys, key)
 	})
@@ -160,19 +159,19 @@ func TestHttpHeader(t *testing.T) {
 func TestMapHeader(t *testing.T) {
 	var as = assert.New(t)
 	var header = mapHeaderTemplate.Generate().(*MapHeader)
-	header.Set(constant.ContentType, constant.MimeJson)
-	header.Set(constant.XPath, "")
+	header.Set(internal.ContentType, internal.MimeJson)
+	header.Set(UPath, "")
 	as.Equal(2, header.Len())
 
 	var keys []string
-	header.Del(constant.XPath)
+	header.Del(UPath)
 	header.Range(func(key string, value string) {
 		keys = append(keys, key)
 	})
 	as.Equal(1, len(keys))
 
-	as.Equal(constant.XPath, header.formatKey("x-path"))
-	as.Equal(constant.ContentType, header.formatKey("content-type"))
+	as.Equal(UPath, header.formatKey("u-path"))
+	as.Equal(internal.ContentType, header.formatKey("content-type"))
 	as.Equal("Ct", header.formatKey("ct"))
 	as.Equal("", header.formatKey(""))
 }

@@ -2,7 +2,7 @@ package uRouter
 
 import (
 	"bytes"
-	"github.com/lxzan/uRouter/constant"
+	"github.com/lxzan/uRouter/internal"
 	"net/http"
 	"sync"
 )
@@ -16,19 +16,19 @@ func newBufferPool() *bufferPool {
 		p16: &sync.Pool{},
 	}
 	bp.p1.New = func() interface{} {
-		return bytes.NewBuffer(make([]byte, 0, constant.BufferLeveL1))
+		return bytes.NewBuffer(make([]byte, 0, internal.BufferLeveL1))
 	}
 	bp.p2.New = func() interface{} {
-		return bytes.NewBuffer(make([]byte, 0, constant.BufferLeveL2))
+		return bytes.NewBuffer(make([]byte, 0, internal.BufferLeveL2))
 	}
 	bp.p4.New = func() interface{} {
-		return bytes.NewBuffer(make([]byte, 0, constant.BufferLeveL4))
+		return bytes.NewBuffer(make([]byte, 0, internal.BufferLeveL4))
 	}
 	bp.p8.New = func() interface{} {
-		return bytes.NewBuffer(make([]byte, 0, constant.BufferLeveL8))
+		return bytes.NewBuffer(make([]byte, 0, internal.BufferLeveL8))
 	}
 	bp.p16.New = func() interface{} {
-		return bytes.NewBuffer(make([]byte, 0, constant.BufferLeveL16))
+		return bytes.NewBuffer(make([]byte, 0, internal.BufferLeveL16))
 	}
 	return bp
 }
@@ -43,15 +43,15 @@ type bufferPool struct {
 
 func (c *bufferPool) Get(n int) *bytes.Buffer {
 	var b *bytes.Buffer
-	if n <= constant.BufferLeveL1 {
+	if n <= internal.BufferLeveL1 {
 		b = c.p1.Get().(*bytes.Buffer)
-	} else if n <= constant.BufferLeveL2 {
+	} else if n <= internal.BufferLeveL2 {
 		b = c.p2.Get().(*bytes.Buffer)
-	} else if n <= constant.BufferLeveL4 {
+	} else if n <= internal.BufferLeveL4 {
 		b = c.p4.Get().(*bytes.Buffer)
-	} else if n <= constant.BufferLeveL8 {
+	} else if n <= internal.BufferLeveL8 {
 		b = c.p8.Get().(*bytes.Buffer)
-	} else if n <= constant.BufferLeveL16 {
+	} else if n <= internal.BufferLeveL16 {
 		b = c.p16.Get().(*bytes.Buffer)
 	} else {
 		b = bytes.NewBuffer(make([]byte, 0, n))
@@ -66,15 +66,15 @@ func (c *bufferPool) Put(b *bytes.Buffer) {
 
 	n := b.Cap()
 	b.Reset()
-	if n <= constant.BufferLeveL1 {
+	if n <= internal.BufferLeveL1 {
 		c.p1.Put(b)
-	} else if n <= constant.BufferLeveL2 {
+	} else if n <= internal.BufferLeveL2 {
 		c.p2.Put(b)
-	} else if n <= constant.BufferLeveL4 {
+	} else if n <= internal.BufferLeveL4 {
 		c.p4.Put(b)
-	} else if n <= constant.BufferLeveL8 {
+	} else if n <= internal.BufferLeveL8 {
 		c.p8.Put(b)
-	} else if n <= constant.BufferLeveL16 {
+	} else if n <= internal.BufferLeveL16 {
 		c.p16.Put(b)
 	}
 }
@@ -85,10 +85,10 @@ func HeaderPool() *headerPool {
 
 func newHeaderPool() *headerPool {
 	var c = new(headerPool)
-	c.Register(constant.HttpHeaderNumber, func() Header {
+	c.Register(internal.HttpHeaderNumber, func() Header {
 		return HttpHeader{Header: http.Header{}}
 	})
-	c.Register(constant.MapHeaderNumber, func() Header {
+	c.Register(internal.MapHeaderNumber, func() Header {
 		return NewMapHeader()
 	})
 	return c

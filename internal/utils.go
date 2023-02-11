@@ -1,5 +1,7 @@
 package internal
 
+import "strings"
+
 // JoinPath 拼接请求路径
 // 如果搬来就是有效路径, 直接返回
 func JoinPath(sep string, ss ...string) string {
@@ -57,4 +59,25 @@ func isValidPath(sep string, path string) bool {
 		}
 	}
 	return true
+}
+
+// SelectString 三元操作
+func SelectString(expression bool, a, b string) string {
+	if expression {
+		return a
+	}
+	return b
+}
+
+// Split 分割字符串(空值将会被过滤掉)
+func Split(s string, sep string) []string {
+	var list = strings.Split(s, sep)
+	var j = 0
+	for _, v := range list {
+		if v = strings.TrimSpace(v); v != "" {
+			list[j] = v
+			j++
+		}
+	}
+	return list[:j]
 }
