@@ -39,14 +39,14 @@ func TestNewAdapter(t *testing.T) {
 		const requestPayload = "hello"
 		const responsePayload = "world"
 		var sum = 0
-		var router = NewAdapter().SetHeaderCodec(uRouter.TextHeader)
+		var router = NewAdapter().SetHeaderCodec(uRouter.TextMapHeader)
 
 		router.On("testEncode", func(ctx *uRouter.Context) {
-			ctx.Writer = newResponseWriter(&connMocker{buf: bytes.NewBufferString("")}, uRouter.TextHeader)
+			ctx.Writer = newResponseWriter(&connMocker{buf: bytes.NewBufferString("")}, uRouter.TextMapHeader)
 
 			sum++
 			ctx.Writer.Header().Set(constant.ContentType, constant.MimeStream)
-			ctx.Writer.Header().Set(constant.XPath, "/testDecode")
+			ctx.Writer.Header().Set(uRouter.UPath, "/testDecode")
 			ctx.Writer.Code(websocket.TextMessage)
 			_, _ = ctx.Writer.Write([]byte(responsePayload))
 			ctx.Writer.Raw()
@@ -70,11 +70,12 @@ func TestNewAdapter(t *testing.T) {
 			as.Equal(2, ctx.Request.Header.Len())
 			as.Equal(responsePayload, string(ctx.Request.Body.(*Message).Bytes()))
 		})
+		router.Start()
 
 		var b = &messageMocker{b: bytes.NewBufferString("")}
-		var header = uRouter.MapHeader{
+		var header = &uRouter.MapHeader{
 			constant.ContentType: constant.MimeJson,
-			constant.XPath:       "/testEncode",
+			uRouter.UPath:        "/testEncode",
 		}
 		if err := router.codec.Encode(b.b, header); err != nil {
 			as.NoError(err)
@@ -90,7 +91,7 @@ func TestNewAdapter(t *testing.T) {
 }
 
 func TestOthers(t *testing.T) {
-	var w = newResponseWriter(&websocket.Conn{}, uRouter.TextHeader)
+	var w = newResponseWriter(&websocket.Conn{}, uRouter.TextMapHeader)
 	w.RawResponseWriter()
 	assert.Equal(t, uRouter.ProtocolWebSocket, w.Protocol())
 }

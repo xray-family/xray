@@ -18,7 +18,7 @@ func main() {
 	r.Use(uRouter.Recovery(), uRouter.AccessLog())
 	group := r.Group("/api/v1")
 	NewController().Mapping(group)
-	r.Display()
+	r.Start()
 
 	if err := http.ListenAndServe(":3000", httpAdapter.NewAdapter(r)); err != nil {
 		uRouter.Logger().Panic(err.Error())

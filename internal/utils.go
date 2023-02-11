@@ -1,6 +1,22 @@
 package internal
 
+import "strings"
+
+// JoinPath 拼接请求路径
+// 如果搬来就是有效路径, 直接返回
 func JoinPath(sep string, ss ...string) string {
+	switch len(ss) {
+	case 0:
+		return sep
+	case 1:
+		if ss[0] == "" || ss[0] == sep {
+			return sep
+		}
+		if isValidPath(sep, ss[0]) {
+			return ss[0]
+		}
+	}
+
 	var ch = sep[0]
 	var cursor = 0
 	var b = make([]byte, 0, 32)
@@ -31,47 +47,55 @@ func JoinPath(sep string, ss ...string) string {
 	return string(b)
 }
 
-func Join1(a string, sep string) string {
-	if len(a) == 0 {
-		return sep
-	}
-	if a[0:1] != sep {
-		a = sep + a
-	}
-	return trimRight(a, sep)
-}
-
-func Join2(a string, b string, sep string) string {
-	b = trimRight(b, sep)
-	var m = len(a)
-	var n = len(b)
-	if m == 0 && n == 0 {
-		return sep
-	}
-
-	var f1 = m > 0 && a[m-1:m] == sep
-	var f2 = n > 0 && b[0:1] == sep
-	if f1 && f2 {
-		return a + b[1:]
-	} else if f1 || f2 {
-		if m == 0 {
-			return b
-		}
-		if n == 0 {
-			return a[:m-1]
-		}
-		return a + b
-	}
-	return a + sep + b
-}
-
-func trimRight(path string, sep string) string {
+func isValidPath(sep string, path string) bool {
+	var ch = sep[0]
 	var n = len(path)
-	if n == 0 {
-		return path
+	if path[0] != ch || path[n-1] == ch {
+		return false
 	}
-	if path[n-1:] == sep {
-		return path[:n-1]
+	for i := 1; i < n; i++ {
+		if path[i] == ch && path[i-1] == ch {
+			return false
+		}
 	}
-	return path
+	return true
+}
+
+// SelectString 三元操作
+func SelectString(expression bool, a, b string) string {
+	if expression {
+		return a
+	}
+	return b
+}
+
+// Split 分割字符串(空值将会被过滤掉)
+func Split(s string, sep string) []string {
+	var list = strings.Split(s, sep)
+	var j = 0
+	for _, v := range list {
+		if v = strings.TrimSpace(v); v != "" {
+			list[j] = v
+			j++
+		}
+	}
+	return list[:j]
+}
+
+func GetMaxLength(args ...string) int {
+	var x = 0
+	for _, v := range args {
+		if n := len(v); n > x {
+			x = n
+		}
+	}
+	return x
+}
+
+func Padding(s string, length int) string {
+	var b = []byte(s)
+	for len(b) < length {
+		b = append(b, ' ')
+	}
+	return string(b)
 }

@@ -1,20 +1,12 @@
 package uRouter
 
 import (
-	"github.com/lxzan/uRouter/helper"
+	"github.com/lxzan/uRouter/internal"
 )
 
-const (
-	defaultSeparator = "/" // 默认路径分隔符
-	defaultVarPrefix = ':' // 默认变量前缀
-)
+const defaultVarPrefix = ':' // 默认变量前缀
 
 type (
-	apiHandler struct {
-		VPath string
-		Funcs []HandlerFunc
-	}
-
 	routeTree struct {
 		Value    *apiHandler
 		Children map[string]*routeTree
@@ -36,16 +28,15 @@ func isVar(s string) bool {
 func hasVar(s string) bool {
 	var n = len(s)
 	for i := 0; i < n-1; i++ {
-		if s[i] == defaultSeparator[0] && s[i+1] == defaultVarPrefix {
+		if s[i] == SEP[0] && s[i+1] == defaultVarPrefix {
 			return true
 		}
 	}
 	return false
 }
 
-func (c *routeTree) Set(vpath string, handlers []HandlerFunc) {
-	var handler = &apiHandler{VPath: vpath, Funcs: handlers}
-	var list = helper.Split(handler.VPath, defaultSeparator)
+func (c *routeTree) Set(handler *apiHandler) {
+	var list = internal.Split(handler.FullPath, SEP)
 	if len(list) == 0 {
 		return
 	}
@@ -76,7 +67,7 @@ func (c *routeTree) doSet(node *routeTree, index int, list []string, handler *ap
 }
 
 func (c *routeTree) Get(path string) (*apiHandler, bool) {
-	var list = helper.Split(path, defaultSeparator)
+	var list = internal.Split(path, SEP)
 	if len(list) == 0 {
 		return nil, false
 	}

@@ -27,14 +27,14 @@ func TestNewAdapter(t *testing.T) {
 		const responsePayload = "world"
 		var sum = 0
 		var router = uRouter.New()
-		var adapter = NewAdapter(router).SetHeaderCodec(uRouter.TextHeader)
+		var adapter = NewAdapter(router).SetHeaderCodec(uRouter.TextMapHeader)
 
 		router.On("testEncode", func(ctx *uRouter.Context) {
-			ctx.Writer = newResponseWriter(&connMocker{buf: bytes.NewBufferString("")}, uRouter.TextHeader)
+			ctx.Writer = newResponseWriter(&connMocker{buf: bytes.NewBufferString("")}, uRouter.TextMapHeader)
 
 			sum++
 			ctx.Writer.Header().Set(constant.ContentType, constant.MimeStream)
-			ctx.Writer.Header().Set(constant.XPath, "/testDecode")
+			ctx.Writer.Header().Set(uRouter.UPath, "/testDecode")
 			ctx.Writer.Code(int(gws.OpcodeText))
 			_, _ = ctx.Writer.Write([]byte(responsePayload))
 			ctx.Writer.Raw()
@@ -58,15 +58,15 @@ func TestNewAdapter(t *testing.T) {
 			as.Equal(2, ctx.Request.Header.Len())
 			as.Equal(responsePayload, ctx.Request.Body.(*gws.Message).Data.String())
 		})
+		router.Start()
 
 		var b = &gws.Message{
 			Opcode: gws.OpcodeText,
 			Data:   bytes.NewBufferString(""),
 		}
-		var header = uRouter.MapHeader{
-			constant.ContentType: constant.MimeJson,
-			constant.XPath:       "/testEncode",
-		}
+		var header = uRouter.NewMapHeader()
+		header.Set(constant.ContentType, constant.MimeJson)
+		header.Set(uRouter.UPath, "/testEncode")
 		if err := adapter.codec.Encode(b.Data, header); err != nil {
 			as.NoError(err)
 			return
@@ -81,7 +81,7 @@ func TestNewAdapter(t *testing.T) {
 }
 
 func TestOthers(t *testing.T) {
-	var w = newResponseWriter(&gws.Conn{}, uRouter.TextHeader)
+	var w = newResponseWriter(&gws.Conn{}, uRouter.TextMapHeader)
 	assert.Equal(t, uRouter.ProtocolWebSocket, w.Protocol())
 
 	w.RawResponseWriter()

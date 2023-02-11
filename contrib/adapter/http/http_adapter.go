@@ -53,5 +53,5 @@ func (c *Adapter) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 		Action: request.Method,
 	}
 	var ctx = uRouter.NewContext(r, &responseWriter{ResponseWriter: writer})
-	c.router.EmitAction(r.Action, request.URL.Path, ctx)
+	c.router.EmitEvent(r.Action, request.URL.Path, ctx)
 }

@@ -2,6 +2,7 @@ package uRouter
 
 import (
 	"github.com/lxzan/uRouter/internal"
+	"net/http"
 	"strings"
 )
 
@@ -9,7 +10,6 @@ import (
 // route group
 type Group struct {
 	router      *Router
-	separator   string
 	path        string
 	middlewares []HandlerFunc
 }
@@ -22,39 +22,47 @@ func (c *Group) Group(path string, middlewares ...HandlerFunc) *Group {
 
 	group := &Group{
 		router:      c.router,
-		separator:   c.separator,
-		path:        internal.JoinPath(c.separator, c.path, path),
-		middlewares: append(c.middlewares, middlewares...),
+		path:        internal.JoinPath(SEP, c.path, path),
+		middlewares: append(c.router.cloneMiddlewares(c.middlewares), middlewares...),
 	}
 	return group
 }
 
-// OnAction 监听事件
+// OnEvent 监听事件
 // listen to event
-func (c *Group) OnAction(action string, path string, handler HandlerFunc, middlewares ...HandlerFunc) {
-	action = strings.ToLower(action)
+func (c *Group) OnEvent(action string, path string, handler HandlerFunc, middlewares ...HandlerFunc) {
 	router := c.router
 	router.mu.Lock()
 	defer router.mu.Unlock()
 
-	p := internal.JoinPath(c.separator, action, c.path, path)
-	h := append(c.middlewares, middlewares...)
+	action = strings.ToLower(action)
+	h := append(router.cloneMiddlewares(c.middlewares), middlewares...)
 	h = append(h, handler)
-
-	// 检测路径冲突
-	if router.pathExists(p) {
-		router.showPathConflict(p)
-		return
-	}
-
-	if !hasVar(p) {
-		router.staticRoutes[p] = h
-	} else {
-		router.dynamicRoutes.Set(p, h)
-	}
+	router.apis = append(router.apis, &apiHandler{
+		Action:   action,
+		Path:     internal.JoinPath(SEP, c.path, path),
+		FullPath: internal.JoinPath(SEP, action, c.path, path),
+		Funcs:    h,
+	})
 }
 
-// On  类似OnAction方法, 但是没有动作修饰词
+// On  类似OnEvent方法, 但是没有动作修饰词
 func (c *Group) On(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
-	c.OnAction("", path, handler, middlewares...)
+	c.OnEvent("", path, handler, middlewares...)
+}
+
+func (c *Group) OnGET(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
+	c.OnEvent(http.MethodGet, path, handler, middlewares...)
+}
+
+func (c *Group) OnPOST(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
+	c.OnEvent(http.MethodPost, path, handler, middlewares...)
+}
+
+func (c *Group) OnPUT(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
+	c.OnEvent(http.MethodPut, path, handler, middlewares...)
+}
+
+func (c *Group) OnDELETE(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
+	c.OnEvent(http.MethodDelete, path, handler, middlewares...)
 }

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"github.com/gorilla/websocket"
 	"github.com/lxzan/uRouter"
-	"github.com/lxzan/uRouter/constant"
 	"sync"
 )
 
@@ -43,7 +42,7 @@ func newResponseWriter(socket websocketWrapper, codec *uRouter.HeaderCodec) *res
 		conn:        socket,
 		headerCodec: codec,
 		header:      codec.Generate(),
-		buf:         uRouter.BufferPool().Get(),
+		buf:         uRouter.BufferPool().Get(0),
 	}
 }
 
@@ -89,7 +88,7 @@ func (c *responseWriter) Flush() error {
 func NewAdapter() *Adapter {
 	return &Adapter{
 		Router: uRouter.New(),
-		codec:  uRouter.TextHeader,
+		codec:  uRouter.TextMapHeader,
 	}
 }
 
@@ -123,6 +122,6 @@ func (c *Adapter) ServeWebSocket(socket *websocket.Conn, opcode int, p []byte) e
 	}
 
 	ctx.Request.Header = header
-	c.Router.EmitAction(r.Action, header.Get(constant.XPath), ctx)
+	c.Router.EmitEvent(r.Action, header.Get(uRouter.UPath), ctx)
 	return nil
 }

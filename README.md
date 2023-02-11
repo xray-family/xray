@@ -52,38 +52,37 @@ Hats off to express, koa, gin!
 package main
 
 import (
-    "github.com/lxzan/uRouter"
-    httpAdapter "github.com/lxzan/uRouter/contrib/adapter/http"
-    "github.com/lxzan/uRouter/contrib/codec/jsoniter"
-    "github.com/lxzan/uRouter/contrib/log/zerolog"
-    "net/http"
+	"github.com/lxzan/uRouter"
+	httpAdapter "github.com/lxzan/uRouter/contrib/adapter/http"
+	"github.com/lxzan/uRouter/contrib/codec/jsoniter"
+	"github.com/lxzan/uRouter/contrib/log/zerolog"
+	"net/http"
 )
 
 func init() {
-    uRouter.SetJsonCodec(jsoniter.JsoniterCodec)
-    uRouter.SetLogger(zerolog.ZeroLogger)
+	uRouter.SetJsonCodec(jsoniter.JsoniterCodec)
+	uRouter.SetLogger(zerolog.ZeroLogger)
 }
 
 func main() {
-    var router = uRouter.New()
-    router.Use(uRouter.Recovery(), uRouter.AccessLog())
-    var group = router.Group("")
+	var router = uRouter.New()
+	router.Use(uRouter.Recovery(), uRouter.AccessLog())
+	var group = router.Group("/api/v1")
 
-    group.OnAction(http.MethodGet, "/user/:uid/article/:aid", func(ctx *uRouter.Context) {
-        _ = ctx.WriteJSON(http.StatusOK, uRouter.Any{
-            "uid": ctx.Param("uid"),
-            "aid": ctx.Param("aid"),
-        })
-    })
+	group.OnGET("/user/list", func(ctx *uRouter.Context) {
+		_ = ctx.WriteJSON(http.StatusOK, []string{"ming", "hong"})
+	})
 
-    group.OnAction(http.MethodPost, "/user/:uid", func(ctx *uRouter.Context) {
-        _ = ctx.WriteString(http.StatusOK, "hello!")
-    })
+	group.OnPOST("/user/:name", func(ctx *uRouter.Context) {
+		_ = ctx.WriteJSON(http.StatusOK, uRouter.Any{
+			"hello": ctx.Param("name"),
+		})
+	})
 
-    router.Display()
-    if err := http.ListenAndServe(":3000", httpAdapter.NewAdapter(router)); err != nil {
-        uRouter.Logger().Panic(err.Error())
-    }
+	router.Start()
+	if err := http.ListenAndServe(":3000", httpAdapter.NewAdapter(router)); err != nil {
+		uRouter.Logger().Panic(err.Error())
+	}
 }
 ```
 
@@ -95,56 +94,57 @@ func main() {
 package main
 
 import (
-    "github.com/lxzan/gws"
-    "github.com/lxzan/uRouter"
-    gwsAdapter "github.com/lxzan/uRouter/contrib/adapter/gws"
-    httpAdapter "github.com/lxzan/uRouter/contrib/adapter/http"
-    "github.com/lxzan/uRouter/contrib/codec/jsoniter"
-    "github.com/lxzan/uRouter/contrib/log/zerolog"
-    "net/http"
+	"github.com/lxzan/gws"
+	"github.com/lxzan/uRouter"
+	gwsAdapter "github.com/lxzan/uRouter/contrib/adapter/gws"
+	httpAdapter "github.com/lxzan/uRouter/contrib/adapter/http"
+	"github.com/lxzan/uRouter/contrib/codec/jsoniter"
+	"github.com/lxzan/uRouter/contrib/log/zerolog"
+	"net/http"
 )
 
 func init() {
-    uRouter.SetLogger(zerolog.ZeroLogger)
-    uRouter.SetJsonCodec(jsoniter.JsoniterCodec)
+	uRouter.SetLogger(zerolog.ZeroLogger)
+	uRouter.SetJsonCodec(jsoniter.JsoniterCodec)
 }
 
 func main() {
-    router := uRouter.New()
-    router.Use(uRouter.Recovery(), uRouter.AccessLog())
+	router := uRouter.New()
+	router.Use(uRouter.Recovery(), uRouter.AccessLog())
 
-    upgrader := gws.NewUpgrader(func(c *gws.Upgrader) {
-        c.EventHandler = &WebSocketHandler{adapter: gwsAdapter.NewAdapter(router)}
-    })
+	upgrader := gws.NewUpgrader(func(c *gws.Upgrader) {
+		c.EventHandler = &WebSocketHandler{adapter: gwsAdapter.NewAdapter(router)}
+	})
 
-    router.OnAction(http.MethodGet, "/connect", func(ctx *uRouter.Context) {
-        socket, err := upgrader.Accept(ctx.Writer.Raw().(http.ResponseWriter), ctx.Request.Raw.(*http.Request))
-        if err != nil {
-            uRouter.Logger().Error(err.Error())
-            return
-        }
-        go socket.Listen()
-    })
+	router.OnGET("/connect", func(ctx *uRouter.Context) {
+		socket, err := upgrader.Accept(ctx.Writer.Raw().(http.ResponseWriter), ctx.Request.Raw.(*http.Request))
+		if err != nil {
+			uRouter.Logger().Error(err.Error())
+			return
+		}
+		go socket.Listen()
+	})
 
-    router.On("/greet", func(ctx *uRouter.Context) {
-        _ = ctx.WriteString(int(gws.OpcodeText), "hello!")
-    })
+	router.On("/greet", func(ctx *uRouter.Context) {
+		ctx.Writer.Header().Set("content-type", "plain/text")
+		_ = ctx.WriteString(int(gws.OpcodeText), "hello!")
+	})
 
-    router.Display()
-    if err := http.ListenAndServe(":3000", httpAdapter.NewAdapter(router)); err != nil {
-        uRouter.Logger().Panic(err.Error())
-    }
+	router.Start()
+	if err := http.ListenAndServe(":3000", httpAdapter.NewAdapter(router)); err != nil {
+		uRouter.Logger().Panic(err.Error())
+	}
 }
 
 type WebSocketHandler struct {
-    gws.BuiltinEventEngine
-    adapter *gwsAdapter.Adapter
+	gws.BuiltinEventEngine
+	adapter *gwsAdapter.Adapter
 }
 
 func (c *WebSocketHandler) OnMessage(socket *gws.Conn, message *gws.Message) {
-    if err := c.adapter.ServeWebSocket(socket, message); err != nil {
-        uRouter.Logger().Error(err.Error())
-    }
+	if err := c.adapter.ServeWebSocket(socket, message); err != nil {
+		uRouter.Logger().Error(err.Error())
+	}
 }
 
 ```
@@ -153,7 +153,7 @@ func (c *WebSocketHandler) OnMessage(socket *gws.Conn, message *gws.Message) {
 
 ```js
 let ws = new WebSocket('ws://127.0.0.1:3000/connect');
-ws.send('0019{"X-Path":"/greet"}{"hello":"world!"}');
+ws.send('0019{"U-Path":"/greet"}{"hello":"world!"}');
 ```
 
 #### Middleware
@@ -164,34 +164,35 @@ ws.send('0019{"X-Path":"/greet"}{"hello":"world!"}');
 package main
 
 import (
-    "github.com/lxzan/uRouter"
-    http2 "github.com/lxzan/uRouter/contrib/adapter/http"
-    "net/http"
+	"fmt"
+	"github.com/lxzan/uRouter"
+	http2 "github.com/lxzan/uRouter/contrib/adapter/http"
+	"net/http"
 )
 
 func main() {
-    var router = uRouter.New()
+	var router = uRouter.New()
 
-    var list []int
-    router.Use(func(ctx *uRouter.Context) {
-        list = append(list, 1)
-        ctx.Next()
-        list = append(list, 2)
-        fmt.Printf("%v\n", list)
-    })
+	var list []int
+	router.Use(func(ctx *uRouter.Context) {
+		list = append(list, 1)
+		ctx.Next()
+		list = append(list, 2)
+		fmt.Printf("%v\n", list)
+	})
 
-    var group = router.Group("/api/v1", func(ctx *uRouter.Context) {
-        list = append(list, 3)
-        ctx.Next()
-        list = append(list, 4)
-    })
+	var group = router.Group("/api/v1", func(ctx *uRouter.Context) {
+		list = append(list, 3)
+		ctx.Next()
+		list = append(list, 4)
+	})
 
-    group.On("/greet", func(ctx *uRouter.Context) {
-        list = append(list, 5)
-    })
+	group.OnGET("/greet", func(ctx *uRouter.Context) {
+		list = append(list, 5)
+	})
 
-    router.Display()
-    _ = http.ListenAndServe(":3000", http2.NewAdapter(router))
+	router.Start()
+	_ = http.ListenAndServe(":3000", http2.NewAdapter(router))
 }
 ```
 
@@ -203,36 +204,40 @@ output: 1, 3, 5, 4, 2
 
 ```go
 import (
-"github.com/lxzan/uRouter"
-"github.com/lxzan/uRouter/contrib/codec/jsoniter"
+    "github.com/lxzan/uRouter"
+    "github.com/lxzan/uRouter/contrib/codec/jsoniter"
 )
 
 func init() {
-// Better performance than uRouter.StdJsonCodec 
-uRouter.SetJsonCodec(jsoniter.JsoniterCodec)
+    // Better performance than uRouter.StdJsonCodec 
+    uRouter.SetJsonCodec(jsoniter.JsoniterCodec)
 }
 ```
 
 #### Header Codec (Not applicable to HTTP)
 
 ```
-uRouter.TextHeader: length_encoding=4 byte, max_header_length=9999 byte
-uRouter.BinaryHeader: length_encoding=2 byte, max_header_length=65535 byte
+uRouter.TextMapHeader:   length_encoding=4 byte, max_header_length=9999  byte
+uRouter.BinaryMapHeader: length_encoding=2 byte, max_header_length=65535 byte
 ```
 
 ```
-// TextHeader Example
+// TextMapHeader Example
 // header length => header payload => body
-0019{"X-Path":"/greet"}{"hello":"world!"}
+0019{"U-Path":"/greet"}{"hello":"world!"}
 ```
 
-#### Benchmark (dynamic route match)
+#### Benchmark
 
 ```
 goos: darwin
 goarch: arm64
-pkg: github.com/lxzan/uRouter
-BenchmarkRouteTree_Get-8   	 6125818	       172.4 ns/op	      80 B/op	       1 allocs/op
+pkg: github.com/lxzan/uRouter/contrib/adapter/http
+BenchmarkStaticRoute
+BenchmarkStaticRoute-8    	18487902	        59.00 ns/op
+BenchmarkDynamicRoute
+BenchmarkDynamicRoute-8   	 5447073	       218.2 ns/op
+BenchmarkGithubRoute
+BenchmarkGithubRoute-8    	10061475	       118.4 ns/op
 PASS
-ok  	github.com/lxzan/uRouter	1.640s
 ```

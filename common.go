@@ -20,8 +20,7 @@ type (
 	}
 
 	BufferPoolInterface interface {
-		SetSize(size int)
-		Get() *bytes.Buffer
+		Get(n int) *bytes.Buffer
 		Put(b *bytes.Buffer)
 	}
 

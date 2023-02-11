@@ -19,14 +19,14 @@ func main() {
 	router.Use(uRouter.Recovery())
 	var group = router.Group("/api/v1")
 
-	group.OnAction(http.MethodGet, "/user/:uid/article/:aid", func(ctx *uRouter.Context) {
+	group.OnEvent(http.MethodGet, "/user/:uid/article/:aid", func(ctx *uRouter.Context) {
 		_ = ctx.WriteJSON(http.StatusOK, uRouter.Any{
 			"uid": ctx.Param("uid"),
 			"aid": ctx.Param("aid"),
 		})
 	})
 
-	router.Display()
+	router.Start()
 	if err := http3.ListenAndServe(":3000", "cert/server.pem", "cert/server-key.pem", httpAdapter.NewAdapter(router)); err != nil {
 		uRouter.Logger().Panic(err.Error())
 	}

@@ -2,9 +2,7 @@ package uRouter
 
 import (
 	"bytes"
-	"errors"
 	"github.com/lxzan/uRouter/constant"
-	"github.com/lxzan/uRouter/helper"
 	"github.com/lxzan/uRouter/internal"
 	"io"
 	"strings"
@@ -91,9 +89,17 @@ func Close(resource interface{}) {
 	}
 }
 
+// Close 关闭请求, 回收Header和Body资源
+func (c *Request) Close() {
+	c.Header.Close()
+	Close(c.Body)
+	c.Header = nil
+	c.Body = nil
+}
+
 func NewContext(request *Request, writer ResponseWriter) *Context {
 	return &Context{
-		index:    -1,
+		index:    0,
 		storage:  Any{},
 		handlers: []HandlerFunc{},
 		Request:  request,
@@ -104,8 +110,8 @@ func NewContext(request *Request, writer ResponseWriter) *Context {
 // Next 执行下一个中间件
 func (c *Context) Next() {
 	c.index++
-	if c.index < len(c.handlers) {
-		c.handlers[c.index](c)
+	if c.index <= len(c.handlers) {
+		c.handlers[c.index-1](c)
 	}
 }
 
@@ -158,18 +164,17 @@ func (c *Context) WriteReader(code int, r io.Reader) (err error) {
 
 // BindJSON 绑定请求数据
 func (c *Context) BindJSON(v interface{}) error {
-	defer Close(c.Request.Body)
 	if c.Request.Body != nil {
 		return defaultJsonCodec.NewDecoder(c.Request.Body).Decode(v)
 	}
-	return errors.New("request body cannot be nil")
+	return constant.ErrNilRequestBody
 }
 
 // Param 获取路径中的参数
 // get the parameters in the path
 func (c *Context) Param(key string) string {
-	var list1 = helper.Split(c.Request.VPath, defaultSeparator)
-	var list2 = helper.Split(c.Request.RPath, defaultSeparator)
+	var list1 = internal.Split(c.Request.VPath, SEP)
+	var list2 = internal.Split(c.Request.RPath, SEP)
 	var m = len(list1)
 	var n = len(list2)
 	if m != n {

@@ -16,7 +16,7 @@ func TestStdJsonCodec_Encode(t *testing.T) {
 }
 
 func TestStdJsonCodec_Decode(t *testing.T) {
-	var d = `{"xpath":["/api"]}`
+	var d = `{"UPath":["/api"]}`
 	var v = http.Header{}
 	err := StdJsonCodec.Decode([]byte(d), &v)
 	assert.NoError(t, err)

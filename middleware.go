@@ -13,9 +13,11 @@ func AccessLog() HandlerFunc {
 	return func(ctx *Context) {
 		var startTime = time.Now()
 		ctx.Next()
-		Logger().Info(
-			"access: protocol=%s, path=%s, cost=%s",
+
+		Logger().Debug(
+			"access: protocol=%s, action=%s, path=%s, cost=%s",
 			ctx.Writer.Protocol(),
+			ctx.Request.Action,
 			ctx.Request.RPath,
 			time.Since(startTime).String(),
 		)

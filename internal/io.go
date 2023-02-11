@@ -1,7 +1,7 @@
 package internal
 
 import (
-	"errors"
+	"github.com/lxzan/uRouter/constant"
 	"io"
 )
 
@@ -11,7 +11,7 @@ func Write(w io.Writer, p []byte) error {
 		return err
 	}
 	if num != len(p) {
-		return errors.New("io size error")
+		return constant.ErrIOBytesUnexpected
 	}
 	return nil
 }
@@ -22,7 +22,7 @@ func Read(r io.Reader, p []byte) error {
 		return err
 	}
 	if num != len(p) {
-		return errors.New("io size error")
+		return constant.ErrIOBytesUnexpected
 	}
 	return nil
 }

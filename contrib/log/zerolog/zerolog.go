@@ -8,36 +8,32 @@ import (
 
 var ZeroLogger = newLogger()
 
-func newLogger() *zLogger {
-	return &zLogger{
-		caller: log.Output(zerolog.ConsoleWriter{Out: os.Stderr}),
-	}
+func newLogger() *ZLogger { return &ZLogger{Logger: log.Output(zerolog.ConsoleWriter{Out: os.Stderr})} }
+
+type ZLogger struct {
+	Logger zerolog.Logger
 }
 
-type zLogger struct {
-	caller zerolog.Logger
+func (c *ZLogger) UnWrap() zerolog.Logger {
+	return c.Logger
 }
 
-func (c *zLogger) UnWrap() zerolog.Logger {
-	return c.caller
+func (c *ZLogger) Debug(format string, v ...interface{}) {
+	c.Logger.Debug().Msgf(format, v...)
 }
 
-func (c *zLogger) Debug(format string, v ...interface{}) {
-	c.caller.Debug().Msgf(format, v...)
+func (c *ZLogger) Info(format string, v ...interface{}) {
+	c.Logger.Info().Msgf(format, v...)
 }
 
-func (c *zLogger) Info(format string, v ...interface{}) {
-	c.caller.Info().Msgf(format, v...)
+func (c *ZLogger) Warn(format string, v ...interface{}) {
+	c.Logger.Warn().Msgf(format, v...)
 }
 
-func (c *zLogger) Warn(format string, v ...interface{}) {
-	c.caller.Warn().Msgf(format, v...)
+func (c *ZLogger) Error(format string, v ...interface{}) {
+	c.Logger.Error().Msgf(format, v...)
 }
 
-func (c *zLogger) Error(format string, v ...interface{}) {
-	c.caller.Error().Msgf(format, v...)
-}
-
-func (c *zLogger) Panic(format string, v ...interface{}) {
-	c.caller.Panic().Msgf(format, v...)
+func (c *ZLogger) Panic(format string, v ...interface{}) {
+	c.Logger.Panic().Msgf(format, v...)
 }
