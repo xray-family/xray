@@ -58,6 +58,7 @@ func TestNewAdapter(t *testing.T) {
 			as.Equal(2, ctx.Request.Header.Len())
 			as.Equal(responsePayload, ctx.Request.Body.(*gws.Message).Data.String())
 		})
+		router.Start()
 
 		var b = &gws.Message{
 			Opcode: gws.OpcodeText,

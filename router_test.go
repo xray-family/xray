@@ -40,7 +40,7 @@ func TestNew(t *testing.T) {
 			list = append(list, 8)
 		})
 
-		r.Start()
+		r.doStart()
 
 		path := "/api/v1/greet"
 		ctx := NewContext(&Request{}, newResponseWriterMocker())
@@ -93,8 +93,9 @@ func TestNew(t *testing.T) {
 			&Request{Header: NewHttpHeader(http.Header{"X-Path": []string{path}})},
 			newResponseWriterMocker(),
 		)
-		r.Emit(path, ctx)
+		r.doStart()
 
+		r.Emit(path, ctx)
 		as.Equal(9, len(list))
 		as.Equal(1, list[0])
 		as.Equal(3, list[1])
@@ -137,6 +138,8 @@ func TestNew(t *testing.T) {
 			list = append(list, 8)
 		})
 
+		r.doStart()
+
 		path := "/api/v1/greet"
 		ctx := NewContext(
 			&Request{Header: NewHttpHeader(http.Header{"X-Path": []string{path}})},
@@ -167,6 +170,7 @@ func TestNew(t *testing.T) {
 			ctx.Next()
 			list = append(list, 2)
 		})
+		r.doStart()
 
 		path := "/test"
 		ctx := NewContext(
@@ -185,9 +189,8 @@ func TestNew(t *testing.T) {
 		var r = New()
 		var list []int
 
-		r.OnNotFound = func(ctx *Context) {
-			list = append(list, 1)
-		}
+		r.OnNotFound = func(ctx *Context) { list = append(list, 1) }
+		r.doStart()
 
 		path := "/test"
 		ctx := NewContext(
@@ -234,6 +237,7 @@ func TestRouter_OnNoMatch(t *testing.T) {
 			ctx.Set("sum", val.(int)+2)
 			ctx.Next()
 		})
+		r.doStart()
 
 		const count = 10
 		var wg = &sync.WaitGroup{}
@@ -283,9 +287,8 @@ func TestRouter_OnNoMatch(t *testing.T) {
 			list = append(list, 8)
 		})
 
-		r.OnNotFound = func(ctx *Context) {
-			list = append(list, 10)
-		}
+		r.OnNotFound = func(ctx *Context) { list = append(list, 10) }
+		r.doStart()
 
 		path := "/api/v1/xxx"
 		ctx := NewContext(
@@ -314,6 +317,7 @@ func TestRouter_Conflict(t *testing.T) {
 		var g = r.Group("user")
 		g.On("1", AccessLog())
 		r.On("user/1", AccessLog())
+		r.doStart()
 	})
 
 	t.Run("route conflict 2", func(t *testing.T) {
@@ -325,6 +329,7 @@ func TestRouter_Conflict(t *testing.T) {
 		var r = New()
 		r.On("user/:id", AccessLog())
 		r.On("user/1", AccessLog())
+		r.doStart()
 	})
 
 	t.Run("route conflict 3", func(t *testing.T) {
@@ -337,6 +342,7 @@ func TestRouter_Conflict(t *testing.T) {
 		r.On("user/:id", AccessLog())
 		var g = r.Group("user")
 		g.On("1", AccessLog())
+		r.doStart()
 	})
 
 	t.Run("route conflict 4", func(t *testing.T) {
@@ -349,6 +355,7 @@ func TestRouter_Conflict(t *testing.T) {
 		r.On("user/1", AccessLog())
 		var g = r.Group("user")
 		g.On(":id", AccessLog())
+		r.doStart()
 	})
 }
 
@@ -356,7 +363,7 @@ func TestRouter_Display(t *testing.T) {
 	r := New()
 	r.OnEvent(http.MethodGet, "/user/list", func(ctx *Context) {})
 	r.OnEvent(http.MethodPost, "/user/:id", func(ctx *Context) {})
-	r.Start()
+	r.doStart()
 }
 
 func TestRouter_Dynamic(t *testing.T) {
@@ -370,6 +377,7 @@ func TestRouter_Dynamic(t *testing.T) {
 		r := New()
 		r.OnEvent(http.MethodGet, "/user/list", func(ctx *Context) {})
 		r.OnEvent(http.MethodGet, "/user/:id", func(ctx *Context) {})
+		r.doStart()
 	})
 
 	t.Run("", func(t *testing.T) {
@@ -397,6 +405,8 @@ func TestRouter_Dynamic(t *testing.T) {
 		r.OnEvent(http.MethodGet, "/user/:id", func(ctx *Context) {
 
 		})
+		r.doStart()
+
 		ctx := NewContext(&Request{}, newResponseWriterMocker())
 		r.EmitEvent(http.MethodGet, "/user/1/profile", ctx)
 		as.Equal(1, sum)

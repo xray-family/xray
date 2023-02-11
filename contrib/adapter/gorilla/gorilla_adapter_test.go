@@ -70,6 +70,7 @@ func TestNewAdapter(t *testing.T) {
 			as.Equal(2, ctx.Request.Header.Len())
 			as.Equal(responsePayload, string(ctx.Request.Body.(*Message).Bytes()))
 		})
+		router.Start()
 
 		var b = &messageMocker{b: bytes.NewBufferString("")}
 		var header = &uRouter.MapHeader{

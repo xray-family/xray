@@ -190,7 +190,14 @@ func (c *Router) display() {
 }
 
 // Start 启动路由器
+// 打印问候语和API列表
 func (c *Router) Start() {
+	c.doStart()
+	c.display()
+}
+
+// 启动路由器
+func (c *Router) doStart() {
 	c.chainsNotFound = append(c.chainsGlobal, c.OnNotFound)
 
 	var staticAPIs []*apiHandler
@@ -203,21 +210,27 @@ func (c *Router) Start() {
 		}
 	}
 
+	var logger = func(v *apiHandler) {
+		Logger().Panic("action=%s, path=%s, msg=api path conflict", v.Action, v.Path)
+	}
+
 	for i, v := range dynamicAPIs {
 		if _, exist := c.dynamicRoutes.Get(v.FullPath); exist {
-			Logger().Panic("action=%s, path=%s, msg=api path conflict", v.Action, v.Path)
+			logger(v)
 			return
 		}
 		c.dynamicRoutes.Set(dynamicAPIs[i])
 	}
 
 	for i, v := range staticAPIs {
+		if _, exist := c.dynamicRoutes.Get(v.FullPath); exist {
+			logger(v)
+			return
+		}
 		if _, exist := c.staticRoutes[v.FullPath]; exist {
-			Logger().Panic("action=%s, path=%s, msg=api path conflict", v.Action, v.Path)
+			logger(v)
 			return
 		}
 		c.staticRoutes[v.FullPath] = staticAPIs[i]
 	}
-
-	c.display()
 }

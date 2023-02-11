@@ -72,6 +72,7 @@ func TestNewAdapter(t *testing.T) {
 		router.On("/test", func(ctx *uRouter.Context) {
 			sum++
 		})
+		router.Start()
 
 		adapter.ServeHTTP(nil, &http.Request{
 			Header: http.Header{},

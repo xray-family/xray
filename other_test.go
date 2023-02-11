@@ -37,6 +37,8 @@ func TestWebSocket(t *testing.T) {
 		r.On("test", func(ctx *Context) {
 			sum++
 		})
+		r.doStart()
+
 		var ctx = newContextMocker()
 		ctx.Writer.(*responseWriterMocker).SetProtocol(ProtocolWebSocket)
 		ctx.Request.Header.Set(constant.XPath, "test")
@@ -81,9 +83,8 @@ func TestHTTP(t *testing.T) {
 		var r = New()
 		var sum = 0
 		r.Use(HttpRequired(http.MethodPost))
-		r.On("test", func(ctx *Context) {
-			sum++
-		})
+		r.On("test", func(ctx *Context) { sum++ })
+		r.doStart()
 
 		var ctx = newContextMocker()
 		ctx.Request.Raw = &http.Request{Method: http.MethodPost}
@@ -124,9 +125,12 @@ func TestRecovery(t *testing.T) {
 		r.On("test", func(ctx *Context) {
 			panic("1")
 		})
+		r.doStart()
+
 		var ctx = newContextMocker()
 		ctx.Request.Header.Set(constant.XPath, "test")
 		r.Emit("test", ctx)
+		println(1)
 	})
 }
 
