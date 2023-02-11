@@ -12,8 +12,9 @@ import (
 )
 
 const (
-	SEP   = "/"
-	UPath = "U-Path"
+	SEP     = "/"
+	UPath   = "U-Path"
+	UAction = "U-Action"
 )
 
 type (

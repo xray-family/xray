@@ -102,6 +102,7 @@ func (c *Adapter) ServeWebSocket(socket *gws.Conn, message *gws.Message) error {
 		return err
 	}
 
+	r.Action = header.Get(uRouter.UAction)
 	ctx.Request.Header = header
 	c.router.EmitEvent(r.Action, header.Get(uRouter.UPath), ctx)
 	return nil

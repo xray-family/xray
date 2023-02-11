@@ -121,6 +121,7 @@ func (c *Adapter) ServeWebSocket(socket *websocket.Conn, opcode int, p []byte) e
 		return err
 	}
 
+	r.Action = header.Get(uRouter.UAction)
 	ctx.Request.Header = header
 	c.Router.EmitEvent(r.Action, header.Get(uRouter.UPath), ctx)
 	return nil
