@@ -100,8 +100,8 @@ func (c *MapHeader) formatKey(key string) string {
 	return string(b)
 }
 
-func NewHttpHeader(h http.Header) HttpHeader {
-	return HttpHeader{Header: h}
+func NewHttpHeader(h http.Header) *HttpHeader {
+	return &HttpHeader{Header: h}
 }
 
 type HttpHeader struct {

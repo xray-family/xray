@@ -9,11 +9,9 @@ import (
 
 func newBufferPool() *bufferPool {
 	bp := &bufferPool{
-		p1:  &sync.Pool{},
-		p2:  &sync.Pool{},
-		p4:  &sync.Pool{},
-		p8:  &sync.Pool{},
-		p16: &sync.Pool{},
+		p1: &sync.Pool{},
+		p2: &sync.Pool{},
+		p4: &sync.Pool{},
 	}
 	bp.p1.New = func() interface{} {
 		return bytes.NewBuffer(make([]byte, 0, internal.BufferLeveL1))
@@ -24,21 +22,13 @@ func newBufferPool() *bufferPool {
 	bp.p4.New = func() interface{} {
 		return bytes.NewBuffer(make([]byte, 0, internal.BufferLeveL4))
 	}
-	bp.p8.New = func() interface{} {
-		return bytes.NewBuffer(make([]byte, 0, internal.BufferLeveL8))
-	}
-	bp.p16.New = func() interface{} {
-		return bytes.NewBuffer(make([]byte, 0, internal.BufferLeveL16))
-	}
 	return bp
 }
 
 type bufferPool struct {
-	p1  *sync.Pool
-	p2  *sync.Pool
-	p4  *sync.Pool
-	p8  *sync.Pool
-	p16 *sync.Pool
+	p1 *sync.Pool
+	p2 *sync.Pool
+	p4 *sync.Pool
 }
 
 func (c *bufferPool) Get(n int) *bytes.Buffer {
@@ -49,10 +39,6 @@ func (c *bufferPool) Get(n int) *bytes.Buffer {
 		b = c.p2.Get().(*bytes.Buffer)
 	} else if n <= internal.BufferLeveL4 {
 		b = c.p4.Get().(*bytes.Buffer)
-	} else if n <= internal.BufferLeveL8 {
-		b = c.p8.Get().(*bytes.Buffer)
-	} else if n <= internal.BufferLeveL16 {
-		b = c.p16.Get().(*bytes.Buffer)
 	} else {
 		b = bytes.NewBuffer(make([]byte, 0, n))
 	}
@@ -72,10 +58,6 @@ func (c *bufferPool) Put(b *bytes.Buffer) {
 		c.p2.Put(b)
 	} else if n <= internal.BufferLeveL4 {
 		c.p4.Put(b)
-	} else if n <= internal.BufferLeveL8 {
-		c.p8.Put(b)
-	} else if n <= internal.BufferLeveL16 {
-		c.p16.Put(b)
 	}
 }
 

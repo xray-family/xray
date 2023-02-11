@@ -24,14 +24,6 @@ func TestBufferPool(t *testing.T) {
 	as.Equal(internal.BufferLeveL4, b2.Cap())
 	as.Equal(0, b2.Len())
 
-	b3 := p.Get(5200)
-	as.Equal(internal.BufferLeveL8, b3.Cap())
-	as.Equal(0, b3.Len())
-
-	b4 := p.Get(9200)
-	as.Equal(internal.BufferLeveL16, b4.Cap())
-	as.Equal(0, b4.Len())
-
 	b5 := p.Get(19200)
 	as.Equal(19200, b5.Cap())
 	as.Equal(0, b5.Len())
@@ -39,8 +31,6 @@ func TestBufferPool(t *testing.T) {
 	p.Put(b0)
 	p.Put(b1)
 	p.Put(b2)
-	p.Put(b3)
-	p.Put(b4)
 	p.Put(b5)
 	p.Put(nil)
 
@@ -55,14 +45,6 @@ func TestBufferPool(t *testing.T) {
 	b2 = p.Get(3200)
 	as.Equal(internal.BufferLeveL4, b2.Cap())
 	as.Equal(0, b2.Len())
-
-	b3 = p.Get(5200)
-	as.Equal(internal.BufferLeveL8, b3.Cap())
-	as.Equal(0, b3.Len())
-
-	b4 = p.Get(9200)
-	as.Equal(internal.BufferLeveL16, b4.Cap())
-	as.Equal(0, b4.Len())
 
 	b5 = p.Get(19200)
 	as.Equal(19200, b5.Cap())
