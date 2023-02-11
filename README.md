@@ -37,14 +37,14 @@ Hats off to express, koa, gin!
 #### Index
 
 - [uRouter](#urouter)
-      - [Feature](#feature)
-      - [Index](#index)
-      - [Quick Start](#quick-start)
-      - [WebSocket](#websocket)
-      - [Middleware](#middleware)
-      - [JSON Codec](#json-codec)
-      - [Header Codec (Not applicable to HTTP)](#header-codec-not-applicable-to-http)
-      - [Benchmark (dynamic route match)](#benchmark-dynamic-route-match)
+  - [Feature](#feature)
+  - [Index](#index)
+  - [Quick Start](#quick-start)
+  - [WebSocket](#websocket)
+  - [Middleware](#middleware)
+  - [JSON Codec](#json-codec)
+  - [Header Codec (Not applicable to HTTP)](#header-codec-not-applicable-to-http)
+  - [Benchmark (dynamic route match)](#benchmark-dynamic-route-match)
 
 #### Quick Start
 
@@ -204,13 +204,13 @@ output: 1, 3, 5, 4, 2
 
 ```go
 import (
-"github.com/lxzan/uRouter"
-"github.com/lxzan/uRouter/contrib/codec/jsoniter"
+    "github.com/lxzan/uRouter"
+    "github.com/lxzan/uRouter/contrib/codec/jsoniter"
 )
 
 func init() {
-  // Better performance than uRouter.StdJsonCodec 
-  uRouter.SetJsonCodec(jsoniter.JsoniterCodec)
+    // Better performance than uRouter.StdJsonCodec 
+    uRouter.SetJsonCodec(jsoniter.JsoniterCodec)
 }
 ```
 
