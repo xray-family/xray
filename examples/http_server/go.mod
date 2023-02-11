@@ -6,6 +6,7 @@ replace (
 	github.com/lxzan/uRouter => ../../
 	github.com/lxzan/uRouter/contrib/adapter/http => ../../contrib/adapter/http
 	github.com/lxzan/uRouter/contrib/log/zerolog => ../../contrib/log/zerolog
+	github.com/lxzan/uRouter/contrib/codec/jsoniter => ../../contrib/codec/jsoniter
 )
 
 require (

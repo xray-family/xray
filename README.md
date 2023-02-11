@@ -86,6 +86,10 @@ func main() {
 }
 ```
 
+- Output
+
+![1](asserts/boot.png)
+
 #### WebSocket
 
 - server
