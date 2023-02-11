@@ -25,6 +25,8 @@ func TestJoinPath(t *testing.T) {
 	as.Equal("/api/v1/user/list", JoinPath(sep, "/api/v1", "user", "list"))
 	as.Equal("/api/v1/user/list", JoinPath(sep, "/api/v1", "user", "list/"))
 	as.Equal("/api/v1/user/list", JoinPath(sep, "/api/v1", "/user", "/list"))
+	as.Equal("/api/v1/user", JoinPath(sep, "/api/v1", "", "/user"))
+	as.Equal("/api/v1/user", JoinPath(sep, "/api/v1//user"))
 }
 
 func TestRandomString(t *testing.T) {
@@ -56,4 +58,17 @@ func TestSplit(t *testing.T) {
 	assert.ElementsMatch(t, []string{"ming", "hong", "hu"}, Split("ming, hong, hu", ","))
 	assert.ElementsMatch(t, []string{"ming", "hong", "hu"}, Split(",ming, hong, hu, ", ","))
 	assert.ElementsMatch(t, []string{"ming", "hong", "hu"}, Split("\nming, hong, hu\n", ","))
+}
+
+func TestGetMaxLength(t *testing.T) {
+	var list = []string{"1", "12", "123"}
+	assert.Equal(t, 3, GetMaxLength(list...))
+}
+
+func TestPadding(t *testing.T) {
+	assert.Equal(t, 16, len(Padding("123", 16)))
+}
+
+func TestUError_Error(t *testing.T) {
+	println(ErrHeaderTooLarge.Error())
 }

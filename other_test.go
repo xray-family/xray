@@ -63,7 +63,7 @@ func TestWebSocket(t *testing.T) {
 		r.On(path, func(ctx *Context) {
 			panic("recovery test")
 		})
-		r.doStart()
+		r.StartSilently()
 
 		r.Emit(path, newContextMocker())
 	})
@@ -109,7 +109,7 @@ func TestHTTP(t *testing.T) {
 		r.OnEvent(http.MethodGet, path, func(ctx *Context) {
 			sum++
 		})
-		r.doStart()
+		r.StartSilently()
 
 		var ctx = newContextMocker()
 		ctx.Request.Raw = &http.Request{}
@@ -125,7 +125,7 @@ func TestHTTP(t *testing.T) {
 		r.OnEvent(http.MethodGet, path, func(ctx *Context) {
 			sum++
 		})
-		r.doStart()
+		r.StartSilently()
 
 		var ctx = newContextMocker()
 		ctx.Request.Raw = &http.Request{}
@@ -141,7 +141,7 @@ func TestHTTP(t *testing.T) {
 		var sum = 0
 		r.Use(HttpRequired(http.MethodPost))
 		r.On("test", func(ctx *Context) { sum++ })
-		r.doStart()
+		r.StartSilently()
 
 		var ctx = newContextMocker()
 		ctx.Request.Raw = &http.Request{Method: http.MethodPost}
@@ -182,7 +182,7 @@ func TestRecovery(t *testing.T) {
 		r.On("test", func(ctx *Context) {
 			panic("1")
 		})
-		r.doStart()
+		r.StartSilently()
 
 		var ctx = newContextMocker()
 		ctx.Request.Header.Set(UPath, "test")

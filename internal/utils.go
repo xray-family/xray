@@ -81,3 +81,21 @@ func Split(s string, sep string) []string {
 	}
 	return list[:j]
 }
+
+func GetMaxLength(args ...string) int {
+	var x = 0
+	for _, v := range args {
+		if n := len(v); n > x {
+			x = n
+		}
+	}
+	return x
+}
+
+func Padding(s string, length int) string {
+	var b = []byte(s)
+	for len(b) < length {
+		b = append(b, ' ')
+	}
+	return string(b)
+}

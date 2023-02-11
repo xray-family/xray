@@ -181,22 +181,37 @@ func (c *Router) display() {
 	Logger().Info(blessMessage + "\n\n")
 	Logger().Info("uRouter is running")
 	Logger().Info("API List:")
+
+	var actions []string
+	var paths []string
+	for _, v := range c.apis {
+		actions = append(actions, v.Action)
+		paths = append(paths, v.Path)
+	}
+	actionLength := internal.GetMaxLength(actions...)
+	pathLength := internal.GetMaxLength(paths...)
+
 	for _, v := range c.apis {
 		n := len(v.Funcs)
 		funcName := runtime.FuncForPC(reflect.ValueOf(v.Funcs[n-1]).Pointer()).Name()
-		Logger().Info("action=%s, path=%s, handler=%s", v.Action, v.Path, funcName)
+		Logger().Info(
+			"action=%s path=%s handler=%s",
+			internal.Padding(v.Action, actionLength),
+			internal.Padding(v.Path, pathLength),
+			funcName,
+		)
 	}
 }
 
-// Start 启动路由器
-// 打印问候语和API列表
+// Start
+// 启动路由器并打印问候语和API列表
 func (c *Router) Start() {
-	c.doStart()
+	c.StartSilently()
 	c.display()
 }
 
-// 启动路由器
-func (c *Router) doStart() {
+// StartSilently 仅启动路由器, 不打印问候语和API列表
+func (c *Router) StartSilently() {
 	c.chainsNotFound = append(c.chainsGlobal, c.OnNotFound)
 
 	var staticAPIs []*apiHandler

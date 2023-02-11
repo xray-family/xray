@@ -1,41 +1,96 @@
 package http
 
 import (
-	"github.com/lxzan/gws"
+	_ "embed"
 	"github.com/lxzan/uRouter"
+	"github.com/lxzan/uRouter/codec"
 	"github.com/lxzan/uRouter/internal"
 	"net/http"
+	"net/url"
 	"testing"
 )
 
-func BenchmarkHTTPReadWrite16(b *testing.B) {
+func BenchmarkStaticRoute(b *testing.B) {
+	r := uRouter.New()
+	path := "/test"
+	r.OnEvent(http.MethodGet, path, func(ctx *uRouter.Context) {
+	})
+	r.StartSilently()
+
 	ctx := uRouter.NewContext(
 		&uRouter.Request{Header: uRouter.NewHttpHeader(http.Header{})},
 		&responseWriter{ResponseWriter: newWriterMocker()},
 	)
 
-	var v = struct {
-		Message string `json:"message"`
-	}{
-		Message: string(internal.AlphabetNumeric.Generate(16)),
-	}
-
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		ctx.Request.Header = uRouter.HeaderPool().Get(internal.MapHeaderNumber)
-		ctx.Request.Header.Set(internal.XRealIP, "127.0.0.1")
-		ctx.Request.Header.Set(uRouter.UPath, "/test")
-		_ = ctx.WriteJSON(int(gws.OpcodeText), &v)
-
-		ctx.Writer.Raw().(*writerMocker).buf.Reset()
+		r.EmitEvent(http.MethodGet, path, ctx)
 	}
 }
 
-func BenchmarkHTTPReadWrite512(b *testing.B) {
+func BenchmarkDynamicRoute(b *testing.B) {
+	r := uRouter.New()
+	path := "/api/v1/user/:id"
+	r.OnEvent(http.MethodGet, path, func(ctx *uRouter.Context) {
+	})
+	r.StartSilently()
+
+	ctx := uRouter.NewContext(
+		&uRouter.Request{Header: uRouter.NewHttpHeader(http.Header{})},
+		&responseWriter{ResponseWriter: newWriterMocker()},
+	)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		r.EmitEvent(http.MethodGet, "/api/v1/user/1", ctx)
+	}
+}
+
+//go:embed github-api.json
+var githubAPI []byte
+
+func BenchmarkGithubRoute(b *testing.B) {
+	r := uRouter.New()
+	var rows = uRouter.Form{}
+	codec.StdJsonCodec.Decode(githubAPI, &rows)
+
+	var paths []string
+	for _, s := range rows {
+		u, e := url.Parse(s)
+		if e == nil {
+			paths = append(paths, u.Path)
+			r.OnEvent(http.MethodGet, u.Path, func(ctx *uRouter.Context) {})
+		}
+	}
+	r.StartSilently()
+
+	ctx := uRouter.NewContext(
+		&uRouter.Request{Header: uRouter.NewHttpHeader(http.Header{})},
+		&responseWriter{ResponseWriter: newWriterMocker()},
+	)
+
+	b.ResetTimer()
+	count := len(paths)
+	for i := 0; i < b.N; i++ {
+		path := paths[i%count]
+		r.EmitEvent(http.MethodGet, path, ctx)
+	}
+}
+
+func BenchmarkWrite(b *testing.B) {
+	var message = struct {
+		Message string `json:"message"`
+	}{
+		Message: string(internal.AlphabetNumeric.Generate(512)),
+	}
+
 	r := uRouter.New()
 	path := "/test"
 	r.OnEvent(http.MethodGet, path, func(ctx *uRouter.Context) {
+		ctx.Writer.Raw().(*writerMocker).buf.Reset()
+		_ = ctx.WriteJSON(http.StatusOK, message)
 	})
-	r.Start()
+	r.StartSilently()
 
 	ctx := uRouter.NewContext(
 		&uRouter.Request{Header: uRouter.NewHttpHeader(http.Header{})},
