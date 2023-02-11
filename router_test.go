@@ -357,6 +357,18 @@ func TestRouter_Conflict(t *testing.T) {
 		g.On(":id", AccessLog())
 		r.doStart()
 	})
+
+	t.Run("route conflict 5", func(t *testing.T) {
+		defer func() {
+			e := recover()
+			as.NotNil(e)
+		}()
+
+		var r = New()
+		r.On("user/:id", AccessLog())
+		r.On("user/:name", AccessLog())
+		r.doStart()
+	})
 }
 
 func TestRouter_Display(t *testing.T) {

@@ -13,7 +13,9 @@ var (
 
 	defaultHeaderPool = newHeaderPool()
 
-	mapHeaderInstance = new(MapHeader)
+	mapHeaderTemplate = new(MapHeader)
+
+	httpHeaderTemplate = new(HttpHeader)
 )
 
 // SetJsonCodec 设置JSON编码器
@@ -22,9 +24,9 @@ var (
 func SetJsonCodec(codec codec.Codec) {
 	defaultJsonCodec = codec
 
-	TextMapHeader = NewHeaderCodec(mapHeaderInstance, codec).setLengthBytes(textLengthEncoding)
+	TextMapHeader = NewHeaderCodec(mapHeaderTemplate, codec).setLengthBytes(textLengthEncoding)
 
-	BinaryMapHeader = NewHeaderCodec(mapHeaderInstance, codec).setLengthBytes(binaryLengthEncoding)
+	BinaryMapHeader = NewHeaderCodec(mapHeaderTemplate, codec).setLengthBytes(binaryLengthEncoding)
 }
 
 // SetBufferPool 设置buffer池

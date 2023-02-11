@@ -159,7 +159,7 @@ func TestHttpHeader(t *testing.T) {
 
 func TestMapHeader(t *testing.T) {
 	var as = assert.New(t)
-	var header = mapHeaderInstance.Generate().(*MapHeader)
+	var header = mapHeaderTemplate.Generate().(*MapHeader)
 	header.Set(constant.ContentType, constant.MimeJson)
 	header.Set(constant.XPath, "")
 	as.Equal(2, header.Len())

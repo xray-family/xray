@@ -19,7 +19,7 @@ func newContextMocker() *Context {
 	return ctx
 }
 
-func newResponseWriterMocker() ResponseWriter {
+func newResponseWriterMocker() *responseWriterMocker {
 	return &responseWriterMocker{
 		protocol:   ProtocolHTTP,
 		statusCode: 0,

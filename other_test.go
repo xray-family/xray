@@ -34,16 +34,39 @@ func TestWebSocket(t *testing.T) {
 		var r = New()
 		var sum = 0
 		r.Use(WebSocketRequired())
-		r.On("test", func(ctx *Context) {
+		r.OnEvent(http.MethodGet, "test", func(ctx *Context) {
 			sum++
+		}, AccessLog())
+		r.OnEvent(http.MethodPost, "test", func(ctx *Context) {
+			sum += 2
 		})
-		r.doStart()
+		r.OnEvent(http.MethodPost, "aha", func(ctx *Context) {
+			sum += 4
+		})
+		r.Start()
 
 		var ctx = newContextMocker()
 		ctx.Writer.(*responseWriterMocker).SetProtocol(ProtocolWebSocket)
 		ctx.Request.Header.Set(constant.XPath, "test")
-		r.Emit("test", ctx)
+		r.EmitEvent(http.MethodGet, "test", ctx)
 		assert.Equal(t, 1, sum)
+	})
+
+	t.Run("recovery", func(t *testing.T) {
+		defer func() {
+			e := recover()
+			assert.Nil(t, e)
+		}()
+
+		r := New()
+		r.Use(Recovery())
+		var path = "/test"
+		r.On(path, func(ctx *Context) {
+			panic("recovery test")
+		})
+		r.doStart()
+
+		r.Emit(path, newContextMocker())
 	})
 }
 
@@ -76,6 +99,41 @@ func TestHTTP(t *testing.T) {
 		ctx.Request.Raw = &http.Request{Method: http.MethodPost}
 		ctx.Request.Header.Set(constant.XPath, "test")
 		r.Emit("test", ctx)
+		assert.Equal(t, 0, sum)
+	})
+
+	t.Run("reject 2", func(t *testing.T) {
+		var r = New()
+		var sum = 0
+		var path = "/test"
+		r.Use(HttpRequired(http.MethodPost))
+		r.OnEvent(http.MethodGet, path, func(ctx *Context) {
+			sum++
+		})
+		r.doStart()
+
+		var ctx = newContextMocker()
+		ctx.Request.Raw = &http.Request{}
+		r.EmitEvent(http.MethodPost, path, ctx)
+		assert.Equal(t, 0, sum)
+	})
+
+	t.Run("reject 3", func(t *testing.T) {
+		var r = New()
+		var sum = 0
+		var path = "/test"
+		r.Use(HttpRequired(http.MethodPost))
+		r.OnEvent(http.MethodGet, path, func(ctx *Context) {
+			sum++
+		})
+		r.doStart()
+
+		var ctx = newContextMocker()
+		ctx.Request.Raw = &http.Request{}
+		w := newResponseWriterMocker()
+		w.SetProtocol(ProtocolWebSocket)
+		ctx.Writer = w
+		r.EmitEvent(http.MethodGet, path, ctx)
 		assert.Equal(t, 0, sum)
 	})
 

@@ -70,10 +70,6 @@ func New() *Router {
 	return r
 }
 
-func (c *Router) showPathConflict(path string) {
-	Logger().Panic("path=%s, msg=path conflict", path)
-}
-
 // Use 设置全局中间件
 // set global middlewares
 func (c *Router) Use(middlewares ...HandlerFunc) {

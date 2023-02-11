@@ -120,10 +120,8 @@ func (c HttpHeader) Generate() Header {
 }
 
 // Close
-// HttpHeader不回收资源
-func (c HttpHeader) Close() {
-	defaultHeaderPool.Put(c)
-}
+// HttpHeader不回收
+func (c HttpHeader) Close() {}
 
 func (c HttpHeader) Number() uint8 {
 	return constant.HttpHeaderNumber
