@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"github.com/lxzan/gws"
 	"github.com/lxzan/uRouter"
+	"github.com/lxzan/uRouter/constant"
 	"github.com/lxzan/uRouter/internal"
 	"testing"
 )
@@ -12,7 +13,7 @@ func BenchmarkResponseWriter_Write1024(b *testing.B) {
 	ctx := uRouter.NewContext(
 		&uRouter.Request{Header: uRouter.TextMapHeader.Generate()},
 		newResponseWriter(&connMocker{
-			buf: bytes.NewBuffer(make([]byte, 0, internal.BufferLeveL16)),
+			buf: bytes.NewBuffer(make([]byte, 0, constant.BufferLeveL16)),
 		}, uRouter.TextMapHeader),
 	)
 
@@ -23,7 +24,7 @@ func BenchmarkResponseWriter_Write1024(b *testing.B) {
 	}
 
 	for i := 0; i < b.N; i++ {
-		ctx.Request.Header.Set(internal.XRealIP, "127.0.0.1")
+		ctx.Request.Header.Set(constant.XRealIP, "127.0.0.1")
 		ctx.Request.Header.Set(uRouter.UPath, "/test")
 		_ = ctx.WriteJSON(int(gws.OpcodeText), &v)
 
@@ -36,7 +37,7 @@ func BenchmarkResponseWriter_Write512(b *testing.B) {
 	ctx := uRouter.NewContext(
 		&uRouter.Request{Header: uRouter.TextMapHeader.Generate(), Raw: &gws.Message{}},
 		newResponseWriter(&connMocker{
-			buf: bytes.NewBuffer(make([]byte, 0, internal.BufferLeveL16)),
+			buf: bytes.NewBuffer(make([]byte, 0, constant.BufferLeveL16)),
 		}, uRouter.TextMapHeader),
 	)
 
@@ -47,8 +48,8 @@ func BenchmarkResponseWriter_Write512(b *testing.B) {
 	}
 
 	for i := 0; i < b.N; i++ {
-		ctx.Request.Header = uRouter.HeaderPool().Get(internal.MapHeaderNumber)
-		ctx.Request.Header.Set(internal.XRealIP, "127.0.0.1")
+		ctx.Request.Header = uRouter.HeaderPool().Get(constant.MapHeaderNumber)
+		ctx.Request.Header.Set(constant.XRealIP, "127.0.0.1")
 		ctx.Request.Header.Set(uRouter.UPath, "/test")
 		_ = ctx.WriteJSON(int(gws.OpcodeText), &v)
 

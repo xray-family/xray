@@ -3,7 +3,7 @@ package uRouter
 import (
 	"bytes"
 	"github.com/lxzan/uRouter/codec"
-	"github.com/lxzan/uRouter/internal"
+	"github.com/lxzan/uRouter/constant"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
@@ -107,7 +107,7 @@ func TestContext_Write(t *testing.T) {
 		}
 		var writer = ctx.Writer.(*responseWriterMocker)
 		as.Equal(http.StatusOK, writer.statusCode)
-		as.Equal(internal.MimeJson, writer.header.Get(internal.ContentType))
+		as.Equal(constant.MimeJson, writer.header.Get(constant.ContentType))
 		var buf = bytes.NewBufferString("")
 		defaultJsonCodec.NewEncoder(buf).Encode(params)
 		as.Equal(buf.Len(), writer.buf.Len())
@@ -116,7 +116,7 @@ func TestContext_Write(t *testing.T) {
 	t.Run("write json 2", func(t *testing.T) {
 		var ctx = newContextMocker()
 		var header = &headerMocker{NewMapHeader()}
-		header.Set(internal.ContentType, internal.MimeJson)
+		header.Set(constant.ContentType, constant.MimeJson)
 		as.Error(ctx.WriteJSON(http.StatusOK, header))
 	})
 
@@ -129,7 +129,7 @@ func TestContext_Write(t *testing.T) {
 		}
 		var writer = ctx.Writer.(*responseWriterMocker)
 		as.Equal(http.StatusOK, writer.statusCode)
-		as.Equal("", writer.header.Get(internal.ContentType))
+		as.Equal("", writer.header.Get(constant.ContentType))
 		as.Equal(params, writer.buf.String())
 	})
 
@@ -142,14 +142,14 @@ func TestContext_Write(t *testing.T) {
 		}
 		var writer = ctx.Writer.(*responseWriterMocker)
 		as.Equal(http.StatusOK, writer.statusCode)
-		as.Equal("", writer.header.Get(internal.ContentType))
+		as.Equal("", writer.header.Get(constant.ContentType))
 		as.Equal(string(params), writer.buf.String())
 	})
 
 	t.Run("write reader", func(t *testing.T) {
 		var ctx = newContextMocker()
 		var header = &headerMocker{NewMapHeader()}
-		header.Set(internal.ContentType, internal.MimeJson)
+		header.Set(constant.ContentType, constant.MimeJson)
 		as.Error(ctx.WriteReader(http.StatusOK, header))
 	})
 }

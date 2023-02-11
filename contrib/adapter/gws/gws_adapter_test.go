@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"github.com/lxzan/gws"
 	"github.com/lxzan/uRouter"
-	"github.com/lxzan/uRouter/internal"
+	"github.com/lxzan/uRouter/constant"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -33,7 +33,7 @@ func TestNewAdapter(t *testing.T) {
 			ctx.Writer = newResponseWriter(&connMocker{buf: bytes.NewBufferString("")}, uRouter.TextMapHeader)
 
 			sum++
-			ctx.Writer.Header().Set(internal.ContentType, internal.MimeStream)
+			ctx.Writer.Header().Set(constant.ContentType, constant.MimeStream)
 			ctx.Writer.Header().Set(uRouter.UPath, "/testDecode")
 			ctx.Writer.Code(int(gws.OpcodeText))
 			_, _ = ctx.Writer.Write([]byte(responsePayload))
@@ -65,7 +65,7 @@ func TestNewAdapter(t *testing.T) {
 			Data:   bytes.NewBufferString(""),
 		}
 		var header = uRouter.NewMapHeader()
-		header.Set(internal.ContentType, internal.MimeJson)
+		header.Set(constant.ContentType, constant.MimeJson)
 		header.Set(uRouter.UPath, "/testEncode")
 		if err := adapter.codec.Encode(b.Data, header); err != nil {
 			as.NoError(err)

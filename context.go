@@ -2,6 +2,7 @@ package uRouter
 
 import (
 	"bytes"
+	"github.com/lxzan/uRouter/constant"
 	"github.com/lxzan/uRouter/internal"
 	"io"
 	"strings"
@@ -128,7 +129,7 @@ func (c *Context) Get(key string) (interface{}, bool) {
 // WriteJSON 写入JSON
 func (c *Context) WriteJSON(code int, v interface{}) error {
 	if c.Writer.Protocol() == ProtocolHTTP {
-		c.Writer.Header().Set(internal.ContentType, internal.MimeJson)
+		c.Writer.Header().Set(constant.ContentType, constant.MimeJson)
 	}
 	c.Writer.Code(code)
 	if err := JsonCodec().NewEncoder(c.Writer).Encode(v); err != nil {
@@ -166,7 +167,7 @@ func (c *Context) BindJSON(v interface{}) error {
 	if c.Request.Body != nil {
 		return defaultJsonCodec.NewDecoder(c.Request.Body).Decode(v)
 	}
-	return internal.ErrNilRequestBody
+	return constant.ErrNilRequestBody
 }
 
 // Param 获取路径中的参数

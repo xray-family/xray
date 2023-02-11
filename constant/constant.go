@@ -1,4 +1,4 @@
-package internal
+package constant
 
 /*
 定义了内部使用的一些常量

@@ -68,7 +68,3 @@ func TestGetMaxLength(t *testing.T) {
 func TestPadding(t *testing.T) {
 	assert.Equal(t, 16, len(Padding("123", 16)))
 }
-
-func TestUError_Error(t *testing.T) {
-	println(ErrHeaderTooLarge.Error())
-}

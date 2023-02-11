@@ -3,7 +3,7 @@ package http
 import (
 	"bytes"
 	"github.com/lxzan/uRouter"
-	"github.com/lxzan/uRouter/internal"
+	"github.com/lxzan/uRouter/constant"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/url"
@@ -114,11 +114,11 @@ func TestNewAdapter(t *testing.T) {
 			as.Equal(3, v.(int))
 
 			{
-				ctx.Writer.Header().Set(internal.ContentType, "plain/text")
+				ctx.Writer.Header().Set(constant.ContentType, "plain/text")
 				as.NoError(ctx.WriteString(http.StatusOK, "OK"))
 				_, ok := ctx.Writer.Raw().(http.ResponseWriter)
 				as.Equal(true, ok)
-				as.Equal("plain/text", ctx.Writer.Header().Get(internal.ContentType))
+				as.Equal("plain/text", ctx.Writer.Header().Get(constant.ContentType))
 			}
 
 		}, func(ctx *uRouter.Context) {

@@ -2,7 +2,7 @@ package uRouter
 
 import (
 	"bytes"
-	"github.com/lxzan/uRouter/internal"
+	"github.com/lxzan/uRouter/constant"
 	"net/http"
 	"sync"
 )
@@ -14,13 +14,13 @@ func newBufferPool() *bufferPool {
 		p4: &sync.Pool{},
 	}
 	bp.p1.New = func() interface{} {
-		return bytes.NewBuffer(make([]byte, 0, internal.BufferLeveL1))
+		return bytes.NewBuffer(make([]byte, 0, constant.BufferLeveL1))
 	}
 	bp.p2.New = func() interface{} {
-		return bytes.NewBuffer(make([]byte, 0, internal.BufferLeveL2))
+		return bytes.NewBuffer(make([]byte, 0, constant.BufferLeveL2))
 	}
 	bp.p4.New = func() interface{} {
-		return bytes.NewBuffer(make([]byte, 0, internal.BufferLeveL4))
+		return bytes.NewBuffer(make([]byte, 0, constant.BufferLeveL4))
 	}
 	return bp
 }
@@ -33,11 +33,11 @@ type bufferPool struct {
 
 func (c *bufferPool) Get(n int) *bytes.Buffer {
 	var b *bytes.Buffer
-	if n <= internal.BufferLeveL1 {
+	if n <= constant.BufferLeveL1 {
 		b = c.p1.Get().(*bytes.Buffer)
-	} else if n <= internal.BufferLeveL2 {
+	} else if n <= constant.BufferLeveL2 {
 		b = c.p2.Get().(*bytes.Buffer)
-	} else if n <= internal.BufferLeveL4 {
+	} else if n <= constant.BufferLeveL4 {
 		b = c.p4.Get().(*bytes.Buffer)
 	} else {
 		b = bytes.NewBuffer(make([]byte, 0, n))
@@ -52,11 +52,11 @@ func (c *bufferPool) Put(b *bytes.Buffer) {
 
 	n := b.Cap()
 	b.Reset()
-	if n <= internal.BufferLeveL1 {
+	if n <= constant.BufferLeveL1 {
 		c.p1.Put(b)
-	} else if n <= internal.BufferLeveL2 {
+	} else if n <= constant.BufferLeveL2 {
 		c.p2.Put(b)
-	} else if n <= internal.BufferLeveL4 {
+	} else if n <= constant.BufferLeveL4 {
 		c.p4.Put(b)
 	}
 }
@@ -67,10 +67,10 @@ func HeaderPool() *headerPool {
 
 func newHeaderPool() *headerPool {
 	var c = new(headerPool)
-	c.Register(internal.HttpHeaderNumber, func() Header {
+	c.Register(constant.HttpHeaderNumber, func() Header {
 		return HttpHeader{Header: http.Header{}}
 	})
-	c.Register(internal.MapHeaderNumber, func() Header {
+	c.Register(constant.MapHeaderNumber, func() Header {
 		return NewMapHeader()
 	})
 	return c

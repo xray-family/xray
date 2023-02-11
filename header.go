@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/lxzan/uRouter/codec"
+	"github.com/lxzan/uRouter/constant"
 	"github.com/lxzan/uRouter/internal"
 	"math"
 	"net/http"
@@ -61,7 +62,7 @@ func (c *MapHeader) Close() {
 }
 
 func (c *MapHeader) Number() uint8 {
-	return internal.MapHeaderNumber
+	return constant.MapHeaderNumber
 }
 
 func (c *MapHeader) Len() int {
@@ -123,7 +124,7 @@ func (c HttpHeader) Generate() Header {
 func (c HttpHeader) Close() {}
 
 func (c HttpHeader) Number() uint8 {
-	return internal.HttpHeaderNumber
+	return constant.HttpHeaderNumber
 }
 
 func (c HttpHeader) Len() int {
@@ -188,7 +189,7 @@ func (c *HeaderCodec) Encode(writer *bytes.Buffer, h Header) error {
 
 	var headerLength = writer.Len() - int(c.lengthEncoding)
 	if headerLength > c.lengthEncoding.MaxLength() {
-		return internal.ErrHeaderTooLarge
+		return constant.ErrHeaderTooLarge
 	}
 
 	var p1 = writer.Bytes()
@@ -222,7 +223,7 @@ func (c *HeaderCodec) Decode(reader *bytes.Buffer) (Header, error) {
 	}
 
 	if reader.Len() < headerLength {
-		return nil, internal.ErrParseHeader
+		return nil, constant.ErrParseHeader
 	}
 
 	if headerLength > 0 {
