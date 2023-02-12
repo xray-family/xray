@@ -68,7 +68,7 @@ func HeaderPool() *headerPool {
 func newHeaderPool() *headerPool {
 	var c = new(headerPool)
 	c.Register(constant.HttpHeaderNumber, func() Header {
-		return HttpHeader{Header: http.Header{}}
+		return NewHttpHeader(http.Header{})
 	})
 	c.Register(constant.MapHeaderNumber, func() Header {
 		return NewMapHeader()
@@ -91,7 +91,9 @@ func (c *headerPool) Get(id uint8) Header {
 }
 
 func (c *headerPool) Put(h Header) {
-	h.Reset()
-	var id = h.Number()
-	c.pools[id].Put(h)
+	if h.Len() <= 32 {
+		h.Reset()
+		var id = h.Number()
+		c.pools[id].Put(h)
+	}
 }
