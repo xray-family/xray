@@ -7,12 +7,10 @@ import (
 	"reflect"
 	"runtime"
 	"sort"
-	"strings"
-	"sync"
 )
 
 const (
-	SEP     = "/"
+	SEP     = internal.Separator
 	UPath   = "U-Path"
 	UAction = "U-Action"
 )
@@ -20,18 +18,14 @@ const (
 type (
 	// Router 路由器
 	Router struct {
-		// 互斥锁, 防止有人搞骚操作, 开启多线程来注册路由
-		// mutual exclusion locks, prevent people from tampering, multi-thread registration routes
-		mu *sync.Mutex
-
 		// 预注册的接口
 		apis []*apiHandler
 
 		// 静态路由
-		staticRoutes map[string]*apiHandler
+		staticRoutes map[string]map[string]*apiHandler
 
 		// 动态路由
-		dynamicRoutes *routeTree
+		dynamicRoutes map[string]*routeTree
 
 		// 全局中间件
 		// global middlewares
@@ -47,10 +41,9 @@ type (
 	}
 
 	apiHandler struct {
-		Action   string        // 动作修饰词
-		Path     string        // 接口路径
-		FullPath string        // 接口路径, 包含action和name
-		Funcs    []HandlerFunc // 处理链
+		Action string        // 动作修饰词
+		Path   string        // 接口路径
+		Funcs  []HandlerFunc // 处理链
 	}
 
 	// HandlerFunc 处理函数
@@ -61,10 +54,9 @@ type (
 func New() *Router {
 	r := &Router{
 		apis:          []*apiHandler{},
-		mu:            &sync.Mutex{},
 		chainsGlobal:  make([]HandlerFunc, 0),
-		staticRoutes:  map[string]*apiHandler{},
-		dynamicRoutes: newRouteTree(),
+		staticRoutes:  map[string]map[string]*apiHandler{},
+		dynamicRoutes: map[string]*routeTree{},
 	}
 	r.OnNotFound = func(ctx *Context) {
 		if ctx.Writer.Protocol() == ProtocolHTTP {
@@ -86,17 +78,12 @@ func (c *Router) cloneMiddlewares(chains []HandlerFunc) []HandlerFunc {
 // Use 设置全局中间件
 // set global middlewares
 func (c *Router) Use(middlewares ...HandlerFunc) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
 	c.chainsGlobal = append(c.chainsGlobal, middlewares...)
 }
 
 // Group 创建路由组
 // create a route group
 func (c *Router) Group(path string, middlewares ...HandlerFunc) *Group {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
 	var group = &Group{
 		router:      c,
 		path:        internal.JoinPath(SEP, path),
@@ -129,17 +116,12 @@ func (c *Router) OnDELETE(path string, handler HandlerFunc, middlewares ...Handl
 
 // OnEvent 类似On方法, 多了一个动作修饰词
 func (c *Router) OnEvent(action string, path string, handler HandlerFunc, middlewares ...HandlerFunc) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	action = strings.ToLower(action)
 	h := append(c.cloneMiddlewares(c.chainsGlobal), middlewares...)
 	h = append(h, handler)
 	c.apis = append(c.apis, &apiHandler{
-		Action:   action,
-		Path:     internal.JoinPath(SEP, path),
-		FullPath: internal.JoinPath(SEP, action, path),
-		Funcs:    h,
+		Action: action,
+		Path:   internal.JoinPath(SEP, path),
+		Funcs:  h,
 	})
 }
 
@@ -152,35 +134,14 @@ func (c *Router) Emit(path string, ctx *Context) {
 // EmitEvent 分发事件
 // emit event
 func (c *Router) EmitEvent(action string, path string, ctx *Context) {
-	action = strings.ToLower(action)
-	path = internal.JoinPath(SEP, path)
+	path = internal.TrimPath(path)
 	ctx.Request.RPath = path
-	fullpath := internal.JoinPath(SEP, SEP+action+path)
 
-	{
-		// 优先匹配静态路由
-		// preferred match for static routes
-		if h, ok := c.staticRoutes[fullpath]; ok {
-			ctx.Request.VPath = h.Path
-			if len(h.Funcs) > 0 {
-				ctx.handlers = h.Funcs
-				ctx.Next()
-			}
-			return
-		}
-	}
-
-	{
-		// 匹配动态路由
-		// matching dynamic routes
-		if h, ok := c.dynamicRoutes.Get(fullpath); ok {
-			ctx.Request.VPath = h.Path
-			if len(h.Funcs) > 0 {
-				ctx.handlers = h.Funcs
-				ctx.Next()
-			}
-			return
-		}
+	if h, ok := getApiHandler(c, action, path); ok {
+		ctx.Request.VPath = h.Path
+		ctx.handlers = h.Funcs
+		ctx.Next()
+		return
 	}
 
 	// 匹配失败的处理
@@ -255,22 +216,18 @@ func (c *Router) StartSilently() {
 	}
 
 	for i, v := range dynamicAPIs {
-		if _, exist := c.dynamicRoutes.Get(v.FullPath); exist {
+		if _, exist := getApiHandler(c, v.Action, v.Path); exist {
 			logger(v)
 			return
 		}
-		c.dynamicRoutes.Set(dynamicAPIs[i])
+		setApiHandler(c, v.Action, v.Path, dynamicAPIs[i])
 	}
 
 	for i, v := range staticAPIs {
-		if _, exist := c.dynamicRoutes.Get(v.FullPath); exist {
+		if _, exist := getApiHandler(c, v.Action, v.Path); exist {
 			logger(v)
 			return
 		}
-		if _, exist := c.staticRoutes[v.FullPath]; exist {
-			logger(v)
-			return
-		}
-		c.staticRoutes[v.FullPath] = staticAPIs[i]
+		setApiHandler(c, v.Action, v.Path, staticAPIs[i])
 	}
 }

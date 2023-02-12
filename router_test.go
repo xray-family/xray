@@ -494,8 +494,8 @@ func TestRouter_EmitRandom(t *testing.T) {
 				return true
 			}
 
-			list1 := internal.Split(v.Path, SEP)
-			list2 := internal.Split(p, SEP)
+			list1 := internal.Split(v.Path)
+			list2 := internal.Split(p)
 			if len(list1) != len(list2) {
 				continue
 			}
@@ -515,12 +515,10 @@ func TestRouter_EmitRandom(t *testing.T) {
 
 	//遍历去验证
 	var expected = 0
-	for k, _ := range mapping {
-		delete(mapping, k)
-	}
+	mapping = make(map[string]uint8)
 	for i := 0; i < count; i++ {
 		ctx := newContextMocker()
-		segments := internal.Split(paths[i], SEP)
+		segments := internal.Split(paths[i])
 		flag := internal.AlphabetNumeric.Intn(32)
 		switch flag {
 		case 2:
@@ -534,7 +532,7 @@ func TestRouter_EmitRandom(t *testing.T) {
 		}
 		var arr = []string{prefix}
 		arr = append(arr, segments...)
-		path := internal.JoinPath(SEP, arr...)
+		path := internal.JoinPath(arr...)
 		if exists(path) {
 			expected++
 		}

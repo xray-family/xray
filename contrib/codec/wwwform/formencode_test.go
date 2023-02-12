@@ -18,7 +18,7 @@ func TestCodec_Decode(t *testing.T) {
 	t.Run("decoder", func(t *testing.T) {
 		var s = "name=xxx&age=2"
 		var v = Message{}
-		err := WWWFormCodec.NewDecoder(strings.NewReader(s)).Decode(&v)
+		err := FormCodec.NewDecoder(strings.NewReader(s)).Decode(&v)
 		if err != nil {
 			as.NoError(err)
 			return
@@ -30,7 +30,7 @@ func TestCodec_Decode(t *testing.T) {
 	t.Run("decode", func(t *testing.T) {
 		var s = "name=xxx&age=2"
 		var v = Message{}
-		err := WWWFormCodec.Decode([]byte(s), &v)
+		err := FormCodec.Decode([]byte(s), &v)
 		if err != nil {
 			as.NoError(err)
 			return
@@ -42,7 +42,7 @@ func TestCodec_Decode(t *testing.T) {
 	t.Run("decode from string", func(t *testing.T) {
 		var s = "name=xxx&age=2"
 		var v = Message{}
-		err := WWWFormCodec.DecodeFromString(s, &v)
+		err := FormCodec.DecodeFromString(s, &v)
 		if err != nil {
 			as.NoError(err)
 			return
@@ -66,7 +66,7 @@ func TestCodec_Encode(t *testing.T) {
 			Age:  12,
 		}
 		var buf = bytes.NewBufferString("")
-		err := WWWFormCodec.NewEncoder(buf).Encode(&v)
+		err := FormCodec.NewEncoder(buf).Encode(&v)
 		if err != nil {
 			as.NoError(err)
 			return
@@ -79,7 +79,7 @@ func TestCodec_Encode(t *testing.T) {
 			Name: "小明",
 			Age:  12,
 		}
-		b, err := WWWFormCodec.Encode(v)
+		b, err := FormCodec.Encode(v)
 		if err != nil {
 			as.NoError(err)
 			return
@@ -92,7 +92,7 @@ func TestCodec_Encode(t *testing.T) {
 			Name: "小明",
 			Age:  12,
 		}
-		b, err := WWWFormCodec.EncodeToString(v)
+		b, err := FormCodec.EncodeToString(v)
 		if err != nil {
 			as.NoError(err)
 			return

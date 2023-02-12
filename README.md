@@ -266,6 +266,8 @@ uRouter.BinaryMapHeader: length_encoding=2 byte, max_header_length=65535 byte
 
 #### Benchmark
 
+##### RPS
+
 - `uRouter`
 
 ```
@@ -292,4 +294,35 @@ Running 10s test @ http://127.0.0.1:3001/api/v1/test
   1971473 requests in 10.10s, 223.74MB read
 Requests/sec: 195157.71
 Transfer/sec:     22.15MB
+```
+
+#### Route Algorithm
+
+- `uRouter`
+
+```
+goos: darwin
+goarch: arm64
+pkg: github.com/lxzan/uRouter
+BenchmarkOneRoute-8             	77647704	        13.53 ns/op	       0 B/op	       0 allocs/op
+BenchmarkOneRouteDynamic-8      	34728837	        34.69 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRecoveryMiddleware-8   	70822222	        16.99 ns/op	       0 B/op	       0 allocs/op
+Benchmark5Params-8              	15952770	        73.23 ns/op	       0 B/op	       0 allocs/op
+BenchmarkOneRouteJSON-8         	89840808	        13.39 ns/op	       0 B/op	       0 allocs/op
+Benchmark404-8                  	81540667	        14.89 ns/op	       0 B/op	       0 allocs/op
+Benchmark404Many-8              	35411809	        34.11 ns/op	       0 B/op	       0 allocs/op
+PASS
+```
+
+```
+goos: darwin
+goarch: arm64
+pkg: github.com/gin-gonic/gin
+BenchmarkOneRoute-8             	45460980	        26.13 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRecoveryMiddleware-8   	38337534	        31.00 ns/op	       0 B/op	       0 allocs/op
+Benchmark5Params-8              	18889320	        63.42 ns/op	       0 B/op	       0 allocs/op
+BenchmarkOneRouteJSON-8         	 7542141	       162.7 ns/op	      48 B/op	       3 allocs/op
+Benchmark404-8                  	29467527	        43.23 ns/op	       0 B/op	       0 allocs/op
+Benchmark404Many-8              	27458932	        43.92 ns/op	       0 B/op	       0 allocs/op
+PASS
 ```

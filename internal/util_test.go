@@ -29,6 +29,18 @@ func TestJoinPath(t *testing.T) {
 	as.Equal("/api/v1/user", JoinPath(sep, "/api/v1//user"))
 }
 
+func TestTrimPath(t *testing.T) {
+	var as = assert.New(t)
+	as.Equal("/api/v1", TrimPath("api/v1//"))
+	as.Equal("/", TrimPath(""))
+	as.Equal("/", TrimPath("/"))
+	as.Equal("/", TrimPath("//"))
+	as.Equal("/api", TrimPath("//api/"))
+	as.Equal("/api", TrimPath("//api//"))
+	as.Equal("/api/v1", TrimPath("//api/v1//"))
+	as.Equal("/api/v1", TrimPath("///api/v1//"))
+}
+
 func TestRandomString(t *testing.T) {
 	var s = AlphabetNumeric.Generate(16)
 	assert.Equal(t, 16, len(s))
@@ -53,11 +65,11 @@ func TestSelectString(t *testing.T) {
 }
 
 func TestSplit(t *testing.T) {
-	assert.ElementsMatch(t, []string{"api", "v1"}, Split("/api/v1", "/"))
-	assert.ElementsMatch(t, []string{"api", "v1"}, Split("/api/v1/", "/"))
-	assert.ElementsMatch(t, []string{"ming", "hong", "hu"}, Split("ming, hong, hu", ","))
-	assert.ElementsMatch(t, []string{"ming", "hong", "hu"}, Split(",ming, hong, hu, ", ","))
-	assert.ElementsMatch(t, []string{"ming", "hong", "hu"}, Split("\nming, hong, hu\n", ","))
+	assert.ElementsMatch(t, []string{"api", "v1"}, Split("/api/v1"))
+	assert.ElementsMatch(t, []string{"api", "v1"}, Split("/api/v1/"))
+	assert.ElementsMatch(t, []string{"ming", "hong", "hu"}, Split("ming/ hong/ hu"))
+	assert.ElementsMatch(t, []string{"ming", "hong", "hu"}, Split("/ming/ hong/ hu/ "))
+	assert.ElementsMatch(t, []string{"ming", "hong", "hu"}, Split("\nming/ hong/ hu\n"))
 }
 
 func TestGetMaxLength(t *testing.T) {
@@ -67,4 +79,68 @@ func TestGetMaxLength(t *testing.T) {
 
 func TestPadding(t *testing.T) {
 	assert.Equal(t, 16, len(Padding("123", 16)))
+}
+
+func TestFastSplit(t *testing.T) {
+	var as = assert.New(t)
+
+	{
+		var s = "/api/v1/list"
+		var list []string
+		FastSplit(s, func(segment string) bool {
+			list = append(list, segment)
+			return true
+		})
+		as.ElementsMatch([]string{"api", "v1", "list"}, list)
+	}
+
+	{
+		var s = "/api//v1/list"
+		var list []string
+		FastSplit(s, func(segment string) bool {
+			list = append(list, segment)
+			return true
+		})
+		as.ElementsMatch([]string{"api", "", "v1", "list"}, list)
+	}
+
+	{
+		var s = "/api/v1/user/list"
+		var list []string
+		FastSplit(s, func(segment string) bool {
+			list = append(list, segment)
+			return len(list) <= 2
+		})
+		as.ElementsMatch([]string{"api", "v1", "user"}, list)
+	}
+
+	{
+		var s = "/api"
+		var list []string
+		FastSplit(s, func(segment string) bool {
+			list = append(list, segment)
+			return true
+		})
+		as.ElementsMatch([]string{"api"}, list)
+	}
+
+	{
+		var s = "/"
+		var list []string
+		FastSplit(s, func(segment string) bool {
+			list = append(list, segment)
+			return true
+		})
+		as.ElementsMatch([]string{}, list)
+	}
+
+	{
+		var s = ""
+		var list []string
+		FastSplit(s, func(segment string) bool {
+			list = append(list, segment)
+			return true
+		})
+		as.ElementsMatch([]string{}, list)
+	}
 }

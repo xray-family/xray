@@ -36,7 +36,7 @@ func hasVar(s string) bool {
 }
 
 func (c *routeTree) Set(handler *apiHandler) {
-	var list = internal.Split(handler.FullPath, SEP)
+	var list = internal.Split(handler.Path)
 	if len(list) == 0 {
 		return
 	}
@@ -67,26 +67,44 @@ func (c *routeTree) doSet(node *routeTree, index int, list []string, handler *ap
 }
 
 func (c *routeTree) Get(path string) (*apiHandler, bool) {
-	var list = internal.Split(path, SEP)
-	if len(list) == 0 {
-		return nil, false
-	}
-	return c.doGet(c, 0, list)
-}
+	var tree = c
+	var expected = 0
+	var actual = 0
 
-func (c *routeTree) doGet(node *routeTree, index int, list []string) (*apiHandler, bool) {
-	if index == len(list) {
-		return node.Value, node.Value != nil
-	}
-	var segment = list[index]
-	if v, ok := node.Children[segment]; ok {
-		return c.doGet(v, index+1, list)
-	}
-	if v, ok := node.Children["*"]; ok {
-		return c.doGet(v, index+1, list)
+	internal.FastSplit(path, func(str string) bool {
+		expected++
+		if v, ok := tree.Children[str]; ok {
+			tree = v
+			actual++
+			return true
+		}
+		if v, ok := tree.Children["*"]; ok {
+			tree = v
+			actual++
+			return true
+		}
+		return false
+	})
+
+	if expected == actual {
+		return tree.Value, tree.Value != nil
 	}
 	return nil, false
 }
+
+//func (c *routeTree) doGet(node *routeTree, index int, list []string) (*apiHandler, bool) {
+//	if index == len(list) {
+//		return node.Value, node.Value != nil
+//	}
+//	var segment = list[index]
+//	if v, ok := node.Children[segment]; ok {
+//		return c.doGet(v, index+1, list)
+//	}
+//	if v, ok := node.Children["*"]; ok {
+//		return c.doGet(v, index+1, list)
+//	}
+//	return nil, false
+//}
 
 func (c *routeTree) Range(f func(h *apiHandler)) {
 	c.doRange(c, f)
@@ -102,4 +120,37 @@ func (c *routeTree) doRange(node *routeTree, f func(h *apiHandler)) {
 	for _, v := range node.Children {
 		c.doRange(v, f)
 	}
+}
+
+func getApiHandler(r *Router, action string, path string) (*apiHandler, bool) {
+	if v1, ok1 := r.staticRoutes[action]; ok1 {
+		if v2, ok2 := v1[path]; ok2 {
+			return v2, true
+		}
+	}
+	if v1, ok1 := r.dynamicRoutes[action]; ok1 {
+		if v2, ok2 := v1.Get(path); ok2 {
+			return v2, true
+		}
+	}
+	return nil, false
+}
+
+func setApiHandler(r *Router, action string, path string, api *apiHandler) {
+	if !hasVar(path) {
+		m, ok := r.staticRoutes[action]
+		if !ok {
+			m = map[string]*apiHandler{}
+			r.staticRoutes[action] = m
+		}
+		m[path] = api
+		return
+	}
+
+	m, ok := r.dynamicRoutes[action]
+	if !ok {
+		m = newRouteTree()
+		r.dynamicRoutes[action] = m
+	}
+	m.Set(api)
 }

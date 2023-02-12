@@ -33,21 +33,21 @@ func TestWebSocket(t *testing.T) {
 		var r = New()
 		var sum = 0
 		r.Use(WebSocketRequired())
-		r.OnEvent(http.MethodGet, "test", func(ctx *Context) {
+		r.OnEvent(http.MethodGet, "/test", func(ctx *Context) {
 			sum++
 		}, AccessLog())
-		r.OnEvent(http.MethodPost, "test", func(ctx *Context) {
+		r.OnEvent(http.MethodPost, "/test", func(ctx *Context) {
 			sum += 2
 		})
-		r.OnEvent(http.MethodPost, "aha", func(ctx *Context) {
+		r.OnEvent(http.MethodPost, "/aha", func(ctx *Context) {
 			sum += 4
 		})
 		r.Start()
 
 		var ctx = newContextMocker()
 		ctx.Writer.(*responseWriterMocker).SetProtocol(ProtocolWebSocket)
-		ctx.Request.Header.Set(UPath, "test")
-		r.EmitEvent(http.MethodGet, "test", ctx)
+		ctx.Request.Header.Set(UPath, "/test")
+		r.EmitEvent(http.MethodGet, "/test", ctx)
 		assert.Equal(t, 1, sum)
 	})
 
@@ -140,13 +140,13 @@ func TestHTTP(t *testing.T) {
 		var r = New()
 		var sum = 0
 		r.Use(HttpRequired(http.MethodPost))
-		r.On("test", func(ctx *Context) { sum++ })
+		r.On("/test", func(ctx *Context) { sum++ })
 		r.StartSilently()
 
 		var ctx = newContextMocker()
 		ctx.Request.Raw = &http.Request{Method: http.MethodPost}
-		ctx.Request.Header.Set(UPath, "test")
-		r.Emit("test", ctx)
+		ctx.Request.Header.Set(UPath, "/test")
+		r.Emit("/test", ctx)
 		assert.Equal(t, 1, sum)
 	})
 }
@@ -163,12 +163,12 @@ func TestRecovery(t *testing.T) {
 		}()
 
 		r.Use(Recovery())
-		r.On("test", func(ctx *Context) {
+		r.On("/test", func(ctx *Context) {
 			panic("1")
 		})
 		var ctx = newContextMocker()
-		ctx.Request.Header.Set(UPath, "test")
-		r.Emit("test", ctx)
+		ctx.Request.Header.Set(UPath, "/test")
+		r.Emit("/test", ctx)
 	})
 
 	t.Run("without recovery", func(t *testing.T) {
@@ -179,14 +179,14 @@ func TestRecovery(t *testing.T) {
 			as.NotNil(e)
 		}()
 
-		r.On("test", func(ctx *Context) {
+		r.On("/test", func(ctx *Context) {
 			panic("1")
 		})
 		r.StartSilently()
 
 		var ctx = newContextMocker()
-		ctx.Request.Header.Set(UPath, "test")
-		r.Emit("test", ctx)
+		ctx.Request.Header.Set(UPath, "/test")
+		r.Emit("/test", ctx)
 		println(1)
 	})
 }

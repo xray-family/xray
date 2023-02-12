@@ -2,25 +2,16 @@ package internal
 
 import "strings"
 
-// JoinPath 拼接请求路径
-// 如果搬来就是有效路径, 直接返回
-func JoinPath(sep string, ss ...string) string {
-	switch len(ss) {
-	case 0:
-		return sep
-	case 1:
-		if ss[0] == "" || ss[0] == sep {
-			return sep
-		}
-		if isValidPath(sep, ss[0]) {
-			return ss[0]
-		}
-	}
+const (
+	Separator     = "/"
+	SeparatorByte = '/'
+)
 
-	var ch = sep[0]
+// JoinPath 拼接请求路径
+func JoinPath(ss ...string) string {
 	var cursor = 0
 	var b = make([]byte, 0, 32)
-	b = append(b, ch)
+	b = append(b, SeparatorByte)
 	cursor++
 
 	for _, v := range ss {
@@ -29,49 +20,27 @@ func JoinPath(sep string, ss ...string) string {
 			continue
 		}
 
-		if b[cursor-1] != ch {
-			b = append(b, ch)
+		if b[cursor-1] != SeparatorByte {
+			b = append(b, SeparatorByte)
 			cursor++
 		}
 		for j := 0; j < n; j++ {
-			if !(b[cursor-1] == ch && v[j] == ch) {
+			if !(b[cursor-1] == SeparatorByte && v[j] == SeparatorByte) {
 				b = append(b, v[j])
 				cursor++
 			}
 		}
 	}
 
-	if cursor > 1 && b[cursor-1] == ch {
+	if cursor > 1 && b[cursor-1] == SeparatorByte {
 		return string(b[:cursor-1])
 	}
 	return string(b)
 }
 
-func isValidPath(sep string, path string) bool {
-	var ch = sep[0]
-	var n = len(path)
-	if path[0] != ch || path[n-1] == ch {
-		return false
-	}
-	for i := 1; i < n; i++ {
-		if path[i] == ch && path[i-1] == ch {
-			return false
-		}
-	}
-	return true
-}
-
-// SelectString 三元操作
-func SelectString(expression bool, a, b string) string {
-	if expression {
-		return a
-	}
-	return b
-}
-
 // Split 分割字符串(空值将会被过滤掉)
-func Split(s string, sep string) []string {
-	var list = strings.Split(s, sep)
+func Split(s string) []string {
+	var list = strings.Split(s, Separator)
 	var j = 0
 	for _, v := range list {
 		if v = strings.TrimSpace(v); v != "" {
@@ -82,6 +51,35 @@ func Split(s string, sep string) []string {
 	return list[:j]
 }
 
+// TrimPath 去除路径两边多余的斜杠
+func TrimPath(path string) string {
+	path = strings.TrimSpace(path)
+	n := len(path)
+	if n == 0 {
+		return Separator
+	}
+
+	if path[0] != SeparatorByte {
+		path = Separator + path
+	}
+	if n >= 2 && path[0]+path[1] == 94 {
+		return TrimPath(path[1:])
+	}
+	if path[n-1] == SeparatorByte {
+		return TrimPath(path[:n-1])
+	}
+	return path
+}
+
+// SelectString 三元操作
+func SelectString(expression bool, a, b string) string {
+	if expression {
+		return a
+	}
+	return b
+}
+
+// GetMaxLength 获取数组中最长字符串的长度
 func GetMaxLength(args ...string) int {
 	var x = 0
 	for _, v := range args {
@@ -92,10 +90,33 @@ func GetMaxLength(args ...string) int {
 	return x
 }
 
+// Padding 填充空格, 使字符串到达指定长度
 func Padding(s string, length int) string {
 	var b = []byte(s)
 	for len(b) < length {
 		b = append(b, ' ')
 	}
 	return string(b)
+}
+
+// FastSplit 快速分割字符串, 0 alloc
+// str是预先格式化好的, 必须以斜杠开头
+func FastSplit(str string, f func(segment string) bool) {
+	var n = len(str)
+	var i = 1
+	var j = i
+	for k := i; k < n; k++ {
+		if str[k] == SeparatorByte || k == n-1 {
+			if k == n-1 {
+				j++
+			}
+			if !f(str[i:j]) {
+				return
+			}
+			i = k + 1
+			j = i
+		} else {
+			j++
+		}
+	}
 }

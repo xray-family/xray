@@ -3,7 +3,6 @@ package uRouter
 import (
 	"github.com/lxzan/uRouter/internal"
 	"net/http"
-	"strings"
 )
 
 // Group 路由组
@@ -17,9 +16,6 @@ type Group struct {
 // Group 创建子路由组
 // create a child route group
 func (c *Group) Group(path string, middlewares ...HandlerFunc) *Group {
-	c.router.mu.Lock()
-	defer c.router.mu.Unlock()
-
 	group := &Group{
 		router:      c.router,
 		path:        internal.JoinPath(SEP, c.path, path),
@@ -32,17 +28,12 @@ func (c *Group) Group(path string, middlewares ...HandlerFunc) *Group {
 // listen to event
 func (c *Group) OnEvent(action string, path string, handler HandlerFunc, middlewares ...HandlerFunc) {
 	router := c.router
-	router.mu.Lock()
-	defer router.mu.Unlock()
-
-	action = strings.ToLower(action)
 	h := append(router.cloneMiddlewares(c.middlewares), middlewares...)
 	h = append(h, handler)
 	router.apis = append(router.apis, &apiHandler{
-		Action:   action,
-		Path:     internal.JoinPath(SEP, c.path, path),
-		FullPath: internal.JoinPath(SEP, action, c.path, path),
-		Funcs:    h,
+		Action: action,
+		Path:   internal.JoinPath(SEP, c.path, path),
+		Funcs:  h,
 	})
 }
 
