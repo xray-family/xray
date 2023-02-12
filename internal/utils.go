@@ -61,6 +61,20 @@ func isValidPath(sep string, path string) bool {
 	return true
 }
 
+func TrimPath(path string) string {
+	n := len(path)
+	if n == 0 || (n == 1 && path == "/") {
+		return "/"
+	}
+	if n >= 2 && path[0]+path[1] == 94 {
+		return TrimPath(path[1:])
+	}
+	if path[n-1] == '/' {
+		return TrimPath(path[:n-1])
+	}
+	return path
+}
+
 // SelectString 三元操作
 func SelectString(expression bool, a, b string) string {
 	if expression {

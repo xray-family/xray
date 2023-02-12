@@ -29,6 +29,17 @@ func TestJoinPath(t *testing.T) {
 	as.Equal("/api/v1/user", JoinPath(sep, "/api/v1//user"))
 }
 
+func TestTrimPath(t *testing.T) {
+	var as = assert.New(t)
+	as.Equal("/", TrimPath(""))
+	as.Equal("/", TrimPath("/"))
+	as.Equal("/", TrimPath("//"))
+	as.Equal("/api", TrimPath("//api/"))
+	as.Equal("/api", TrimPath("//api//"))
+	as.Equal("/api/v1", TrimPath("//api/v1//"))
+	as.Equal("/api/v1", TrimPath("///api/v1//"))
+}
+
 func TestRandomString(t *testing.T) {
 	var s = AlphabetNumeric.Generate(16)
 	assert.Equal(t, 16, len(s))
