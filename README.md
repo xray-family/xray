@@ -42,9 +42,8 @@ Hats off to express, koa, gin!
   - [Quick Start](#quick-start)
   - [WebSocket](#websocket)
   - [Middleware](#middleware)
-  - [JSON Codec](#json-codec)
-  - [Header Codec (Not applicable to HTTP)](#header-codec-not-applicable-to-http)
-  - [Benchmark (dynamic route match)](#benchmark-dynamic-route-match)
+  - [Codec](#codec)
+  - [Benchmark](#benchmark)
 
 #### Quick Start
 
@@ -157,12 +156,12 @@ func (c *WebSocketHandler) OnMessage(socket *gws.Conn, message *gws.Message) {
 
 ```js
 let ws = new WebSocket('ws://127.0.0.1:3000/connect');
-ws.send('0019{"U-Path":"/greet"}{"hello":"world!"}');
+ws.send('0033{"U-Path":"/greet","U-Action":""}{"hello":"world!"}');
 ```
 
 #### Middleware
 
-![onion model](https://upload-images.jianshu.io/upload_images/26203625-b80a51afcf265c9d.jpg?imageMogr2/auto-orient/strip|imageView2/2/w/1078/format/webp)
+![onion model](asserts/onion.webp)
 
 ```go
 package main
@@ -204,7 +203,27 @@ func main() {
 output: 1, 3, 5, 4, 2
 ```
 
-#### JSON Codec
+#### Codec
+
+- WWW Form Codec
+
+```go
+type Input struct {
+	Name string `form:"name"`
+	Age  int    `form:"age"`
+}
+
+func (c *Controller) Test(ctx *uRouter.Context) {
+	defer ctx.Request.Close()
+	var input = &Input{}
+	_ = wwwform.FormCodec.NewDecoder(ctx.Request.Body).Decode(input)
+	
+	fmt.Printf("%v\n", input)
+	_ = ctx.WriteString(http.StatusOK, "success")
+}
+```
+
+- JSON Codec
 
 ```go
 import (
@@ -216,9 +235,23 @@ func init() {
     // Better performance than uRouter.StdJsonCodec 
     uRouter.SetJsonCodec(jsoniter.JsoniterCodec)
 }
+
+type Input struct {
+    Name string `form:"name"`
+    Age  int    `form:"age"`
+}
+
+func (c *Controller) Test(ctx *uRouter.Context) {
+    defer ctx.Request.Close()
+    var input = &Input{}
+    _ = uRouter.JsonCodec().NewDecoder(ctx.Request.Body).Decode(input)
+
+    fmt.Printf("%v\n", input)
+    _ = ctx.WriteString(http.StatusOK, "success")
+}
 ```
 
-#### Header Codec (Not applicable to HTTP)
+- Header Codec (Not applicable to HTTP)
 
 ```
 uRouter.TextMapHeader:   length_encoding=4 byte, max_header_length=9999  byte
@@ -228,20 +261,35 @@ uRouter.BinaryMapHeader: length_encoding=2 byte, max_header_length=65535 byte
 ```
 // TextMapHeader Example
 // header length => header payload => body
-0019{"U-Path":"/greet"}{"hello":"world!"}
+0033{"U-Path":"/greet","U-Action":""}{"hello":"world!"}
 ```
 
 #### Benchmark
 
+- `uRouter`
+
 ```
-goos: darwin
-goarch: arm64
-pkg: github.com/lxzan/uRouter/contrib/adapter/http
-BenchmarkStaticRoute
-BenchmarkStaticRoute-8    	18487902	        59.00 ns/op
-BenchmarkDynamicRoute
-BenchmarkDynamicRoute-8   	 5447073	       218.2 ns/op
-BenchmarkGithubRoute
-BenchmarkGithubRoute-8    	10061475	       118.4 ns/op
-PASS
+wrk -t2 -c100 -d10s 'http://127.0.0.1:3000/api/v1/test'
+Running 10s test @ http://127.0.0.1:3000/api/v1/test
+  2 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     1.10ms    1.91ms  29.86ms   89.53%
+    Req/Sec    93.14k     6.95k  103.45k    73.50%
+  1852591 requests in 10.00s, 210.25MB read
+Requests/sec: 185213.28
+Transfer/sec:     21.02MB
+```
+
+- bare `net/http`
+
+```
+wrk -t2 -c100 -d10s 'http://127.0.0.1:3001/api/v1/test'
+Running 10s test @ http://127.0.0.1:3001/api/v1/test
+  2 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     1.09ms    2.07ms  42.90ms   90.58%
+    Req/Sec    98.12k     6.96k  107.20k    70.79%
+  1971473 requests in 10.10s, 223.74MB read
+Requests/sec: 195157.71
+Transfer/sec:     22.15MB
 ```

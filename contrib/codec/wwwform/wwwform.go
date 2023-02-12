@@ -7,7 +7,7 @@ import (
 	"net/url"
 )
 
-var WWWFormCodec = new(Codec)
+var FormCodec = new(Codec)
 
 type Codec struct{}
 

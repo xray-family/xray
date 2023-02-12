@@ -10,8 +10,9 @@ const (
 )
 
 const (
-	MimeJson   = "application/json; charset=utf-8"
-	MimeStream = "application/octet-stream"
+	MimeJson    = "application/json; charset=utf-8"
+	MimeWWWForm = "application/x-www-form-urlencoded"
+	MimeStream  = "application/octet-stream"
 )
 
 const (

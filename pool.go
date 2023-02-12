@@ -93,7 +93,6 @@ func (c *headerPool) Get(id uint8) Header {
 func (c *headerPool) Put(h Header) {
 	if h.Len() <= 32 {
 		h.Reset()
-		var id = h.Number()
-		c.pools[id].Put(h)
+		c.pools[h.Number()].Put(h)
 	}
 }

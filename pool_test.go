@@ -68,7 +68,7 @@ func TestHeaderPool(t *testing.T) {
 	as.Equal(true, ok2)
 	as.Equal(0, h2.Len())
 
-	h3, ok3 := newHeaderPool().Get(constant.HttpHeaderNumber).(HttpHeader)
+	h3, ok3 := newHeaderPool().Get(constant.HttpHeaderNumber).(*HttpHeader)
 	as.Equal(true, ok3)
 	as.Equal(0, h3.Len())
 }
