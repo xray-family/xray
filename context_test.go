@@ -87,7 +87,6 @@ func TestContext_BindJSON(t *testing.T) {
 
 	t.Run("", func(t *testing.T) {
 		var ctx = newContextMocker()
-		ctx.Request.Body = nil
 		var params = struct {
 			Age int `json:"age"`
 		}{}

@@ -164,10 +164,7 @@ func (c *Context) WriteReader(code int, r io.Reader) (err error) {
 
 // BindJSON 绑定请求数据
 func (c *Context) BindJSON(v interface{}) error {
-	if c.Request.Body != nil {
-		return JsonCodec().NewDecoder(c.Request.Body).Decode(v)
-	}
-	return constant.ErrNilRequestBody
+	return JsonCodec().NewDecoder(c.Request.Body).Decode(v)
 }
 
 // Param 获取路径中的参数

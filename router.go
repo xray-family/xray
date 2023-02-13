@@ -114,7 +114,14 @@ func (c *Router) OnDELETE(path string, handler HandlerFunc, middlewares ...Handl
 	c.OnEvent(http.MethodDelete, path, handler, middlewares...)
 }
 
-// OnEvent 类似On方法, 多了一个动作修饰词
+// OnEvent 监听一个事件, 绑定处理函数
+// action: 操作修饰词, 区分大小写, 可为空字符串; 在HTTP里固定为Method
+// path: 请求路径
+// handler: 处理函数
+// listens for an event, binds a handler
+// action: action modifier, case-sensitive, can be an empty string; fixed to Method in HTTP
+// path: request path
+// handler: handler function
 func (c *Router) OnEvent(action string, path string, handler HandlerFunc, middlewares ...HandlerFunc) {
 	h := append(c.cloneMiddlewares(c.chainsGlobal), middlewares...)
 	h = append(h, handler)

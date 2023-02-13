@@ -6,12 +6,10 @@ import (
 
 const defaultVarPrefix = ':' // 默认变量前缀
 
-type (
-	routeTree struct {
-		Value    *apiHandler
-		Children map[string]*routeTree
-	}
-)
+type routeTree struct {
+	Value    *apiHandler
+	Children map[string]*routeTree
+}
 
 func newRouteTree() *routeTree {
 	return &routeTree{
@@ -122,6 +120,7 @@ func (c *routeTree) doRange(node *routeTree, f func(h *apiHandler)) {
 	}
 }
 
+// 查找接口绑定的处理函数
 func getApiHandler(r *Router, action string, path string) (*apiHandler, bool) {
 	if v1, ok1 := r.staticRoutes[action]; ok1 {
 		if v2, ok2 := v1[path]; ok2 {
@@ -136,6 +135,7 @@ func getApiHandler(r *Router, action string, path string) (*apiHandler, bool) {
 	return nil, false
 }
 
+// 设置接口绑定的处理函数
 func setApiHandler(r *Router, action string, path string, api *apiHandler) {
 	if !hasVar(path) {
 		m, ok := r.staticRoutes[action]
