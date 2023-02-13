@@ -89,14 +89,6 @@ func Close(resource interface{}) {
 	}
 }
 
-// Close 关闭请求, 回收Header和Body资源
-func (c *Request) Close() {
-	c.Header.Close()
-	Close(c.Body)
-	c.Header = nil
-	c.Body = nil
-}
-
 func NewContext(request *Request, writer ResponseWriter) *Context {
 	return &Context{
 		index:    0,
@@ -105,6 +97,16 @@ func NewContext(request *Request, writer ResponseWriter) *Context {
 		Request:  request,
 		Writer:   writer,
 	}
+}
+
+// Close 关闭请求, 回收Header和Body资源
+func (c *Context) Close() {
+	c.Request.Header.Close()
+	Close(c.Request.Body)
+	c.Request.Header = nil
+	c.Request.Body = nil
+
+	Close(c.Writer)
 }
 
 // Next 执行下一个中间件
@@ -164,6 +166,9 @@ func (c *Context) WriteReader(code int, r io.Reader) (err error) {
 
 // BindJSON 绑定请求数据
 func (c *Context) BindJSON(v interface{}) error {
+	if r, ok := c.Request.Body.(BytesReader); ok {
+		return JsonCodec().Decode(r.Bytes(), v)
+	}
 	return JsonCodec().NewDecoder(c.Request.Body).Decode(v)
 }
 
