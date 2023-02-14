@@ -2,6 +2,7 @@ package uRouter
 
 import (
 	"bytes"
+	"errors"
 	"github.com/lxzan/uRouter/codec"
 	"github.com/lxzan/uRouter/constant"
 	"github.com/stretchr/testify/assert"
@@ -53,6 +54,9 @@ func (c *responseWriterMocker) Header() Header {
 }
 
 func (c *responseWriterMocker) Write(p []byte) (int, error) {
+	if len(p) == 0 {
+		return 0, errors.New("test error")
+	}
 	return c.buf.Write(p)
 }
 
@@ -160,11 +164,21 @@ func TestContext_Write(t *testing.T) {
 		as.Equal(string(params), writer.buf.String())
 	})
 
-	t.Run("write reader", func(t *testing.T) {
+	t.Run("write reader 1", func(t *testing.T) {
 		var ctx = newContextMocker()
 		var header = &headerMocker{newMapHeader()}
 		header.Set(constant.ContentType, constant.MimeJson)
 		as.Error(ctx.WriteReader(http.StatusOK, header))
+	})
+
+	t.Run("write reader 2", func(t *testing.T) {
+		var ctx = newContextMocker()
+		as.Error(ctx.WriteReader(http.StatusOK, bytes.NewBufferString("")))
+	})
+
+	t.Run("write bytes", func(t *testing.T) {
+		var ctx = newContextMocker()
+		as.Error(ctx.WriteBytes(http.StatusOK, []byte{}))
 	})
 }
 

@@ -11,11 +11,13 @@ func main() {
 	var router = uRouter.New()
 	router.Use(uRouter.Recovery())
 
-	router.OnGET("/test", Test)
+	router.OnGET("/test", func(ctx *uRouter.Context) {
+		_ = ctx.WriteBytes(http.StatusOK, []byte("hello"))
+	})
 
 	router.Start()
 
-	// 开启一个原生的server, 对比下性能损失
+	// 开启一个原生的fasthttp server, 对比下性能
 	go func() {
 		if err := fasthttp.ListenAndServe(":3001", func(ctx *fasthttp.RequestCtx) {
 			ctx.SetBody([]byte("hello"))
@@ -24,14 +26,16 @@ func main() {
 		}
 	}()
 
+	// 开启一个原生的http server, 对比下性能
+	go func() {
+		if err := http.ListenAndServe(":3002", http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			_, _ = writer.Write([]byte("hello"))
+		})); err != nil {
+			uRouter.Logger().Panic(err.Error())
+		}
+	}()
+
 	if err := fasthttp.ListenAndServe(":3000", fasthttpAdapter.NewAdapter(router).ServeFastHTTP); err != nil {
 		uRouter.Logger().Panic(err.Error())
 	}
-}
-
-func Test(ctx *uRouter.Context) {
-	ctx.Request.Header.Range(func(key, value string) {
-		println(key, value)
-	})
-	_ = ctx.WriteString(http.StatusOK, "hello")
 }

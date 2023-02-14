@@ -240,4 +240,5 @@ func TestAny(t *testing.T) {
 	as.Equal(0, m.ToInt("xxx"))
 	as.Equal(int64(0), m.ToInt64("xxx"))
 	as.Equal("", m.ToString("xxx"))
+	HeaderPool()
 }

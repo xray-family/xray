@@ -1,7 +1,6 @@
 package uRouter
 
 import (
-	"bytes"
 	"github.com/lxzan/uRouter/constant"
 	"github.com/lxzan/uRouter/internal"
 	"io"
@@ -140,7 +139,11 @@ func (c *Context) WriteJSON(code int, v interface{}) error {
 
 // WriteBytes 写入字节流
 func (c *Context) WriteBytes(code int, p []byte) error {
-	return c.WriteReader(code, bytes.NewBuffer(p))
+	c.Writer.Code(code)
+	if _, err := c.Writer.Write(p); err != nil {
+		return err
+	}
+	return c.Writer.Flush()
 }
 
 // WriteString 写入字节流
