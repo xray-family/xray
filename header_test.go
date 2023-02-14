@@ -98,7 +98,7 @@ func TestHeaderCodec(t *testing.T) {
 	})
 
 	t.Run("encode header error", func(t *testing.T) {
-		var header = &headerMocker{NewMapHeader()}
+		var header = &headerMocker{newMapHeader()}
 		header.Set(constant.ContentType, constant.MimeJson)
 		var w = bytes.NewBufferString("")
 		as.Error(TextMapHeader.Encode(w, header))
@@ -159,7 +159,7 @@ func TestHttpHeader(t *testing.T) {
 
 func TestMapHeader(t *testing.T) {
 	var as = assert.New(t)
-	var header = mapHeaderTemplate.Generate().(*MapHeader)
+	var header = newMapHeader()
 	header.Set(constant.ContentType, constant.MimeJson)
 	header.Set(UPath, "")
 	as.Equal(2, header.Len())
@@ -180,7 +180,7 @@ func TestMapHeader(t *testing.T) {
 func TestHeader_Reset(t *testing.T) {
 
 	t.Run("map header", func(t *testing.T) {
-		var m = NewMapHeader()
+		var m = newMapHeader()
 		for i := 0; i < 64; i++ {
 			key := internal.AlphabetNumeric.Generate(16)
 			m.Set(string(key), "1")

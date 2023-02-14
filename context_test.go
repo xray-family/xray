@@ -6,8 +6,13 @@ import (
 	"github.com/lxzan/uRouter/constant"
 	"github.com/stretchr/testify/assert"
 	"net/http"
+	"strings"
 	"testing"
 )
+
+func newMapHeader() *MapHeader {
+	return MapHeaderTemplate.Generate().(*MapHeader)
+}
 
 func newContextMocker() *Context {
 	var request = &Request{
@@ -78,6 +83,16 @@ func TestContext_BindJSON(t *testing.T) {
 
 	t.Run("", func(t *testing.T) {
 		var ctx = newContextMocker()
+		ctx.Request.Body = strings.NewReader(`{"age":1}`)
+		var params = struct {
+			Age int `json:"age"`
+		}{}
+		as.NoError(ctx.BindJSON(&params))
+		as.Equal(1, params.Age)
+	})
+
+	t.Run("", func(t *testing.T) {
+		var ctx = newContextMocker()
 		ctx.Request.Body = bytes.NewBufferString(`{"age":"1}`)
 		var params = struct {
 			Age int `json:"age"`
@@ -114,7 +129,7 @@ func TestContext_Write(t *testing.T) {
 
 	t.Run("write json 2", func(t *testing.T) {
 		var ctx = newContextMocker()
-		var header = &headerMocker{NewMapHeader()}
+		var header = &headerMocker{newMapHeader()}
 		header.Set(constant.ContentType, constant.MimeJson)
 		as.Error(ctx.WriteJSON(http.StatusOK, header))
 	})
@@ -147,7 +162,7 @@ func TestContext_Write(t *testing.T) {
 
 	t.Run("write reader", func(t *testing.T) {
 		var ctx = newContextMocker()
-		var header = &headerMocker{NewMapHeader()}
+		var header = &headerMocker{newMapHeader()}
 		header.Set(constant.ContentType, constant.MimeJson)
 		as.Error(ctx.WriteReader(http.StatusOK, header))
 	})

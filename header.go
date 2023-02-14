@@ -18,17 +18,17 @@ var (
 
 	// TextMapHeader 文本类型头部编码, 4字节, 最大长度=9999
 	// text type header code, 4 bytes, max length = 9999
-	TextMapHeader = NewHeaderCodec(NewMapHeader(), codec.StdJsonCodec).setLengthBytes(textLengthEncoding)
+	TextMapHeader = NewHeaderCodec(MapHeaderTemplate, codec.StdJsonCodec).setLengthBytes(textLengthEncoding)
 
 	// BinaryMapHeader 二进制类型头部编码, 2字节, 最大长度=65535
 	// binary type header code, 2 bytes, max length = 65535
-	BinaryMapHeader = NewHeaderCodec(NewMapHeader(), codec.StdJsonCodec).setLengthBytes(binaryLengthEncoding)
+	BinaryMapHeader = NewHeaderCodec(MapHeaderTemplate, codec.StdJsonCodec).setLengthBytes(binaryLengthEncoding)
 )
 
 type (
 	Header interface {
-		Number() uint8                   // 用于区分Header的不同实现, 唯一的序列号
-		Generate() Header                // 初始化一个Header, 需要返回指针类型
+		Number() uint8                   // 用于区分Header的不同实现, 内部唯一的序列号
+		Generate() Header                // 生成一个新的Header, 需要返回指针类型
 		Close()                          // 回收资源
 		Reset()                          // 重置
 		Set(key, value string)           // 设置键值对
@@ -40,10 +40,6 @@ type (
 
 	headerLengthEncoding uint8
 )
-
-func NewMapHeader() *MapHeader {
-	return &MapHeader{}
-}
 
 type MapHeader map[string]string
 

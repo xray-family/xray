@@ -71,7 +71,7 @@ func newHeaderPool() *headerPool {
 		return NewHttpHeader(http.Header{})
 	})
 	c.Register(constant.MapHeaderNumber, func() Header {
-		return NewMapHeader()
+		return &MapHeader{}
 	})
 	return c
 }

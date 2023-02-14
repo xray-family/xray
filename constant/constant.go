@@ -15,6 +15,7 @@ const (
 	MimeStream  = "application/octet-stream"
 )
 
+// buffer level
 const (
 	KiB           = 1024
 	BufferLeveL1  = KiB
@@ -24,6 +25,7 @@ const (
 	BufferLeveL16 = 16 * KiB
 )
 
+// header serial number
 const (
 	HttpHeaderNumber = iota
 	MapHeaderNumber
