@@ -67,6 +67,7 @@ func (c *responseWriter) Write(p []byte) (n int, err error) {
 func (c *responseWriter) Flush() error {
 	c.conn.WriteMessage(c.code, c.buf.Bytes())
 	uRouter.BufferPool().Put(c.buf)
+	c.header.Close()
 	return nil
 }
 

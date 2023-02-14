@@ -82,6 +82,7 @@ func (c *responseWriter) Flush() error {
 		return err
 	}
 	uRouter.BufferPool().Put(c.buf)
+	c.header.Close()
 	return nil
 }
 

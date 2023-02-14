@@ -3,7 +3,6 @@ package uRouter
 import (
 	"bytes"
 	"github.com/lxzan/uRouter/constant"
-	"net/http"
 	"sync"
 )
 
@@ -67,9 +66,6 @@ func HeaderPool() *headerPool {
 
 func newHeaderPool() *headerPool {
 	var c = new(headerPool)
-	c.Register(constant.HttpHeaderNumber, func() Header {
-		return NewHttpHeader(http.Header{})
-	})
 	c.Register(constant.MapHeaderNumber, func() Header {
 		return &MapHeader{}
 	})
@@ -90,9 +86,6 @@ func (c *headerPool) Get(id uint8) Header {
 	return c.pools[id].Get().(Header)
 }
 
-func (c *headerPool) Put(h Header) {
-	if h.Len() <= 32 {
-		h.Reset()
-		c.pools[h.Number()].Put(h)
-	}
+func (c *headerPool) Put(id uint8, h Header) {
+	c.pools[id].Put(h)
 }

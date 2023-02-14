@@ -30,5 +30,8 @@ func main() {
 }
 
 func Test(ctx *uRouter.Context) {
+	ctx.Request.Header.Range(func(key, value string) {
+		println(key, value)
+	})
 	_ = ctx.WriteString(http.StatusOK, "hello")
 }

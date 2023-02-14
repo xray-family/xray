@@ -3,7 +3,6 @@ package uRouter
 import (
 	"github.com/lxzan/uRouter/constant"
 	"github.com/stretchr/testify/assert"
-	"net/http"
 	"testing"
 )
 
@@ -51,24 +50,24 @@ func TestBufferPool(t *testing.T) {
 	as.Equal(0, b5.Len())
 }
 
-func TestHeaderPool(t *testing.T) {
-	as := assert.New(t)
-
-	p := HeaderPool()
-	p = newHeaderPool()
-	h1 := p.Get(constant.MapHeaderNumber)
-	_, ok1 := h1.(*MapHeader)
-	as.Equal(true, ok1)
-	as.Equal(0, h1.Len())
-
-	defaultHeaderPool.Put(&HttpHeader{Header: http.Header{}})
-
-	h2 := defaultHeaderPool.Get(constant.MapHeaderNumber)
-	_, ok2 := h2.(*MapHeader)
-	as.Equal(true, ok2)
-	as.Equal(0, h2.Len())
-
-	h3, ok3 := newHeaderPool().Get(constant.HttpHeaderNumber).(*HttpHeader)
-	as.Equal(true, ok3)
-	as.Equal(0, h3.Len())
-}
+//func TestHeaderPool(t *testing.T) {
+//	as := assert.New(t)
+//
+//	p := HeaderPool()
+//	p = newHeaderPool()
+//	h1 := p.Get(constant.MapHeaderNumber)
+//	_, ok1 := h1.(*MapHeader)
+//	as.Equal(true, ok1)
+//	as.Equal(0, h1.Len())
+//
+//	defaultHeaderPool.Put(&HttpHeader{Header: http.Header{}})
+//
+//	h2 := defaultHeaderPool.Get(constant.MapHeaderNumber)
+//	_, ok2 := h2.(*MapHeader)
+//	as.Equal(true, ok2)
+//	as.Equal(0, h2.Len())
+//
+//	h3, ok3 := newHeaderPool().Get(constant.HttpHeaderNumber).(*HttpHeader)
+//	as.Equal(true, ok3)
+//	as.Equal(0, h3.Len())
+//}

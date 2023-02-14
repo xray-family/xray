@@ -25,8 +25,6 @@ const (
 	BufferLeveL16 = 16 * KiB
 )
 
-// header serial number
 const (
-	HttpHeaderNumber = iota
-	MapHeaderNumber
+	MapHeaderNumber = iota
 )

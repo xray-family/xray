@@ -53,19 +53,19 @@ func (c *Adapter) SetRouter(r *uRouter.Router) *Adapter {
 }
 
 // ServeFastHTTP 服务HTTP
-func (c *Adapter) ServeFastHTTP(fctx *fasthttp.RequestCtx) {
+func (c *Adapter) ServeFastHTTP(ctx *fasthttp.RequestCtx) {
 	var r = &uRouter.Request{
-		Raw:    &fctx.Request,
-		Header: &requestHeader{RequestHeader: &fctx.Request.Header},
-		Action: b2s(fctx.Method()),
-		Body:   bytes.NewBuffer(fctx.Request.Body()),
+		Raw:    &ctx.Request,
+		Header: &requestHeader{RequestHeader: &ctx.Request.Header},
+		Action: b2s(ctx.Method()),
+		Body:   bytes.NewBuffer(ctx.Request.Body()),
 	}
 
-	var ctx = uRouter.NewContext(r, &responseWriter{
-		writer: &fctx.Response,
-		header: &responseHeader{ResponseHeader: &fctx.Response.Header},
+	var uctx = uRouter.NewContext(r, &responseWriter{
+		writer: &ctx.Response,
+		header: &responseHeader{ResponseHeader: &ctx.Response.Header},
 	})
-	c.router.EmitEvent(r.Action, b2s(fctx.Request.URI().Path()), ctx)
+	c.router.EmitEvent(r.Action, b2s(ctx.Request.URI().Path()), uctx)
 }
 
 // b2s converts byte slice to a string without memory allocation.
@@ -103,9 +103,7 @@ func (c *requestHeader) Generate() uRouter.Header { return nil }
 
 func (c *requestHeader) Close() {}
 
-func (c *requestHeader) Get(key string) string {
-	return b2s(c.Peek(key))
-}
+func (c *requestHeader) Get(key string) string { return b2s(c.Peek(key)) }
 
 func (c *requestHeader) Range(f func(key string, value string)) {
 	c.VisitAll(func(key, value []byte) {

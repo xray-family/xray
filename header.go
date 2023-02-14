@@ -27,10 +27,8 @@ var (
 
 type (
 	Header interface {
-		Number() uint8                   // 用于区分Header的不同实现, 内部唯一的序列号
 		Generate() Header                // 生成一个新的Header, 需要返回指针类型
 		Close()                          // 回收资源
-		Reset()                          // 重置
 		Set(key, value string)           // 设置键值对
 		Get(key string) string           // 获取一个值
 		Del(key string)                  // 删除
@@ -43,22 +41,17 @@ type (
 
 type MapHeader map[string]string
 
-func (c *MapHeader) Reset() {
-	for k, _ := range *c {
-		delete(*c, k)
-	}
-}
-
 func (c *MapHeader) Generate() Header {
-	return defaultHeaderPool.Get(c.Number())
+	return defaultHeaderPool.Get(constant.MapHeaderNumber)
 }
 
 func (c *MapHeader) Close() {
-	defaultHeaderPool.Put(c)
-}
-
-func (c *MapHeader) Number() uint8 {
-	return constant.MapHeaderNumber
+	if c.Len() <= 32 {
+		for k, _ := range *c {
+			delete(*c, k)
+		}
+		defaultHeaderPool.Put(constant.MapHeaderNumber, c)
+	}
 }
 
 func (c *MapHeader) Len() int {
@@ -105,23 +98,11 @@ type HttpHeader struct {
 	http.Header
 }
 
-func (c HttpHeader) Reset() {
-	for k, _ := range c.Header {
-		delete(c.Header, k)
-	}
-}
-
 func (c HttpHeader) Generate() Header {
 	return &HttpHeader{Header: http.Header{}}
 }
 
-// Close
-// HttpHeader不回收
 func (c HttpHeader) Close() {}
-
-func (c HttpHeader) Number() uint8 {
-	return constant.HttpHeaderNumber
-}
 
 func (c HttpHeader) Len() int {
 	return len(c.Header)

@@ -9,6 +9,25 @@ import (
 	"testing"
 )
 
+func BenchmarkAdapter_ServeHTTP(b *testing.B) {
+	var router = uRouter.New()
+	router.OnGET("/", func(ctx *uRouter.Context) {})
+	router.StartSilently()
+	adapter := NewAdapter(router)
+
+	socket := &gws.Conn{}
+	msg := &gws.Message{Data: bytes.NewBufferString("")}
+	header := uRouter.MapHeaderTemplate.Generate()
+	header.Set(uRouter.UPath, "/")
+	header.Set(uRouter.UAction, "")
+	_ = uRouter.TextMapHeader.Encode(msg.Data, header)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = adapter.ServeWebSocket(socket, msg)
+	}
+}
+
 func BenchmarkResponseWriter_Write1024(b *testing.B) {
 	ctx := uRouter.NewContext(
 		&uRouter.Request{Header: uRouter.TextMapHeader.Generate()},
@@ -53,7 +72,7 @@ func BenchmarkResponseWriter_Write512(b *testing.B) {
 		ctx.Request.Header.Set(uRouter.UPath, "/test")
 		_ = ctx.WriteJSON(int(gws.OpcodeText), &v)
 
-		uRouter.HeaderPool().Put(ctx.Request.Header)
+		uRouter.HeaderPool().Put(constant.MapHeaderNumber, ctx.Request.Header)
 		ctx.Writer.Raw().(*connMocker).buf.Reset()
 	}
 }

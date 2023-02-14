@@ -188,13 +188,13 @@ func TestHeader_Reset(t *testing.T) {
 
 	t.Run("map header", func(t *testing.T) {
 		var m = newMapHeader()
-		for i := 0; i < 64; i++ {
+		for i := 0; i < 32; i++ {
 			key := internal.AlphabetNumeric.Generate(16)
 			m.Set(string(key), "1")
 		}
-		m.Reset()
-		assert.Equal(t, 0, m.Len())
+
 		m.Close()
+		assert.Equal(t, 0, m.Len())
 	})
 
 	t.Run("http header", func(t *testing.T) {
@@ -203,9 +203,8 @@ func TestHeader_Reset(t *testing.T) {
 			key := internal.AlphabetNumeric.Generate(16)
 			m.Set(string(key), "1")
 		}
-		m.Reset()
-		assert.Equal(t, 0, m.Len())
 		m.Close()
+		assert.Equal(t, 64, m.Len())
 		m.Generate()
 	})
 
