@@ -32,7 +32,7 @@ Hats off to express, koa, gin!
 - no dependence
 - dynamic separation matching request paths, powered by map and trie
 - the onion model middleware, router group
-- adapt to `http`, `http2`, `http3`, `lxzan/gws`, `gorilla/websocket` ...
+- adapt to `http`, `http2`, `http3`, `fasthttp`, `lxzan/gws`, `gorilla/websocket` ...
 
 #### Index
 
@@ -268,34 +268,61 @@ uRouter.BinaryMapHeader: length_encoding=2 byte, max_header_length=65535 byte
 
 ##### RPS
 
-- `uRouter`
+- `uRouter / Standard`
 
 ```
-wrk -t2 -c100 -d10s 'http://127.0.0.1:3000/api/v1/test'
-Running 10s test @ http://127.0.0.1:3000/api/v1/test
-  2 threads and 100 connections
+wrk -t4 -c100 -d10s http://127.0.0.1:3000/test
+Running 10s test @ http://127.0.0.1:3000/test
+  4 threads and 100 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     1.10ms    1.91ms  29.86ms   89.53%
-    Req/Sec    93.14k     6.95k  103.45k    73.50%
-  1852591 requests in 10.00s, 210.25MB read
-Requests/sec: 185213.28
-Transfer/sec:     21.02MB
+    Latency   842.21us    1.16ms  16.97ms   86.80%
+    Req/Sec    50.92k     8.35k   74.41k    71.00%
+  2029109 requests in 10.03s, 230.28MB read
+Requests/sec: 202250.69
+Transfer/sec:     22.95MB
 ```
 
-- bare `net/http`
+- `uRouter / FastHTTP`
 
 ```
-wrk -t2 -c100 -d10s 'http://127.0.0.1:3001/api/v1/test'
-Running 10s test @ http://127.0.0.1:3001/api/v1/test
-  2 threads and 100 connections
+wrk -t4 -c100 -d10s http://127.0.0.1:3000/test
+Running 10s test @ http://127.0.0.1:3000/test
+  4 threads and 100 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     1.09ms    2.07ms  42.90ms   90.58%
-    Req/Sec    98.12k     6.96k  107.20k    70.79%
-  1971473 requests in 10.10s, 223.74MB read
-Requests/sec: 195157.71
-Transfer/sec:     22.15MB
+    Latency   770.07us    1.76ms  24.38ms   92.02%
+    Req/Sec    87.59k    17.29k  132.58k    64.25%
+  3495445 requests in 10.06s, 463.36MB read
+Requests/sec: 347469.03
+Transfer/sec:     46.06MB
 ```
 
+
+- `Standard`
+
+```
+wrk -t4 -c100 -d10s http://127.0.0.1:3002/test
+Running 10s test @ http://127.0.0.1:3002/test
+  4 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   824.42us    1.20ms  24.56ms   87.58%
+    Req/Sec    54.28k     9.66k   84.70k    69.75%
+  2163902 requests in 10.05s, 249.70MB read
+Requests/sec: 215292.62
+Transfer/sec:     24.84MB
+```
+
+- `FastHTTP`
+```
+wrk -t4 -c100 -d10s http://127.0.0.1:3001/test
+Running 10s test @ http://127.0.0.1:3001/test
+  4 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   682.07us    1.85ms  34.71ms   93.02%
+    Req/Sec   103.69k    22.77k  175.90k    64.39%
+  4096885 requests in 10.07s, 543.09MB read
+Requests/sec: 406843.81
+Transfer/sec:     53.93MB
+```
 #### Route Algorithm
 
 - `uRouter`
