@@ -68,6 +68,8 @@ func (c *responseWriter) Flush() error {
 	c.conn.WriteMessage(c.code, c.buf.Bytes())
 	uRouter.BufferPool().Put(c.buf)
 	c.header.Close()
+	c.buf = nil
+	c.header = nil
 	return nil
 }
 

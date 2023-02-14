@@ -42,7 +42,6 @@ func newResponseWriter(socket websocketWrapper, codec *uRouter.HeaderCodec) *res
 		conn:        socket,
 		headerCodec: codec,
 		header:      codec.Generate(),
-		buf:         uRouter.BufferPool().Get(0),
 	}
 }
 
@@ -59,7 +58,7 @@ func (c *responseWriter) Header() uRouter.Header {
 }
 
 func (c *responseWriter) Code(opcode int) {
-	c.code = int(opcode)
+	c.code = opcode
 }
 
 func (c *responseWriter) RawResponseWriter() interface{} {
@@ -68,6 +67,7 @@ func (c *responseWriter) RawResponseWriter() interface{} {
 
 func (c *responseWriter) Write(p []byte) (n int, err error) {
 	c.once.Do(func() {
+		c.buf = uRouter.BufferPool().Get(len(p) + 256)
 		err = c.headerCodec.Encode(c.buf, c.header)
 		n = c.buf.Len()
 	})
@@ -83,6 +83,8 @@ func (c *responseWriter) Flush() error {
 	}
 	uRouter.BufferPool().Put(c.buf)
 	c.header.Close()
+	c.buf = nil
+	c.header = nil
 	return nil
 }
 
