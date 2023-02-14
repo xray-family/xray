@@ -5,32 +5,15 @@ import (
 	"github.com/lxzan/uRouter"
 	"github.com/valyala/fasthttp"
 	"reflect"
-	"sync"
 	"unsafe"
 )
 
-var headerTemplate = new(uRouter.MapHeader)
-
 type responseWriter struct {
-	once   *sync.Once
-	code   int
 	writer *fasthttp.Response
 	header uRouter.Header
 }
 
-func (c *responseWriter) Close() {
-	c.header.Close()
-	c.header = nil
-}
-
 func (c *responseWriter) Write(p []byte) (n int, err error) {
-	var h = &c.writer.Header
-	c.once.Do(func() {
-		c.writer.SetStatusCode(c.code)
-		c.header.Range(func(key, value string) {
-			h.Set(key, value)
-		})
-	})
 	return c.writer.BodyWriter().Write(p)
 }
 
@@ -43,7 +26,7 @@ func (c *responseWriter) Header() uRouter.Header {
 }
 
 func (c *responseWriter) Code(code int) {
-	c.code = code
+	c.writer.SetStatusCode(code)
 }
 
 func (c *responseWriter) Raw() interface{} {
@@ -58,7 +41,7 @@ func NewAdapter(router *uRouter.Router) *Adapter {
 	return &Adapter{router: router}
 }
 
-// Adapter HTTP适配器
+// Adapter FastHTTP适配器
 type Adapter struct {
 	router *uRouter.Router
 }
@@ -73,18 +56,14 @@ func (c *Adapter) SetRouter(r *uRouter.Router) *Adapter {
 func (c *Adapter) ServeFastHTTP(fctx *fasthttp.RequestCtx) {
 	var r = &uRouter.Request{
 		Raw:    &fctx.Request,
-		Header: headerTemplate.Generate(),
+		Header: &requestHeader{RequestHeader: &fctx.Request.Header},
 		Action: b2s(fctx.Method()),
 		Body:   bytes.NewBuffer(fctx.Request.Body()),
 	}
-	fctx.Request.Header.VisitAll(func(key, value []byte) {
-		r.Header.Set(b2s(key), b2s(value))
-	})
 
 	var ctx = uRouter.NewContext(r, &responseWriter{
-		once:   &sync.Once{},
 		writer: &fctx.Response,
-		header: headerTemplate.Generate(),
+		header: &responseHeader{ResponseHeader: &fctx.Response.Header},
 	})
 	c.router.EmitEvent(r.Action, b2s(fctx.Request.URI().Path()), ctx)
 }
@@ -112,4 +91,42 @@ func s2b(s string) (b []byte) {
 	bh.Cap = sh.Len
 	bh.Len = sh.Len
 	return b
+}
+
+type requestHeader struct {
+	*fasthttp.RequestHeader
+}
+
+func (c *requestHeader) Number() uint8 { return 0 }
+
+func (c *requestHeader) Generate() uRouter.Header { return nil }
+
+func (c *requestHeader) Close() {}
+
+func (c *requestHeader) Get(key string) string {
+	return b2s(c.Peek(key))
+}
+
+func (c *requestHeader) Range(f func(key string, value string)) {
+	c.VisitAll(func(key, value []byte) {
+		f(b2s(key), b2s(value))
+	})
+}
+
+type responseHeader struct {
+	*fasthttp.ResponseHeader
+}
+
+func (c *responseHeader) Number() uint8 { return 0 }
+
+func (c *responseHeader) Generate() uRouter.Header { return nil }
+
+func (c *responseHeader) Close() {}
+
+func (c *responseHeader) Get(key string) string { return b2s(c.Peek(key)) }
+
+func (c *responseHeader) Range(f func(key string, value string)) {
+	c.VisitAll(func(key, value []byte) {
+		f(b2s(key), b2s(value))
+	})
 }

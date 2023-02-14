@@ -100,13 +100,11 @@ func NewContext(request *Request, writer ResponseWriter) *Context {
 }
 
 // Close 关闭请求, 回收Header和Body资源
-func (c *Context) Close() {
-	c.Request.Header.Close()
-	Close(c.Request.Body)
-	c.Request.Header = nil
-	c.Request.Body = nil
-
-	Close(c.Writer)
+func (c *Request) Close() {
+	c.Header.Close()
+	Close(c.Body)
+	c.Header = nil
+	c.Body = nil
 }
 
 // Next 执行下一个中间件
