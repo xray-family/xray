@@ -38,7 +38,7 @@ type (
 		Range(f func(key, value string)) // 遍历
 	}
 
-	headerLengthEncoding uint8
+	headerLengthEncoding int
 )
 
 type MapHeader map[string]string

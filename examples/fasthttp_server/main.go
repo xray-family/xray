@@ -31,5 +31,4 @@ func main() {
 
 func Test(ctx *uRouter.Context) {
 	_ = ctx.WriteString(http.StatusOK, "hello")
-	ctx.Request.Close()
 }

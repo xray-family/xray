@@ -97,6 +97,13 @@ func TestHeaderCodec(t *testing.T) {
 		as.Equal(0, header2.Len())
 	})
 
+	t.Run("encode header ok", func(t *testing.T) {
+		var header = newMapHeader()
+		header.Set(constant.ContentType, constant.MimeJson)
+		var w = bytes.NewBufferString("")
+		as.NoError(TextMapHeader.Encode(w, header))
+	})
+
 	t.Run("encode header error", func(t *testing.T) {
 		var header = &headerMocker{newMapHeader()}
 		header.Set(constant.ContentType, constant.MimeJson)
