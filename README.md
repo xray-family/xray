@@ -233,47 +233,62 @@ output: 1, 3, 5, 4, 2
 ##### WWW Form Codec
 
 ```go
+package main
+
+import (
+	"fmt"
+	"github.com/lxzan/uRouter"
+	"github.com/lxzan/uRouter/contrib/codec/wwwform"
+	"net/http"
+)
+
 type Input struct {
-Name string `form:"name"`
-Age  int    `form:"age"`
+	Name string `form:"name"`
+	Age  int    `form:"age"`
 }
 
 func (c *Controller) Test(ctx *uRouter.Context) {
-defer ctx.Request.Close()
-var input = &Input{}
-_ = wwwform.FormCodec.NewDecoder(ctx.Request.Body).Decode(input)
+	defer ctx.Request.Close()
+	var input = &Input{}
+	_ = wwwform.FormCodec.NewDecoder(ctx.Request.Body).Decode(input)
 
-fmt.Printf("%v\n", input)
-_ = ctx.WriteString(http.StatusOK, "success")
+	fmt.Printf("%v\n", input)
+	_ = ctx.WriteString(http.StatusOK, "success")
 }
+
 ```
 
 ##### JSON Codec
 
 ```go
+package main
+
 import (
-"github.com/lxzan/uRouter"
-"github.com/lxzan/uRouter/contrib/codec/jsoniter"
+	"fmt"
+	"github.com/lxzan/uRouter"
+	"github.com/lxzan/uRouter/contrib/codec/jsoniter"
+	"net/http"
 )
 
 func init() {
-// Better performance than uRouter.StdJsonCodec 
-uRouter.SetJsonCodec(jsoniter.JsoniterCodec)
+	// Better performance than uRouter.StdJsonCodec 
+	uRouter.SetJsonCodec(jsoniter.JsoniterCodec)
 }
 
 type Input struct {
-Name string `form:"name"`
-Age  int    `form:"age"`
+	Name string `form:"name"`
+	Age  int    `form:"age"`
 }
 
 func (c *Controller) Test(ctx *uRouter.Context) {
-defer ctx.Request.Close()
-var input = &Input{}
-_ = uRouter.JsonCodec().NewDecoder(ctx.Request.Body).Decode(input)
+	defer ctx.Request.Close()
+	var input = &Input{}
+	_ = uRouter.JsonCodec().NewDecoder(ctx.Request.Body).Decode(input)
 
-fmt.Printf("%v\n", input)
-_ = ctx.WriteString(http.StatusOK, "success")
+	fmt.Printf("%v\n", input)
+	_ = ctx.WriteString(http.StatusOK, "success")
 }
+
 ```
 
 ##### Header Codec (Not applicable to HTTP)
