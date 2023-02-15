@@ -38,7 +38,6 @@ Hats off to express, koa, gin!
 
 - [uRouter](#urouter)
     - [Feature](#feature)
-    - [Index](#index)
     - [Quick Start](#quick-start)
     - [WebSocket](#websocket)
         - [Server](#server)
@@ -54,7 +53,7 @@ Hats off to express, koa, gin!
     - [Swagger](#swagger)
     - [Benchmark](#benchmark)
         - [RPS](#rps)
-    - [Route Algorithm](#route-algorithm)
+        - [Route Algorithm](#route-algorithm)
     - [Acknowledgements](#acknowledgements)
 
 #### Quick Start
@@ -407,7 +406,7 @@ Requests/sec: 406843.81
 Transfer/sec:     53.93MB
 ```
 
-#### Route Algorithm
+##### Route Algorithm
 
 - `uRouter`
 
