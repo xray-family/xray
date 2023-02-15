@@ -37,13 +37,25 @@ Hats off to express, koa, gin!
 #### Index
 
 - [uRouter](#urouter)
-  - [Feature](#feature)
-  - [Index](#index)
-  - [Quick Start](#quick-start)
-  - [WebSocket](#websocket)
-  - [Middleware](#middleware)
-  - [Codec](#codec)
-  - [Benchmark](#benchmark)
+    - [Feature](#feature)
+    - [Index](#index)
+    - [Quick Start](#quick-start)
+    - [WebSocket](#websocket)
+        - [Server](#server)
+        - [Client](#client)
+    - [Route](#route)
+        - [Static](#static)
+        - [Dynamic](#dynamic)
+    - [Middleware](#middleware)
+    - [Codec](#codec)
+        - [WWW Form Codec](#www-form-codec)
+        - [JSON Codec](#json-codec)
+        - [Header Codec (Not applicable to HTTP)](#header-codec-not-applicable-to-http)
+    - [Swagger](#swagger)
+    - [Benchmark](#benchmark)
+        - [RPS](#rps)
+    - [Route Algorithm](#route-algorithm)
+    - [Acknowledgements](#acknowledgements)
 
 #### Quick Start
 
@@ -51,37 +63,37 @@ Hats off to express, koa, gin!
 package main
 
 import (
-	"github.com/lxzan/uRouter"
-	httpAdapter "github.com/lxzan/uRouter/contrib/adapter/http"
-	"github.com/lxzan/uRouter/contrib/codec/jsoniter"
-	"github.com/lxzan/uRouter/contrib/log/zerolog"
-	"net/http"
+    "github.com/lxzan/uRouter"
+    httpAdapter "github.com/lxzan/uRouter/contrib/adapter/http"
+    "github.com/lxzan/uRouter/contrib/codec/jsoniter"
+    "github.com/lxzan/uRouter/contrib/log/zerolog"
+    "net/http"
 )
 
 func init() {
-	uRouter.SetJsonCodec(jsoniter.JsoniterCodec)
-	uRouter.SetLogger(zerolog.ZeroLogger)
+    uRouter.SetJsonCodec(jsoniter.JsoniterCodec)
+    uRouter.SetLogger(zerolog.ZeroLogger)
 }
 
 func main() {
-	var router = uRouter.New()
-	router.Use(uRouter.Recovery(), uRouter.AccessLog())
-	var group = router.Group("/api/v1")
+    var router = uRouter.New()
+    router.Use(uRouter.Recovery(), uRouter.AccessLog())
+    var group = router.Group("/api/v1")
 
-	group.OnGET("/user/list", func(ctx *uRouter.Context) {
-		_ = ctx.WriteJSON(http.StatusOK, []string{"ming", "hong"})
-	})
+    group.OnGET("/user/list", func(ctx *uRouter.Context) {
+        _ = ctx.WriteJSON(http.StatusOK, []string{"ming", "hong"})
+    })
 
-	group.OnPOST("/user/:name", func(ctx *uRouter.Context) {
-		_ = ctx.WriteJSON(http.StatusOK, uRouter.Any{
-			"hello": ctx.Param("name"),
-		})
-	})
+    group.OnPOST("/user/:name", func(ctx *uRouter.Context) {
+        _ = ctx.WriteJSON(http.StatusOK, uRouter.Any{
+            "hello": ctx.Param("name"),
+        })
+    })
 
-	router.Start()
-	if err := http.ListenAndServe(":3000", httpAdapter.NewAdapter(router)); err != nil {
-		uRouter.Logger().Panic(err.Error())
-	}
+    router.Start()
+    if err := http.ListenAndServe(":3000", httpAdapter.NewAdapter(router)); err != nil {
+        uRouter.Logger().Panic(err.Error())
+    }
 }
 ```
 
@@ -91,72 +103,86 @@ func main() {
 
 #### WebSocket
 
-- server
+##### Server
 
 ```go
 package main
 
 import (
-	"github.com/lxzan/gws"
-	"github.com/lxzan/uRouter"
-	gwsAdapter "github.com/lxzan/uRouter/contrib/adapter/gws"
-	httpAdapter "github.com/lxzan/uRouter/contrib/adapter/http"
-	"github.com/lxzan/uRouter/contrib/codec/jsoniter"
-	"github.com/lxzan/uRouter/contrib/log/zerolog"
-	"net/http"
+    "github.com/lxzan/gws"
+    "github.com/lxzan/uRouter"
+    gwsAdapter "github.com/lxzan/uRouter/contrib/adapter/gws"
+    httpAdapter "github.com/lxzan/uRouter/contrib/adapter/http"
+    "github.com/lxzan/uRouter/contrib/codec/jsoniter"
+    "github.com/lxzan/uRouter/contrib/log/zerolog"
+    "net/http"
 )
 
 func init() {
-	uRouter.SetLogger(zerolog.ZeroLogger)
-	uRouter.SetJsonCodec(jsoniter.JsoniterCodec)
+    uRouter.SetLogger(zerolog.ZeroLogger)
+    uRouter.SetJsonCodec(jsoniter.JsoniterCodec)
 }
 
 func main() {
-	router := uRouter.New()
-	router.Use(uRouter.Recovery(), uRouter.AccessLog())
+    router := uRouter.New()
+    router.Use(uRouter.Recovery(), uRouter.AccessLog())
 
-	upgrader := gws.NewUpgrader(func(c *gws.Upgrader) {
-		c.EventHandler = &WebSocketHandler{adapter: gwsAdapter.NewAdapter(router)}
-	})
+    upgrader := gws.NewUpgrader(func(c *gws.Upgrader) {
+        c.EventHandler = &WebSocketHandler{adapter: gwsAdapter.NewAdapter(router)}
+    })
 
-	router.OnGET("/connect", func(ctx *uRouter.Context) {
-		socket, err := upgrader.Accept(ctx.Writer.Raw().(http.ResponseWriter), ctx.Request.Raw.(*http.Request))
-		if err != nil {
-			uRouter.Logger().Error(err.Error())
-			return
-		}
-		go socket.Listen()
-	})
+    router.OnGET("/connect", func(ctx *uRouter.Context) {
+        socket, err := upgrader.Accept(ctx.Writer.Raw().(http.ResponseWriter), ctx.Request.Raw.(*http.Request))
+        if err != nil {
+            uRouter.Logger().Error(err.Error())
+            return
+        }
+        go socket.Listen()
+    })
 
-	router.On("/greet", func(ctx *uRouter.Context) {
-		ctx.Writer.Header().Set("content-type", "plain/text")
-		_ = ctx.WriteString(int(gws.OpcodeText), "hello!")
-	})
+    router.On("/greet", func(ctx *uRouter.Context) {
+        ctx.Writer.Header().Set("content-type", "plain/text")
+        _ = ctx.WriteString(int(gws.OpcodeText), "hello!")
+    })
 
-	router.Start()
-	if err := http.ListenAndServe(":3000", httpAdapter.NewAdapter(router)); err != nil {
-		uRouter.Logger().Panic(err.Error())
-	}
+    router.Start()
+    if err := http.ListenAndServe(":3000", httpAdapter.NewAdapter(router)); err != nil {
+        uRouter.Logger().Panic(err.Error())
+    }
 }
 
 type WebSocketHandler struct {
-	gws.BuiltinEventEngine
-	adapter *gwsAdapter.Adapter
+    gws.BuiltinEventEngine
+    adapter *gwsAdapter.Adapter
 }
 
 func (c *WebSocketHandler) OnMessage(socket *gws.Conn, message *gws.Message) {
-	if err := c.adapter.ServeWebSocket(socket, message); err != nil {
-		uRouter.Logger().Error(err.Error())
-	}
+    if err := c.adapter.ServeWebSocket(socket, message); err != nil {
+        uRouter.Logger().Error(err.Error())
+    }
 }
 
 ```
 
-- client
+##### Client
 
 ```js
 let ws = new WebSocket('ws://127.0.0.1:3000/connect');
 ws.send('0033{"U-Path":"/greet","U-Action":""}{"hello":"world!"}');
+```
+
+#### Route
+
+##### Static
+
+```go
+router.OnGET("/ping", func (ctx *uRouter.Context) {})
+```
+
+##### Dynamic
+
+```go
+router.OnPOST("/user/:id", func (ctx *uRouter.Context) {})
 ```
 
 #### Middleware
@@ -167,35 +193,35 @@ ws.send('0033{"U-Path":"/greet","U-Action":""}{"hello":"world!"}');
 package main
 
 import (
-	"fmt"
-	"github.com/lxzan/uRouter"
-	http2 "github.com/lxzan/uRouter/contrib/adapter/http"
-	"net/http"
+    "fmt"
+    "github.com/lxzan/uRouter"
+    http2 "github.com/lxzan/uRouter/contrib/adapter/http"
+    "net/http"
 )
 
 func main() {
-	var router = uRouter.New()
+    var router = uRouter.New()
 
-	var list []int
-	router.Use(func(ctx *uRouter.Context) {
-		list = append(list, 1)
-		ctx.Next()
-		list = append(list, 2)
-		fmt.Printf("%v\n", list)
-	})
+    var list []int
+    router.Use(func(ctx *uRouter.Context) {
+        list = append(list, 1)
+        ctx.Next()
+        list = append(list, 2)
+        fmt.Printf("%v\n", list)
+    })
 
-	var group = router.Group("/api/v1", func(ctx *uRouter.Context) {
-		list = append(list, 3)
-		ctx.Next()
-		list = append(list, 4)
-	})
+    var group = router.Group("/api/v1", func(ctx *uRouter.Context) {
+        list = append(list, 3)
+        ctx.Next()
+        list = append(list, 4)
+    })
 
-	group.OnGET("/greet", func(ctx *uRouter.Context) {
-		list = append(list, 5)
-	})
+    group.OnGET("/greet", func(ctx *uRouter.Context) {
+        list = append(list, 5)
+    })
 
-	router.Start()
-	_ = http.ListenAndServe(":3000", http2.NewAdapter(router))
+    router.Start()
+    _ = http.ListenAndServe(":3000", http2.NewAdapter(router))
 }
 ```
 
@@ -205,53 +231,53 @@ output: 1, 3, 5, 4, 2
 
 #### Codec
 
-- WWW Form Codec
+##### WWW Form Codec
 
 ```go
 type Input struct {
-	Name string `form:"name"`
-	Age  int    `form:"age"`
+Name string `form:"name"`
+Age  int    `form:"age"`
 }
 
 func (c *Controller) Test(ctx *uRouter.Context) {
-	defer ctx.Request.Close()
-	var input = &Input{}
-	_ = wwwform.FormCodec.NewDecoder(ctx.Request.Body).Decode(input)
-	
-	fmt.Printf("%v\n", input)
-	_ = ctx.WriteString(http.StatusOK, "success")
+defer ctx.Request.Close()
+var input = &Input{}
+_ = wwwform.FormCodec.NewDecoder(ctx.Request.Body).Decode(input)
+
+fmt.Printf("%v\n", input)
+_ = ctx.WriteString(http.StatusOK, "success")
 }
 ```
 
-- JSON Codec
+##### JSON Codec
 
 ```go
 import (
-    "github.com/lxzan/uRouter"
-    "github.com/lxzan/uRouter/contrib/codec/jsoniter"
+"github.com/lxzan/uRouter"
+"github.com/lxzan/uRouter/contrib/codec/jsoniter"
 )
 
 func init() {
-    // Better performance than uRouter.StdJsonCodec 
-    uRouter.SetJsonCodec(jsoniter.JsoniterCodec)
+// Better performance than uRouter.StdJsonCodec 
+uRouter.SetJsonCodec(jsoniter.JsoniterCodec)
 }
 
 type Input struct {
-    Name string `form:"name"`
-    Age  int    `form:"age"`
+Name string `form:"name"`
+Age  int    `form:"age"`
 }
 
 func (c *Controller) Test(ctx *uRouter.Context) {
-    defer ctx.Request.Close()
-    var input = &Input{}
-    _ = uRouter.JsonCodec().NewDecoder(ctx.Request.Body).Decode(input)
+defer ctx.Request.Close()
+var input = &Input{}
+_ = uRouter.JsonCodec().NewDecoder(ctx.Request.Body).Decode(input)
 
-    fmt.Printf("%v\n", input)
-    _ = ctx.WriteString(http.StatusOK, "success")
+fmt.Printf("%v\n", input)
+_ = ctx.WriteString(http.StatusOK, "success")
 }
 ```
 
-- Header Codec (Not applicable to HTTP)
+##### Header Codec (Not applicable to HTTP)
 
 ```
 uRouter.TextMapHeader:   length_encoding=4 byte, max_header_length=9999  byte
@@ -262,6 +288,63 @@ uRouter.BinaryMapHeader: length_encoding=2 byte, max_header_length=65535 byte
 // TextMapHeader Example
 // header length => header payload => body
 0033{"U-Path":"/greet","U-Action":""}{"hello":"world!"}
+```
+
+#### Swagger
+
+1. install command tool
+
+```bash
+go install github.com/swaggo/swag/cmd/swag@latest
+```
+
+2. generate docs
+
+```bash
+swag init
+```
+
+3. write your code
+
+```go
+package main
+
+import (
+    "github.com/lxzan/uRouter"
+    httpAdapter "github.com/lxzan/uRouter/contrib/adapter/http"
+    "github.com/lxzan/uRouter/contrib/doc/swagger"
+    _ "github.com/lxzan/uRouter/examples/debug/docs"
+    swaggerFiles "github.com/swaggo/files"
+    "net/http"
+)
+
+// PingExample godoc
+// @Summary ping example
+// @Schemes
+// @Description do ping
+// @Tags example
+// @Accept json
+// @Produce json
+// @Success 200 {string} Helloworld
+// @Router /example/helloworld [get]
+func Helloworld(ctx *uRouter.Context) {
+    _ = ctx.WriteJSON(http.StatusOK, "helloworld")
+}
+
+func main() {
+    var router = uRouter.New()
+    router.Use(uRouter.Recovery(), uRouter.AccessLog())
+
+    router.OnGET("/swagger/:any", swagger.WrapHandler(swaggerFiles.Handler))
+
+    router.OnGET("/api/v1/example/helloworld", Helloworld)
+
+    router.Start()
+
+    if err := http.ListenAndServe(":3000", httpAdapter.NewAdapter(router)); err != nil {
+        uRouter.Logger().Panic(err.Error())
+    }
+}
 ```
 
 #### Benchmark
@@ -296,7 +379,6 @@ Requests/sec: 347469.03
 Transfer/sec:     46.06MB
 ```
 
-
 - `Standard`
 
 ```
@@ -312,6 +394,7 @@ Transfer/sec:     24.84MB
 ```
 
 - `FastHTTP`
+
 ```
 wrk -t4 -c100 -d10s http://127.0.0.1:3001/test
 Running 10s test @ http://127.0.0.1:3001/test
@@ -323,6 +406,7 @@ Running 10s test @ http://127.0.0.1:3001/test
 Requests/sec: 406843.81
 Transfer/sec:     53.93MB
 ```
+
 #### Route Algorithm
 
 - `uRouter`
@@ -353,3 +437,7 @@ Benchmark404-8                  	29467527	        43.23 ns/op	       0 B/op	    
 Benchmark404Many-8              	27458932	        43.92 ns/op	       0 B/op	       0 allocs/op
 PASS
 ```
+
+#### Acknowledgements
+
+- [gin-swagger](https://github.com/swaggo/gin-swagger)
