@@ -424,6 +424,8 @@ Benchmark404Many-8              	35411809	        34.11 ns/op	       0 B/op	    
 PASS
 ```
 
+- gin
+
 ```
 goos: darwin
 goarch: arm64
