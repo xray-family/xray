@@ -97,8 +97,6 @@ type requestHeader struct {
 	*fasthttp.RequestHeader
 }
 
-func (c *requestHeader) Number() uint8 { return 0 }
-
 func (c *requestHeader) Generate() uRouter.Header { return nil }
 
 func (c *requestHeader) Close() {}
@@ -114,8 +112,6 @@ func (c *requestHeader) Range(f func(key string, value string)) {
 type responseHeader struct {
 	*fasthttp.ResponseHeader
 }
-
-func (c *responseHeader) Number() uint8 { return 0 }
 
 func (c *responseHeader) Generate() uRouter.Header { return nil }
 
