@@ -9,7 +9,7 @@ import (
 
 type (
 	websocketWrapper interface {
-		WriteMessage(opcode gws.Opcode, payload []byte)
+		WriteMessage(opcode gws.Opcode, payload []byte) error
 	}
 
 	responseWriter struct {
@@ -65,7 +65,9 @@ func (c *responseWriter) Write(p []byte) (n int, err error) {
 }
 
 func (c *responseWriter) Flush() error {
-	c.conn.WriteMessage(c.code, c.buf.Bytes())
+	if err := c.conn.WriteMessage(c.code, c.buf.Bytes()); err != nil {
+		return err
+	}
 	uRouter.BufferPool().Put(c.buf)
 	c.header.Close()
 	c.buf = nil

@@ -44,7 +44,7 @@ func main() {
 }
 
 type WebSocketHandler struct {
-	gws.BuiltinEventEngine
+	gws.BuiltinEventHandler
 	adapter *gwsAdapter.Adapter
 }
 
