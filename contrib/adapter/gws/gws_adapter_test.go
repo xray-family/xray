@@ -14,9 +14,10 @@ type connMocker struct {
 	buf    *bytes.Buffer
 }
 
-func (c *connMocker) WriteMessage(opcode gws.Opcode, payload []byte) {
+func (c *connMocker) WriteMessage(opcode gws.Opcode, payload []byte) error {
 	c.opcode = opcode
-	c.buf.Write(payload)
+	_, err := c.buf.Write(payload)
+	return err
 }
 
 func TestNewAdapter(t *testing.T) {
