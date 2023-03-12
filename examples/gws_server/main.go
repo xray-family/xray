@@ -19,9 +19,7 @@ func main() {
 	router := uRouter.New()
 	router.Use(uRouter.Recovery(), uRouter.AccessLog())
 
-	upgrader := gws.NewUpgrader(func(c *gws.Upgrader) {
-		c.EventHandler = &WebSocketHandler{adapter: gwsAdapter.NewAdapter(router)}
-	})
+	upgrader := gws.NewUpgrader(&WebSocketHandler{adapter: gwsAdapter.NewAdapter(router)}, nil)
 
 	router.OnGET("/connect", func(ctx *uRouter.Context) {
 		socket, err := upgrader.Accept(ctx.Writer.Raw().(http.ResponseWriter), ctx.Request.Raw.(*http.Request))
@@ -44,7 +42,7 @@ func main() {
 }
 
 type WebSocketHandler struct {
-	gws.BuiltinEventEngine
+	gws.BuiltinEventHandler
 	adapter *gwsAdapter.Adapter
 }
 

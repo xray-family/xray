@@ -6,8 +6,8 @@ github.com/godbus/dbus/v5 v5.0.4/go.mod h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5x
 github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
 github.com/json-iterator/go v1.1.12 h1:PV8peI4a0ysnczrg+LtxykD8LfKY9ML6u2jnxaEnrnM=
 github.com/json-iterator/go v1.1.12/go.mod h1:e30LSqwooZae/UwlEbR2852Gd8hjQvJoHmT4TnhNGBo=
-github.com/lxzan/gws v1.2.14 h1:wVbAMXolxcU07l0viakF7ypNwZAu/RwPOgRXWZfMNwA=
-github.com/lxzan/gws v1.2.14/go.mod h1:vJhBIxPUu71rgaXRe+ooqWK5rk9HYpILFthvRbC/wFw=
+github.com/lxzan/gws v1.4.4 h1:OuU9KRTWX6pUzW8YodRAPlTR0S/LXWSONIqDnxE9XBg=
+github.com/lxzan/gws v1.4.4/go.mod h1:dVFrrjW+m8YrfF+dxvJ2k3zCYLuCzZRAf4WOmGFprSg=
 github.com/lxzan/uRouter/contrib/codec/jsoniter v0.0.0-20230208023827-6baa50a514b5 h1:3eNC7Y0TnepLYOxzLYKAcH9IQaz3nLF1ChaT4QVCEGU=
 github.com/lxzan/uRouter/contrib/codec/jsoniter v0.0.0-20230208023827-6baa50a514b5/go.mod h1:y69wPiDX48SbcrRS4l4EkmJxmHaFIEHt6kh9NdC9V0E=
 github.com/mattn/go-colorable v0.1.12 h1:jF+Du6AlPIjs2BiUiQlKOX0rt3SujHxPnksPKZbaA40=

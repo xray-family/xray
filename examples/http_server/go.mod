@@ -5,8 +5,8 @@ go 1.16
 replace (
 	github.com/lxzan/uRouter => ../../
 	github.com/lxzan/uRouter/contrib/adapter/http => ../../contrib/adapter/http
-	github.com/lxzan/uRouter/contrib/log/zerolog => ../../contrib/log/zerolog
 	github.com/lxzan/uRouter/contrib/codec/jsoniter => ../../contrib/codec/jsoniter
+	github.com/lxzan/uRouter/contrib/log/zerolog => ../../contrib/log/zerolog
 )
 
 require (
@@ -14,4 +14,5 @@ require (
 	github.com/lxzan/uRouter/contrib/adapter/http v1.0.0
 	github.com/lxzan/uRouter/contrib/codec/jsoniter v0.0.0-20230208023827-6baa50a514b5
 	github.com/lxzan/uRouter/contrib/log/zerolog v0.0.0-00010101000000-000000000000
+	golang.org/x/sys v0.0.0-20220728004956-3c1f35247d10 // indirect
 )
