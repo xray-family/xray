@@ -9,7 +9,7 @@ func BenchmarkOneRoute(b *testing.B) {
 	router := New()
 	router.OnGET("/ping", func(c *Context) {
 	})
-	router.StartSilently()
+	//router.StartSilently()
 	ctx := newContextMocker()
 
 	b.ResetTimer()
@@ -22,7 +22,7 @@ func BenchmarkOneRouteDynamic(b *testing.B) {
 	router := New()
 	router.OnGET("/user/:id", func(c *Context) {
 	})
-	router.StartSilently()
+	//router.StartSilently()
 	ctx := newContextMocker()
 
 	b.ResetTimer()
@@ -36,7 +36,7 @@ func BenchmarkRecoveryMiddleware(b *testing.B) {
 	router.Use(Recovery())
 	router.OnGET("/", func(c *Context) {
 	})
-	router.StartSilently()
+	//router.StartSilently()
 	ctx := newContextMocker()
 
 	b.ResetTimer()
@@ -50,7 +50,7 @@ func Benchmark5Params(b *testing.B) {
 	router.Use(func(ctx *Context) {})
 	router.OnGET("/param/:param1/:params2/:param3/:param4/:param5", func(c *Context) {
 	})
-	router.StartSilently()
+	//router.StartSilently()
 	ctx := newContextMocker()
 
 	b.ResetTimer()
@@ -69,7 +69,7 @@ func BenchmarkOneRouteJSON(b *testing.B) {
 		_ = c.WriteJSON(http.StatusOK, data)
 		c.Request.Close()
 	})
-	router.StartSilently()
+	//router.StartSilently()
 	ctx := newContextMocker()
 
 	b.ResetTimer()
@@ -82,8 +82,8 @@ func Benchmark404(b *testing.B) {
 	router := New()
 	router.OnGET("/", func(c *Context) {})
 	router.OnGET("/something", func(c *Context) {})
-	router.OnNotFound = func(ctx *Context) {}
-	router.StartSilently()
+	//router.OnNotFound = func(ctx *Context) {}
+	//router.StartSilently()
 	ctx := newContextMocker()
 
 	b.ResetTimer()
@@ -102,8 +102,8 @@ func Benchmark404Many(b *testing.B) {
 	router.OnGET("/robots.txt", func(c *Context) {})
 	router.OnGET("/delete/:id", func(c *Context) {})
 	router.OnGET("/user/:id/:mode", func(c *Context) {})
-	router.OnNotFound = func(ctx *Context) {}
-	router.StartSilently()
+	//router.OnNotFound = func(ctx *Context) {}
+	//router.StartSilently()
 	ctx := newContextMocker()
 
 	b.ResetTimer()

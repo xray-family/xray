@@ -144,3 +144,9 @@ func TestFastSplit(t *testing.T) {
 		as.ElementsMatch([]string{}, list)
 	}
 }
+
+func TestClone(t *testing.T) {
+	var a = []int{1, 3, 5}
+	var b = Clone(a)
+	assert.ElementsMatch(t, a, b)
+}

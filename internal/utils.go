@@ -1,6 +1,9 @@
 package internal
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 const (
 	Separator     = "/"
@@ -119,4 +122,18 @@ func FastSplit(str string, f func(segment string) bool) {
 			j++
 		}
 	}
+}
+
+func Clone[T any, A ~[]T](arr A) A {
+	return append(A(nil), arr...)
+}
+
+func Catch(f func()) (err error) {
+	defer func() {
+		if exception := recover(); exception != nil {
+			err = fmt.Errorf("%v", exception)
+		}
+	}()
+	f()
+	return err
 }

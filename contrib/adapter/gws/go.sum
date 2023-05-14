@@ -1,10 +1,10 @@
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/lxzan/gws v1.2.14 h1:wVbAMXolxcU07l0viakF7ypNwZAu/RwPOgRXWZfMNwA=
-github.com/lxzan/gws v1.2.14/go.mod h1:vJhBIxPUu71rgaXRe+ooqWK5rk9HYpILFthvRbC/wFw=
-github.com/lxzan/gws v1.3.2 h1:OhUonTAyhRwOwhrHqIArzg5bdCN3aqaSNd+4F2HtE3g=
-github.com/lxzan/gws v1.3.2/go.mod h1:vJhBIxPUu71rgaXRe+ooqWK5rk9HYpILFthvRbC/wFw=
+github.com/klauspost/compress v1.16.5 h1:IFV2oUNUzZaz+XyusxpLzpzS8Pt5rh0Z16For/djlyI=
+github.com/klauspost/compress v1.16.5/go.mod h1:ntbaceVETuRiXiv4DpjP66DpAtAGkEQskQzEyD//IeE=
+github.com/lxzan/gws v1.5.1 h1:0ZAk1zK8cP0voUWd6f3GmfuuBYfPJjgN4jDTFWnmsLA=
+github.com/lxzan/gws v1.5.1/go.mod h1:dsC6S7kJNh+iWqqu2HiO8tnNCji04HwyJCYfTOS+6iY=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=

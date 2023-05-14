@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"runtime"
 	"sort"
+	"time"
 )
 
 const (
@@ -18,26 +19,23 @@ const (
 type (
 	// Router 路由器
 	Router struct {
-		// 预注册的接口
-		apis []*apiHandler
-
 		// 静态路由
-		staticRoutes map[string]map[string]*apiHandler
+		staticMatcher staticMatcher
 
 		// 动态路由
-		dynamicRoutes map[string]*routeTree
+		dynamicMatcher dynamicMatcher
 
 		// 全局中间件
 		// global middlewares
 		chainsGlobal []HandlerFunc
 
-		// 路径匹配失败的处理函数链: chainsGlobal + OnNotFound
-		// path match failure handler chain: chainsGlobal + OnNotFound
+		// 路径匹配失败的处理函数链: chainsGlobal + onNotFound
+		// path match failure handler chain: chainsGlobal + onNotFound
 		chainsNotFound []HandlerFunc
 
 		// 路径匹配失败的处理函数
 		// path matching failure handling function
-		OnNotFound HandlerFunc
+		onNotFound HandlerFunc
 	}
 
 	apiHandler struct {
@@ -53,32 +51,37 @@ type (
 // New 创建路由器
 func New() *Router {
 	r := &Router{
-		apis:          []*apiHandler{},
-		chainsGlobal:  make([]HandlerFunc, 0),
-		staticRoutes:  map[string]map[string]*apiHandler{},
-		dynamicRoutes: map[string]*routeTree{},
+		chainsGlobal:   make([]HandlerFunc, 0),
+		staticMatcher:  make(staticMatcher, 0),
+		dynamicMatcher: make(dynamicMatcher),
 	}
-	r.OnNotFound = func(ctx *Context) {
+
+	r.onNotFound = func(ctx *Context) {
 		if ctx.Writer.Protocol() == ProtocolHTTP {
 			_ = ctx.WriteString(http.StatusNotFound, "not found")
 		}
 	}
-	return r
-}
 
-// cloneMiddlewares deep clone
-func (c *Router) cloneMiddlewares(chains []HandlerFunc) []HandlerFunc {
-	var results []HandlerFunc
-	for i, _ := range chains {
-		results = append(results, chains[i])
-	}
-	return results
+	go func() {
+		time.Sleep(time.Second)
+		r.display()
+	}()
+
+	return r
 }
 
 // Use 设置全局中间件
 // set global middlewares
 func (c *Router) Use(middlewares ...HandlerFunc) {
 	c.chainsGlobal = append(c.chainsGlobal, middlewares...)
+	c.SetHandlerNotFound(c.onNotFound)
+}
+
+// SetHandlerNotFound 设置找不到路由的处理函数
+func (c *Router) SetHandlerNotFound(handler HandlerFunc) {
+	c.onNotFound = handler
+	c.chainsNotFound = internal.Clone(c.chainsGlobal)
+	c.chainsNotFound = append(c.chainsNotFound, handler)
 }
 
 // Group 创建路由组
@@ -87,7 +90,7 @@ func (c *Router) Group(path string, middlewares ...HandlerFunc) *Group {
 	var group = &Group{
 		router:      c,
 		path:        internal.JoinPath(SEP, path),
-		middlewares: append(c.cloneMiddlewares(c.chainsGlobal), middlewares...),
+		middlewares: append(internal.Clone(c.chainsGlobal), middlewares...),
 	}
 	return group
 }
@@ -114,6 +117,11 @@ func (c *Router) OnDELETE(path string, handler HandlerFunc, middlewares ...Handl
 	c.OnEvent(http.MethodDelete, path, handler, middlewares...)
 }
 
+// 报告路由冲突
+func (c *Router) reportConflict(api1, api2 *apiHandler) {
+	Logger().Panic("action=%s, path=[ %s, %s ], msg=api path conflict", api1.Action, api1.Path, api2.Path)
+}
+
 // OnEvent 监听一个事件, 绑定处理函数
 // action: 操作修饰词, 区分大小写, 可为空字符串; 在HTTP里固定为Method
 // path: 请求路径
@@ -123,13 +131,14 @@ func (c *Router) OnDELETE(path string, handler HandlerFunc, middlewares ...Handl
 // path: request path
 // handler: handler function
 func (c *Router) OnEvent(action string, path string, handler HandlerFunc, middlewares ...HandlerFunc) {
-	h := append(c.cloneMiddlewares(c.chainsGlobal), middlewares...)
+	h := append(internal.Clone(c.chainsGlobal), middlewares...)
 	h = append(h, handler)
-	c.apis = append(c.apis, &apiHandler{
+	api := &apiHandler{
 		Action: action,
 		Path:   internal.JoinPath(SEP, path),
 		Funcs:  h,
-	})
+	}
+	setApiHandler(c, api.Action, api.Path, api)
 }
 
 // Emit 分发事件
@@ -163,9 +172,12 @@ var blessMessage string
 // display 展示接口列表
 // display api list
 func (c *Router) display() {
-	sort.Slice(c.apis, func(i, j int) bool {
-		a := c.apis[i]
-		b := c.apis[j]
+	var apis []*apiHandler
+	c.staticMatcher.Range(func(h *apiHandler) { apis = append(apis, h) })
+	c.dynamicMatcher.Range(func(h *apiHandler) { apis = append(apis, h) })
+	sort.Slice(apis, func(i, j int) bool {
+		a := apis[i]
+		b := apis[j]
 		if a.Path != b.Path {
 			return a.Path < b.Path
 		}
@@ -178,14 +190,14 @@ func (c *Router) display() {
 
 	var actions []string
 	var paths []string
-	for _, v := range c.apis {
+	for _, v := range apis {
 		actions = append(actions, v.Action)
 		paths = append(paths, v.Path)
 	}
 	actionLength := internal.GetMaxLength(actions...)
 	pathLength := internal.GetMaxLength(paths...)
 
-	for _, v := range c.apis {
+	for _, v := range apis {
 		n := len(v.Funcs)
 		funcName := runtime.FuncForPC(reflect.ValueOf(v.Funcs[n-1]).Pointer()).Name()
 		Logger().Info(
@@ -194,47 +206,5 @@ func (c *Router) display() {
 			internal.Padding(v.Path, pathLength),
 			funcName,
 		)
-	}
-}
-
-// Start
-// 启动路由器并打印问候语和API列表
-func (c *Router) Start() {
-	c.StartSilently()
-	c.display()
-}
-
-// StartSilently 仅启动路由器, 不打印问候语和API列表
-func (c *Router) StartSilently() {
-	c.chainsNotFound = append(c.cloneMiddlewares(c.chainsGlobal), c.OnNotFound)
-
-	var staticAPIs []*apiHandler
-	var dynamicAPIs []*apiHandler
-	for i, v := range c.apis {
-		if hasVar(v.Path) {
-			dynamicAPIs = append(dynamicAPIs, c.apis[i])
-		} else {
-			staticAPIs = append(staticAPIs, c.apis[i])
-		}
-	}
-
-	var logger = func(v *apiHandler) {
-		Logger().Panic("action=%s, path=%s, msg=api path conflict", v.Action, v.Path)
-	}
-
-	for i, v := range dynamicAPIs {
-		if _, exist := getApiHandler(c, v.Action, v.Path); exist {
-			logger(v)
-			return
-		}
-		setApiHandler(c, v.Action, v.Path, dynamicAPIs[i])
-	}
-
-	for i, v := range staticAPIs {
-		if _, exist := getApiHandler(c, v.Action, v.Path); exist {
-			logger(v)
-			return
-		}
-		setApiHandler(c, v.Action, v.Path, staticAPIs[i])
 	}
 }

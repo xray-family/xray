@@ -10,7 +10,7 @@ replace (
 )
 
 require (
-	github.com/lxzan/gws v1.4.4
+	github.com/lxzan/gws v1.5.1
 	github.com/lxzan/uRouter v1.0.0
 	github.com/lxzan/uRouter/contrib/adapter/gws v0.0.0-00010101000000-000000000000
 	github.com/lxzan/uRouter/contrib/adapter/http v1.0.0

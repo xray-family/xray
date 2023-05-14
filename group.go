@@ -19,7 +19,7 @@ func (c *Group) Group(path string, middlewares ...HandlerFunc) *Group {
 	group := &Group{
 		router:      c.router,
 		path:        internal.JoinPath(SEP, c.path, path),
-		middlewares: append(c.router.cloneMiddlewares(c.middlewares), middlewares...),
+		middlewares: append(internal.Clone(c.middlewares), middlewares...),
 	}
 	return group
 }
@@ -27,14 +27,14 @@ func (c *Group) Group(path string, middlewares ...HandlerFunc) *Group {
 // OnEvent 监听事件
 // listen to event
 func (c *Group) OnEvent(action string, path string, handler HandlerFunc, middlewares ...HandlerFunc) {
-	router := c.router
-	h := append(router.cloneMiddlewares(c.middlewares), middlewares...)
+	h := append(internal.Clone(c.middlewares), middlewares...)
 	h = append(h, handler)
-	router.apis = append(router.apis, &apiHandler{
+	api := &apiHandler{
 		Action: action,
 		Path:   internal.JoinPath(SEP, c.path, path),
 		Funcs:  h,
-	})
+	}
+	setApiHandler(c.router, api.Action, api.Path, api)
 }
 
 // On  类似OnEvent方法, 但是没有动作修饰词
