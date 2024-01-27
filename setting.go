@@ -1,7 +1,7 @@
-package uRouter
+package xray
 
 import (
-	"github.com/lxzan/uRouter/codec"
+	"github.com/lxzan/xray/codec"
 )
 
 var (

@@ -1,10 +1,10 @@
-module github.com/lxzan/uRouter/contrib/adapter/fasthttp
+module github.com/lxzan/xray/contrib/adapter/fasthttp
 
-go 1.16
+go 1.18
 
-replace github.com/lxzan/uRouter => ../../../
+replace github.com/lxzan/xray => ../../../
 
 require (
-	github.com/lxzan/uRouter v1.0.0
+	github.com/lxzan/xray v1.0.0
 	github.com/valyala/fasthttp v1.44.0
 )

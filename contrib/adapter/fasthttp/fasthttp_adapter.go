@@ -2,7 +2,7 @@ package fasthttp
 
 import (
 	"bytes"
-	"github.com/lxzan/uRouter"
+	"github.com/lxzan/xray"
 	"github.com/valyala/fasthttp"
 	"reflect"
 	"unsafe"
@@ -10,7 +10,7 @@ import (
 
 type responseWriter struct {
 	writer *fasthttp.Response
-	header uRouter.Header
+	header xray.Header
 }
 
 func (c *responseWriter) Write(p []byte) (n int, err error) {
@@ -18,10 +18,10 @@ func (c *responseWriter) Write(p []byte) (n int, err error) {
 }
 
 func (c *responseWriter) Protocol() string {
-	return uRouter.ProtocolHTTP
+	return xray.ProtocolHTTP
 }
 
-func (c *responseWriter) Header() uRouter.Header {
+func (c *responseWriter) Header() xray.Header {
 	return c.header
 }
 
@@ -37,31 +37,31 @@ func (c *responseWriter) Flush() error {
 	return nil
 }
 
-func NewAdapter(router *uRouter.Router) *Adapter {
+func NewAdapter(router *xray.Router) *Adapter {
 	return &Adapter{router: router}
 }
 
 // Adapter FastHTTP适配器
 type Adapter struct {
-	router *uRouter.Router
+	router *xray.Router
 }
 
 // SetRouter 设置路由器
-func (c *Adapter) SetRouter(r *uRouter.Router) *Adapter {
+func (c *Adapter) SetRouter(r *xray.Router) *Adapter {
 	c.router = r
 	return c
 }
 
 // ServeFastHTTP 服务HTTP
 func (c *Adapter) ServeFastHTTP(ctx *fasthttp.RequestCtx) {
-	var r = &uRouter.Request{
+	var r = &xray.Request{
 		Raw:    &ctx.Request,
 		Header: &requestHeader{RequestHeader: &ctx.Request.Header},
 		Action: b2s(ctx.Method()),
 		Body:   bytes.NewBuffer(ctx.Request.Body()),
 	}
 
-	var uctx = uRouter.NewContext(r, &responseWriter{
+	var uctx = xray.NewContext(r, &responseWriter{
 		writer: &ctx.Response,
 		header: &responseHeader{ResponseHeader: &ctx.Response.Header},
 	})
@@ -97,7 +97,7 @@ type requestHeader struct {
 	*fasthttp.RequestHeader
 }
 
-func (c *requestHeader) Generate() uRouter.Header { return nil }
+func (c *requestHeader) Generate() xray.Header { return nil }
 
 func (c *requestHeader) Close() {}
 
@@ -113,7 +113,7 @@ type responseHeader struct {
 	*fasthttp.ResponseHeader
 }
 
-func (c *responseHeader) Generate() uRouter.Header { return nil }
+func (c *responseHeader) Generate() xray.Header { return nil }
 
 func (c *responseHeader) Close() {}
 

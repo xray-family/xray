@@ -1,4 +1,4 @@
-package uRouter
+package xray
 
 import (
 	"fmt"
@@ -15,7 +15,7 @@ func AccessLog() HandlerFunc {
 		ctx.Next()
 
 		Logger().Debug(
-			"access: protocol=%s, action=%s, path=%s, cost=%s",
+			"access: protocol=%s, method=%s, path=%s, cost=%s",
 			ctx.Writer.Protocol(),
 			ctx.Request.Action,
 			ctx.Request.RPath,

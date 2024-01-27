@@ -1,4 +1,4 @@
-package uRouter
+package xray
 
 import (
 	"bytes"
@@ -24,7 +24,7 @@ func TestWebSocket(t *testing.T) {
 			sum++
 		})
 		var ctx = newContextMocker()
-		ctx.Request.Header.Set(UPath, "test")
+		ctx.Request.Header.Set(XPath, "test")
 		r.Emit("test", ctx)
 		assert.Equal(t, 0, sum)
 	})
@@ -45,7 +45,7 @@ func TestWebSocket(t *testing.T) {
 
 		var ctx = newContextMocker()
 		ctx.Writer.(*responseWriterMocker).SetProtocol(ProtocolWebSocket)
-		ctx.Request.Header.Set(UPath, "/test")
+		ctx.Request.Header.Set(XPath, "/test")
 		r.EmitEvent(http.MethodGet, "/test", ctx)
 		assert.Equal(t, 1, sum)
 	})
@@ -78,7 +78,7 @@ func TestHTTP(t *testing.T) {
 
 		var ctx = newContextMocker()
 		ctx.Request.Raw = &http.Request{Method: http.MethodGet}
-		ctx.Request.Header.Set(UPath, "test")
+		ctx.Request.Header.Set(XPath, "test")
 		r.Emit("test", ctx)
 		assert.Equal(t, 0, sum)
 	})
@@ -94,7 +94,7 @@ func TestHTTP(t *testing.T) {
 		var ctx = newContextMocker()
 		ctx.Writer.(*responseWriterMocker).SetProtocol(ProtocolWebSocket)
 		ctx.Request.Raw = &http.Request{Method: http.MethodPost}
-		ctx.Request.Header.Set(UPath, "test")
+		ctx.Request.Header.Set(XPath, "test")
 		r.Emit("test", ctx)
 		assert.Equal(t, 0, sum)
 	})
@@ -140,7 +140,7 @@ func TestHTTP(t *testing.T) {
 
 		var ctx = newContextMocker()
 		ctx.Request.Raw = &http.Request{Method: http.MethodPost}
-		ctx.Request.Header.Set(UPath, "/test")
+		ctx.Request.Header.Set(XPath, "/test")
 		r.Emit("/test", ctx)
 		assert.Equal(t, 1, sum)
 	})
@@ -162,7 +162,7 @@ func TestRecovery(t *testing.T) {
 			panic("1")
 		})
 		var ctx = newContextMocker()
-		ctx.Request.Header.Set(UPath, "/test")
+		ctx.Request.Header.Set(XPath, "/test")
 		r.Emit("/test", ctx)
 	})
 
@@ -179,7 +179,7 @@ func TestRecovery(t *testing.T) {
 		})
 
 		var ctx = newContextMocker()
-		ctx.Request.Header.Set(UPath, "/test")
+		ctx.Request.Header.Set(XPath, "/test")
 		r.Emit("/test", ctx)
 		println(1)
 	})

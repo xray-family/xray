@@ -2,7 +2,7 @@ package codec
 
 import (
 	"bytes"
-	"github.com/lxzan/uRouter/constant"
+	"github.com/lxzan/xray/constant"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
@@ -16,7 +16,7 @@ func TestStdJsonCodec_Encode(t *testing.T) {
 }
 
 func TestStdJsonCodec_Decode(t *testing.T) {
-	var d = `{"UPath":["/api"]}`
+	var d = `{"XPath":["/api"]}`
 	var v = http.Header{}
 	err := StdJsonCodec.Decode([]byte(d), &v)
 	assert.NoError(t, err)

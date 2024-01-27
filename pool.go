@@ -1,8 +1,8 @@
-package uRouter
+package xray
 
 import (
 	"bytes"
-	"github.com/lxzan/uRouter/constant"
+	"github.com/lxzan/xray/constant"
 	"sync"
 )
 
@@ -66,7 +66,7 @@ func HeaderPool() *headerPool {
 
 func newHeaderPool() *headerPool {
 	var c = new(headerPool)
-	c.Register(constant.MapHeaderNumber, func() Header {
+	c.Register(constant.IdMapHeader, func() Header {
 		return &MapHeader{}
 	})
 	return c

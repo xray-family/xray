@@ -26,5 +26,6 @@ const (
 )
 
 const (
-	MapHeaderNumber = iota
+	IdHttpHeader = iota
+	IdMapHeader
 )

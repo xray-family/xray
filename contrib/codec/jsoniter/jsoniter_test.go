@@ -1,10 +1,10 @@
 package jsoniter
 
 import (
-	"github.com/lxzan/uRouter"
-	"github.com/lxzan/uRouter/codec"
-	"github.com/lxzan/uRouter/constant"
-	"github.com/lxzan/uRouter/internal"
+	"github.com/lxzan/xray"
+	"github.com/lxzan/xray/codec"
+	"github.com/lxzan/xray/constant"
+	"github.com/lxzan/xray/internal"
 	"testing"
 )
 
@@ -37,8 +37,8 @@ func BenchmarkPoolJsonCodec(b *testing.B) {
 	}{Message: s}
 
 	for i := 0; i < b.N; i++ {
-		w := uRouter.BufferPool().Get(constant.BufferLeveL1)
+		w := xray.BufferPool().Get(constant.BufferLeveL1)
 		_ = codec.StdJsonCodec.NewEncoder(w).Encode(v)
-		uRouter.BufferPool().Put(w)
+		xray.BufferPool().Put(w)
 	}
 }

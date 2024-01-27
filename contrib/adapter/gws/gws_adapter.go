@@ -3,44 +3,40 @@ package gws
 import (
 	"bytes"
 	"github.com/lxzan/gws"
-	"github.com/lxzan/uRouter"
-	"sync"
+	"github.com/lxzan/xray"
 )
 
 type (
 	websocketWrapper interface {
-		WriteMessage(opcode gws.Opcode, payload []byte) error
+		Writev(opcode gws.Opcode, payloads ...[]byte) error
 	}
 
 	responseWriter struct {
-		once        sync.Once
 		conn        websocketWrapper
-		headerCodec *uRouter.HeaderCodec
-		header      uRouter.Header
+		headerCodec *xray.HeaderCodec
+		header      xray.Header
 		code        gws.Opcode
 		buf         *bytes.Buffer
+		payloads    [][]byte
 	}
 )
 
-func newResponseWriter(socket websocketWrapper, codec *uRouter.HeaderCodec) *responseWriter {
-	return &responseWriter{
-		once:        sync.Once{},
-		code:        gws.OpcodeText,
-		conn:        socket,
-		headerCodec: codec,
-		header:      codec.Generate(),
-	}
+func (c *responseWriter) Reset(socket websocketWrapper, code gws.Opcode, codec *xray.HeaderCodec) {
+	c.conn = socket
+	c.code = code
+	c.headerCodec = codec
+	c.header = codec.Generate()
 }
 
 func (c *responseWriter) Protocol() string {
-	return uRouter.ProtocolWebSocket
+	return xray.ProtocolWebSocket
 }
 
 func (c *responseWriter) Raw() interface{} {
 	return c.conn
 }
 
-func (c *responseWriter) Header() uRouter.Header {
+func (c *responseWriter) Header() xray.Header {
 	return c.header
 }
 
@@ -53,62 +49,56 @@ func (c *responseWriter) RawResponseWriter() interface{} {
 }
 
 func (c *responseWriter) Write(p []byte) (n int, err error) {
-	c.once.Do(func() {
-		c.buf = uRouter.BufferPool().Get(len(p) + 256)
-		err = c.headerCodec.Encode(c.buf, c.header)
-		n = c.buf.Len()
-	})
-	if err != nil {
-		return
-	}
-	return c.buf.Write(p)
+	c.payloads = append(c.payloads, p)
+	return len(p), nil
 }
 
 func (c *responseWriter) Flush() error {
-	if err := c.conn.WriteMessage(c.code, c.buf.Bytes()); err != nil {
+	if err := c.headerCodec.Encode(c.buf, c.header); err != nil {
 		return err
 	}
-	uRouter.BufferPool().Put(c.buf)
-	c.header.Close()
-	c.buf = nil
-	c.header = nil
-	return nil
+	c.payloads[0] = c.buf.Bytes()
+	return c.conn.Writev(c.code, c.payloads...)
 }
 
-func NewAdapter(router *uRouter.Router) *Adapter {
+func NewAdapter(router *xray.Router) *Adapter {
 	return &Adapter{
 		router: router,
-		codec:  uRouter.TextMapHeader,
+		codec:  xray.TextMapHeader,
+		pool:   newWriterPool(),
 	}
 }
 
 type Adapter struct {
-	router *uRouter.Router
-	codec  *uRouter.HeaderCodec
+	router *xray.Router
+	codec  *xray.HeaderCodec
+	pool   *writerPool
 }
 
 // SetHeaderCodec 设置头部编码方式
-func (c *Adapter) SetHeaderCodec(codec *uRouter.HeaderCodec) *Adapter {
+func (c *Adapter) SetHeaderCodec(codec *xray.HeaderCodec) *Adapter {
 	c.codec = codec
 	return c
 }
 
 // ServeWebSocket 服务WebSocket
 func (c *Adapter) ServeWebSocket(socket *gws.Conn, message *gws.Message) error {
-	r := &uRouter.Request{
+	r := &xray.Request{
 		Raw:    message,
 		Body:   message,
 		Action: "",
 	}
-	ctx := uRouter.NewContext(r, newResponseWriter(socket, c.codec))
+	writer := c.pool.Get()
+	writer.Reset(socket, message.Opcode, c.codec)
+	ctx := xray.NewContext(r, writer)
 
 	header, err := c.codec.Decode(message.Data)
 	if err != nil {
 		return err
 	}
 
-	r.Action = header.Get(uRouter.UAction)
+	r.Action = header.Get(xray.XMethod)
 	ctx.Request.Header = header
-	c.router.EmitEvent(r.Action, header.Get(uRouter.UPath), ctx)
+	c.router.EmitEvent(r.Action, header.Get(xray.XPath), ctx)
 	return nil
 }

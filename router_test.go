@@ -1,11 +1,12 @@
-package uRouter
+package xray
 
 import (
-	"github.com/lxzan/uRouter/internal"
+	"github.com/lxzan/xray/internal"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"sync"
 	"testing"
+	"time"
 )
 
 func TestNew(t *testing.T) {
@@ -207,14 +208,14 @@ func TestNew(t *testing.T) {
 		path := "/test"
 		ctx := NewContext(
 			&Request{
-				Header: NewHttpHeader(http.Header{UPath: []string{path}}), Body: nil,
+				Header: NewHttpHeader(http.Header{XPath: []string{path}}), Body: nil,
 			},
 			newResponseWriterMocker(),
 		)
 		r.Emit(path, ctx)
 
 		r.staticMatcher.Set(&apiHandler{
-			Action: http.MethodPost,
+			Method: http.MethodPost,
 			Path:   "/404",
 			Funcs:  []HandlerFunc{AccessLog()},
 		})
@@ -244,7 +245,7 @@ func TestRouter_OnNoMatch(t *testing.T) {
 			go func() {
 				var path = "test"
 				var ctx = NewContext(
-					&Request{Header: NewHttpHeader(http.Header{UPath: []string{path}})},
+					&Request{Header: NewHttpHeader(http.Header{XPath: []string{path}})},
 					newResponseWriterMocker(),
 				)
 				r.Emit(path, ctx)
@@ -618,4 +619,13 @@ func TestGroup_Actions(t *testing.T) {
 		r.EmitEvent(http.MethodDelete, "/api/v1/test", newContextMocker())
 		as.Equal(1, sum)
 	})
+}
+
+func TestRouter_Display(t *testing.T) {
+	r := New(WithGreeting(true, 100*time.Millisecond))
+	r.OnGET("eat", AccessLog())
+	r.OnPOST("eat", AccessLog())
+	r.OnGET("speak", AccessLog())
+	r.OnGET("speak/:msg", AccessLog())
+	time.Sleep(200 * time.Millisecond)
 }

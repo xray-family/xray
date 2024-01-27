@@ -1,7 +1,7 @@
 package internal
 
 import (
-	"github.com/lxzan/uRouter/constant"
+	"github.com/lxzan/xray/constant"
 	"io"
 )
 

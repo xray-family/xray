@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/lxzan/uRouter"
-	httpAdapter "github.com/lxzan/uRouter/contrib/adapter/http"
+	"github.com/lxzan/xray"
+	httpAdapter "github.com/lxzan/xray/contrib/adapter/http"
 	"net/http"
 )
 
@@ -14,18 +14,18 @@ func NewController() *Controller {
 	return new(Controller)
 }
 
-func (c *Controller) Mapping(group *uRouter.Group) *Controller {
+func (c *Controller) Mapping(group *xray.Group) *Controller {
 	group.OnEvent(http.MethodGet, "/greet/:name", c.Greet)
 	group.OnPOST("/test", c.Test)
 	return c
 }
 
-func (c *Controller) Greet(ctx *uRouter.Context) {
-	_ = ctx.WriteJSON(http.StatusOK, uRouter.Any{
+func (c *Controller) Greet(ctx *xray.Context) {
+	_ = ctx.WriteJSON(http.StatusOK, xray.Any{
 		"hello": ctx.Param("name"),
 	})
 }
 
-func (c *Controller) Test(ctx *uRouter.Context) {
+func (c *Controller) Test(ctx *xray.Context) {
 	_ = ctx.WriteString(http.StatusOK, "aha")
 }

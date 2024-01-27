@@ -1,7 +1,7 @@
-package uRouter
+package xray
 
 import (
-	"github.com/lxzan/uRouter/internal"
+	"github.com/lxzan/xray/internal"
 	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"

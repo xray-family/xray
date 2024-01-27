@@ -1,12 +1,12 @@
-package uRouter
+package xray
 
 import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"github.com/lxzan/uRouter/codec"
-	"github.com/lxzan/uRouter/constant"
-	"github.com/lxzan/uRouter/internal"
+	"github.com/lxzan/xray/codec"
+	"github.com/lxzan/xray/constant"
+	"github.com/lxzan/xray/internal"
 	"math"
 	"net/http"
 	"strconv"
@@ -27,13 +27,13 @@ var (
 
 type (
 	Header interface {
-		Generate() Header                // 生成一个新的Header, 需要返回指针类型
-		Close()                          // 回收资源
-		Set(key, value string)           // 设置键值对
-		Get(key string) string           // 获取一个值
-		Del(key string)                  // 删除
-		Len() int                        // 获取长度
-		Range(f func(key, value string)) // 遍历
+		PoolGet() Header                      // 生成一个新的Header, 需要返回指针类型
+		PoolPut()                             // 回收资源
+		Set(key, value string)                // 设置键值对
+		Get(key string) string                // 获取一个值
+		Del(key string)                       // 删除
+		Len() int                             // 获取长度
+		Range(f func(key, value string) bool) // 遍历
 	}
 
 	headerLengthEncoding int
@@ -41,16 +41,16 @@ type (
 
 type MapHeader map[string]string
 
-func (c *MapHeader) Generate() Header {
-	return defaultHeaderPool.Get(constant.MapHeaderNumber)
+func (c *MapHeader) PoolGet() Header {
+	return HeaderPool().Get(constant.IdMapHeader)
 }
 
-func (c *MapHeader) Close() {
+func (c *MapHeader) PoolPut() {
 	if c.Len() <= 32 {
 		for k, _ := range *c {
 			delete(*c, k)
 		}
-		defaultHeaderPool.Put(constant.MapHeaderNumber, c)
+		HeaderPool().Put(constant.IdMapHeader, c)
 	}
 }
 
@@ -58,9 +58,11 @@ func (c *MapHeader) Len() int {
 	return len(*c)
 }
 
-func (c *MapHeader) Range(f func(key string, value string)) {
+func (c *MapHeader) Range(f func(key string, value string) bool) {
 	for k, v := range *c {
-		f(k, v)
+		if !f(k, v) {
+			return
+		}
 	}
 }
 
@@ -98,19 +100,21 @@ type HttpHeader struct {
 	http.Header
 }
 
-func (c HttpHeader) Generate() Header {
+func (c HttpHeader) PoolGet() Header {
 	return &HttpHeader{Header: http.Header{}}
 }
 
-func (c HttpHeader) Close() {}
+func (c HttpHeader) PoolPut() {}
 
 func (c HttpHeader) Len() int {
 	return len(c.Header)
 }
 
-func (c HttpHeader) Range(f func(key string, value string)) {
-	for k, _ := range c.Header {
-		f(k, c.Get(k))
+func (c HttpHeader) Range(f func(key string, value string) bool) {
+	for k, values := range c.Header {
+		for _, v := range values {
+			f(k, v)
+		}
 	}
 }
 
@@ -212,5 +216,5 @@ func (c *HeaderCodec) Decode(reader *bytes.Buffer) (Header, error) {
 }
 
 func (c *HeaderCodec) Generate() Header {
-	return c.template.Generate()
+	return c.template.PoolGet()
 }

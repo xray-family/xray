@@ -1,10 +1,10 @@
-package uRouter
+package xray
 
 import (
 	"bytes"
 	"errors"
-	"github.com/lxzan/uRouter/codec"
-	"github.com/lxzan/uRouter/constant"
+	"github.com/lxzan/xray/codec"
+	"github.com/lxzan/xray/constant"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"strings"
@@ -12,7 +12,7 @@ import (
 )
 
 func newMapHeader() *MapHeader {
-	return MapHeaderTemplate.Generate().(*MapHeader)
+	return MapHeaderTemplate.PoolGet().(*MapHeader)
 }
 
 func newContextMocker() *Context {

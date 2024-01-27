@@ -2,8 +2,8 @@ package http
 
 import (
 	"bytes"
-	"github.com/lxzan/uRouter"
-	"github.com/lxzan/uRouter/constant"
+	"github.com/lxzan/xray"
+	"github.com/lxzan/xray/constant"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/url"
@@ -40,14 +40,14 @@ func TestNewAdapter(t *testing.T) {
 
 	t.Run("abort", func(t *testing.T) {
 		var sum = int64(0)
-		var router = uRouter.New()
+		var router = xray.New()
 		var adapter = NewAdapter(router)
 
-		router.Use(func(ctx *uRouter.Context) {
+		router.Use(func(ctx *xray.Context) {
 			return
 		})
 
-		router.On("/test", func(ctx *uRouter.Context) {
+		router.On("/test", func(ctx *xray.Context) {
 			sum++
 		})
 
@@ -61,18 +61,17 @@ func TestNewAdapter(t *testing.T) {
 
 	t.Run("next", func(t *testing.T) {
 		var sum = int64(0)
-		var router = uRouter.New()
+		var router = xray.New()
 		var adapter = NewAdapter(router)
 
-		router.Use(func(ctx *uRouter.Context) {
+		router.Use(func(ctx *xray.Context) {
 			ctx.Next()
 			return
 		})
 
-		router.On("/test", func(ctx *uRouter.Context) {
+		router.On("/test", func(ctx *xray.Context) {
 			sum++
 		})
-		router.Start()
 
 		adapter.ServeHTTP(nil, &http.Request{
 			Header: http.Header{},
@@ -84,32 +83,32 @@ func TestNewAdapter(t *testing.T) {
 	})
 
 	t.Run("complex", func(t *testing.T) {
-		var router = uRouter.New()
+		var router = xray.New()
 		var adapter = NewAdapter(router)
 
-		router.Use(func(ctx *uRouter.Context) {
+		router.Use(func(ctx *xray.Context) {
 			ctx.Set("sum", 0)
 			ctx.Next()
 		})
 
-		router.OnNotFound = func(ctx *uRouter.Context) {
+		router.SetHandlerNotFound(func(ctx *xray.Context) {
 			v, _ := ctx.Get("sum")
 			as.Equal(0, v.(int))
-		}
+		})
 
-		g0 := router.Group("api/v1", func(ctx *uRouter.Context) {
+		g0 := router.Group("api/v1", func(ctx *xray.Context) {
 			v, _ := ctx.Get("sum")
 			ctx.Set("sum", v.(int)+1)
 			ctx.Next()
 		})
 
-		g1 := g0.Group("user", func(ctx *uRouter.Context) {
+		g1 := g0.Group("user", func(ctx *xray.Context) {
 			v, _ := ctx.Get("sum")
 			ctx.Set("sum", v.(int)+4)
 			ctx.Next()
 		})
 
-		g0.On("/t1", func(ctx *uRouter.Context) {
+		g0.On("/t1", func(ctx *xray.Context) {
 			v, _ := ctx.Get("sum")
 			as.Equal(3, v.(int))
 
@@ -121,25 +120,25 @@ func TestNewAdapter(t *testing.T) {
 				as.Equal("plain/text", ctx.Writer.Header().Get(constant.ContentType))
 			}
 
-		}, func(ctx *uRouter.Context) {
+		}, func(ctx *xray.Context) {
 			v, _ := ctx.Get("sum")
 			ctx.Set("sum", v.(int)+2)
 			ctx.Next()
 		})
 
-		g0.On("t2", func(ctx *uRouter.Context) {
+		g0.On("t2", func(ctx *xray.Context) {
 			v, _ := ctx.Get("sum")
 			as.Equal(1, v.(int))
 		})
 
-		g1.On("t3", func(ctx *uRouter.Context) {
+		g1.On("t3", func(ctx *xray.Context) {
 			v, _ := ctx.Get("sum")
 			as.Equal(5, v.(int))
 		})
 
 		g2 := g0.Group("session")
 
-		g2.On("t4", func(ctx *uRouter.Context) {
+		g2.On("t4", func(ctx *xray.Context) {
 			v, _ := ctx.Get("sum")
 			as.Equal(1, v.(int))
 		})

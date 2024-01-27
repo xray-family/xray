@@ -1,8 +1,8 @@
-package uRouter
+package xray
 
 import (
 	_ "embed"
-	"github.com/lxzan/uRouter/internal"
+	"github.com/lxzan/xray/internal"
 	"net/http"
 	"reflect"
 	"runtime"
@@ -12,13 +12,16 @@ import (
 
 const (
 	SEP     = internal.Separator
-	UPath   = "U-Path"
-	UAction = "U-Action"
+	XPath   = "X-Path"
+	XMethod = "X-Method"
 )
 
 type (
 	// Router 路由器
 	Router struct {
+		// 配置
+		conf *config
+
 		// 静态路由
 		staticMatcher staticMatcher
 
@@ -39,7 +42,7 @@ type (
 	}
 
 	apiHandler struct {
-		Action string        // 动作修饰词
+		Method string        // 操作方法
 		Path   string        // 接口路径
 		Funcs  []HandlerFunc // 处理链
 	}
@@ -49,23 +52,31 @@ type (
 )
 
 // New 创建路由器
-func New() *Router {
+func New(options ...Option) *Router {
+	conf := &config{greeting{enabled: true, delay: time.Second}}
+	for _, f := range options {
+		f(conf)
+	}
+
 	r := &Router{
+		conf:           conf,
 		chainsGlobal:   make([]HandlerFunc, 0),
 		staticMatcher:  make(staticMatcher, 0),
 		dynamicMatcher: make(dynamicMatcher),
 	}
 
-	r.onNotFound = func(ctx *Context) {
+	r.SetHandlerNotFound(func(ctx *Context) {
 		if ctx.Writer.Protocol() == ProtocolHTTP {
 			_ = ctx.WriteString(http.StatusNotFound, "not found")
 		}
-	}
+	})
 
-	go func() {
-		time.Sleep(time.Second)
-		r.display()
-	}()
+	if conf.greeting.enabled {
+		go func() {
+			time.Sleep(conf.greeting.delay)
+			r.display()
+		}()
+	}
 
 	return r
 }
@@ -119,26 +130,26 @@ func (c *Router) OnDELETE(path string, handler HandlerFunc, middlewares ...Handl
 
 // 报告路由冲突
 func (c *Router) reportConflict(api1, api2 *apiHandler) {
-	Logger().Panic("action=%s, path=[ %s, %s ], msg=api path conflict", api1.Action, api1.Path, api2.Path)
+	Logger().Panic("method=%s, path=[ %s, %s ], msg=api path conflict", api1.Method, api1.Path, api2.Path)
 }
 
 // OnEvent 监听一个事件, 绑定处理函数
-// action: 操作修饰词, 区分大小写, 可为空字符串; 在HTTP里固定为Method
+// method: 操作修饰词, 区分大小写, 可以为空
 // path: 请求路径
 // handler: 处理函数
 // listens for an event, binds a handler
-// action: action modifier, case-sensitive, can be an empty string; fixed to Method in HTTP
+// method: action modifier, case-sensitive, can be an empty string;
 // path: request path
 // handler: handler function
-func (c *Router) OnEvent(action string, path string, handler HandlerFunc, middlewares ...HandlerFunc) {
+func (c *Router) OnEvent(method string, path string, handler HandlerFunc, middlewares ...HandlerFunc) {
 	h := append(internal.Clone(c.chainsGlobal), middlewares...)
 	h = append(h, handler)
 	api := &apiHandler{
-		Action: action,
+		Method: method,
 		Path:   internal.JoinPath(SEP, path),
 		Funcs:  h,
 	}
-	setApiHandler(c, api.Action, api.Path, api)
+	setApiHandler(c, api.Method, api.Path, api)
 }
 
 // Emit 分发事件
@@ -181,17 +192,17 @@ func (c *Router) display() {
 		if a.Path != b.Path {
 			return a.Path < b.Path
 		}
-		return a.Action < b.Action
+		return a.Method < b.Method
 	})
 
 	Logger().Info(blessMessage + "\n\n")
-	Logger().Info("uRouter is running")
+	Logger().Info("Xray is running")
 	Logger().Info("API List:")
 
 	var actions []string
 	var paths []string
 	for _, v := range apis {
-		actions = append(actions, v.Action)
+		actions = append(actions, v.Method)
 		paths = append(paths, v.Path)
 	}
 	actionLength := internal.GetMaxLength(actions...)
@@ -202,7 +213,7 @@ func (c *Router) display() {
 		funcName := runtime.FuncForPC(reflect.ValueOf(v.Funcs[n-1]).Pointer()).Name()
 		Logger().Info(
 			"action=%s path=%s handler=%s",
-			internal.Padding(v.Action, actionLength),
+			internal.Padding(v.Method, actionLength),
 			internal.Padding(v.Path, pathLength),
 			funcName,
 		)

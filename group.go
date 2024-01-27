@@ -1,7 +1,7 @@
-package uRouter
+package xray
 
 import (
-	"github.com/lxzan/uRouter/internal"
+	"github.com/lxzan/xray/internal"
 	"net/http"
 )
 
@@ -26,18 +26,18 @@ func (c *Group) Group(path string, middlewares ...HandlerFunc) *Group {
 
 // OnEvent 监听事件
 // listen to event
-func (c *Group) OnEvent(action string, path string, handler HandlerFunc, middlewares ...HandlerFunc) {
+func (c *Group) OnEvent(method string, path string, handler HandlerFunc, middlewares ...HandlerFunc) {
 	h := append(internal.Clone(c.middlewares), middlewares...)
 	h = append(h, handler)
 	api := &apiHandler{
-		Action: action,
+		Method: method,
 		Path:   internal.JoinPath(SEP, c.path, path),
 		Funcs:  h,
 	}
-	setApiHandler(c.router, api.Action, api.Path, api)
+	setApiHandler(c.router, api.Method, api.Path, api)
 }
 
-// On  类似OnEvent方法, 但是没有动作修饰词
+// On  类似OnEvent方法, 但是没有操作方法
 func (c *Group) On(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
 	c.OnEvent("", path, handler, middlewares...)
 }

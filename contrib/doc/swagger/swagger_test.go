@@ -2,8 +2,8 @@ package swagger
 
 import (
 	"bytes"
-	"github.com/lxzan/uRouter"
-	httpAdapter "github.com/lxzan/uRouter/contrib/adapter/http"
+	"github.com/lxzan/xray"
+	httpAdapter "github.com/lxzan/xray/contrib/adapter/http"
 	"github.com/stretchr/testify/assert"
 	swaggerFiles "github.com/swaggo/files"
 	"github.com/swaggo/swag"
@@ -14,7 +14,7 @@ import (
 	"testing"
 )
 
-func onANY(r *uRouter.Router, path string, handler uRouter.HandlerFunc) {
+func onANY(r *xray.Router, path string, handler xray.HandlerFunc) {
 	r.OnGET(path, handler)
 	r.OnPOST(path, handler)
 	r.OnPUT(path, handler)
@@ -30,7 +30,7 @@ func (s *mockedSwag) ReadDoc() string {
 }
 
 func TestWrapHandler(t *testing.T) {
-	router := uRouter.New()
+	router := xray.New()
 
 	router.OnGET("/:any", WrapHandler(swaggerFiles.Handler, URL("https://github.com/swaggo/gin-swagger")))
 
@@ -38,9 +38,8 @@ func TestWrapHandler(t *testing.T) {
 }
 
 func TestWrapCustomHandler(t *testing.T) {
-	router := uRouter.New()
+	router := xray.New()
 	onANY(router, "/:any", CustomWrapHandler(&Config{}, swaggerFiles.Handler))
-	router.StartSilently()
 
 	w1 := performRequest(http.MethodGet, "/index.html", router)
 	assert.Equal(t, http.StatusOK, w1.Code)
@@ -82,10 +81,9 @@ func TestWrapCustomHandler(t *testing.T) {
 func TestDisablingWrapHandler(t *testing.T) {
 
 	t.Run("", func(t *testing.T) {
-		router := uRouter.New()
+		router := xray.New()
 		disablingKey := "SWAGGER_DISABLE"
 		router.OnGET("/simple/:any", DisablingWrapHandler(swaggerFiles.Handler, disablingKey))
-		router.StartSilently()
 
 		assert.Equal(t, http.StatusOK, performRequest(http.MethodGet, "/simple/index.html", router).Code)
 		assert.Equal(t, http.StatusOK, performRequest(http.MethodGet, "/simple/doc.json", router).Code)
@@ -95,11 +93,10 @@ func TestDisablingWrapHandler(t *testing.T) {
 	})
 
 	t.Run("", func(t *testing.T) {
-		router := uRouter.New()
+		router := xray.New()
 		disablingKey := "SWAGGER_DISABLE"
 		_ = os.Setenv(disablingKey, "true")
 		router.OnGET("/disabling/:any", DisablingWrapHandler(swaggerFiles.Handler, disablingKey))
-		router.StartSilently()
 
 		assert.Equal(t, http.StatusNotFound, performRequest(http.MethodGet, "/disabling/index.html", router).Code)
 		assert.Equal(t, http.StatusNotFound, performRequest(http.MethodGet, "/disabling/doc.json", router).Code)
@@ -112,23 +109,21 @@ func TestDisablingCustomWrapHandler(t *testing.T) {
 	disablingKey := "SWAGGER_DISABLE2"
 
 	t.Run("", func(t *testing.T) {
-		router := uRouter.New()
+		router := xray.New()
 		router.OnGET("/simple/:any", DisablingCustomWrapHandler(&Config{}, swaggerFiles.Handler, disablingKey))
-		router.StartSilently()
 		assert.Equal(t, http.StatusOK, performRequest(http.MethodGet, "/simple/index.html", router).Code)
 	})
 
 	t.Run("", func(t *testing.T) {
-		router := uRouter.New()
+		router := xray.New()
 		_ = os.Setenv(disablingKey, "true")
 		router.OnGET("/disabling/:any", DisablingCustomWrapHandler(&Config{}, swaggerFiles.Handler, disablingKey))
-		router.StartSilently()
 		assert.Equal(t, http.StatusNotFound, performRequest(http.MethodGet, "/disabling/index.html", router).Code)
 	})
 
 }
 
-func performRequest(method, target string, router *uRouter.Router) *httptest.ResponseRecorder {
+func performRequest(method, target string, router *xray.Router) *httptest.ResponseRecorder {
 	r := httptest.NewRequest(method, target, bytes.NewBufferString(""))
 	w := httptest.NewRecorder()
 	httpAdapter.NewAdapter(router).ServeHTTP(w, r)

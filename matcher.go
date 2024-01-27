@@ -1,7 +1,7 @@
-package uRouter
+package xray
 
 import (
-	"github.com/lxzan/uRouter/internal"
+	"github.com/lxzan/xray/internal"
 )
 
 const defaultVarPrefix = ':' // 默认变量前缀
@@ -115,10 +115,10 @@ func (c *routeTree) doRange(node *routeTree, f func(h *apiHandler)) {
 type staticMatcher map[string]map[string]*apiHandler
 
 func (c staticMatcher) Set(h *apiHandler) {
-	if _, ok := c[h.Action]; !ok {
-		c[h.Action] = make(map[string]*apiHandler)
+	if _, ok := c[h.Method]; !ok {
+		c[h.Method] = make(map[string]*apiHandler)
 	}
-	c[h.Action][h.Path] = h
+	c[h.Method][h.Path] = h
 }
 
 func (c staticMatcher) Get(action, path string) (*apiHandler, bool) {
@@ -141,10 +141,10 @@ func (c staticMatcher) Range(f func(h *apiHandler)) {
 type dynamicMatcher map[string]*routeTree
 
 func (c dynamicMatcher) Set(h *apiHandler) {
-	if _, ok := c[h.Action]; !ok {
-		c[h.Action] = newRouteTree()
+	if _, ok := c[h.Method]; !ok {
+		c[h.Method] = newRouteTree()
 	}
-	c[h.Action].Set(h)
+	c[h.Method].Set(h)
 }
 
 func (c dynamicMatcher) Get(action, path string) (*apiHandler, bool) {
@@ -187,7 +187,7 @@ func setApiHandler(r *Router, action string, path string, api *apiHandler) {
 
 	// 检测冲突
 	r.staticMatcher.Range(func(h *apiHandler) {
-		if _, exists := r.dynamicMatcher.Get(h.Action, h.Path); exists {
+		if _, exists := r.dynamicMatcher.Get(h.Method, h.Path); exists {
 			r.reportConflict(api, h)
 		}
 	})

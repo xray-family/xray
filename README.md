@@ -1,4 +1,4 @@
-# uRouter
+# xray
 
 universal router for http, websocket and custom protocol, one is all.
 
@@ -6,9 +6,9 @@ Hats off to express, koa, gin!
 
 [![Build Status][1]][2] [![MIT licensed][3]][4] [![Go Version][5]][6] [![codecov][7]][8] [![Go Report Card][9]][10]
 
-[1]: https://github.com/lxzan/uRouter/workflows/Go%20Test/badge.svg?branch=main
+[1]: https://github.com/lxzan/xray/workflows/Go%20Test/badge.svg?branch=main
 
-[2]: https://github.com/lxzan/uRouter/actions?query=branch%3Amain
+[2]: https://github.com/lxzan/xray/actions?query=branch%3Amain
 
 [3]: https://img.shields.io/badge/license-MIT-blue.svg
 
@@ -16,15 +16,15 @@ Hats off to express, koa, gin!
 
 [5]: https://img.shields.io/badge/go-%3E%3D1.16-30dff3?style=flat-square&logo=go
 
-[6]: https://github.com/lxzan/uRouter
+[6]: https://github.com/lxzan/xray
 
-[7]: https://codecov.io/gh/lxzan/uRouter/branch/main/graph/badge.svg?token=0Tx9xH9Lvd
+[7]: https://codecov.io/gh/lxzan/xray/branch/main/graph/badge.svg?token=0Tx9xH9Lvd
 
-[8]: https://codecov.io/gh/lxzan/uRouter
+[8]: https://codecov.io/gh/lxzan/xray
 
-[9]: https://goreportcard.com/badge/github.com/lxzan/uRouter
+[9]: https://goreportcard.com/badge/github.com/lxzan/xray
 
-[10]: https://goreportcard.com/report/github.com/lxzan/uRouter
+[10]: https://goreportcard.com/report/github.com/lxzan/xray
 
 #### Feature
 
@@ -36,7 +36,7 @@ Hats off to express, koa, gin!
 
 #### Index
 
-- [uRouter](#urouter)
+- [xray](#xray)
     - [Feature](#feature)
     - [Quick Start](#quick-start)
     - [WebSocket](#websocket)
@@ -62,36 +62,36 @@ Hats off to express, koa, gin!
 package main
 
 import (
-    "github.com/lxzan/uRouter"
-    httpAdapter "github.com/lxzan/uRouter/contrib/adapter/http"
-    "github.com/lxzan/uRouter/contrib/codec/jsoniter"
-    "github.com/lxzan/uRouter/contrib/log/zerolog"
+    "github.com/lxzan/xray"
+    httpAdapter "github.com/lxzan/xray/contrib/adapter/http"
+    "github.com/lxzan/xray/contrib/codec/jsoniter"
+    "github.com/lxzan/xray/contrib/log/zerolog"
     "net/http"
 )
 
 func init() {
-    uRouter.SetJsonCodec(jsoniter.JsoniterCodec)
-    uRouter.SetLogger(zerolog.ZeroLogger)
+    xray.SetJsonCodec(jsoniter.JsoniterCodec)
+    xray.SetLogger(zerolog.ZeroLogger)
 }
 
 func main() {
-    var router = uRouter.New()
-    router.Use(uRouter.Recovery(), uRouter.AccessLog())
+    var router = xray.New()
+    router.Use(xray.Recovery(), xray.AccessLog())
     var group = router.Group("/api/v1")
 
-    group.OnGET("/user/list", func(ctx *uRouter.Context) {
+    group.OnGET("/user/list", func(ctx *xray.Context) {
         _ = ctx.WriteJSON(http.StatusOK, []string{"ming", "hong"})
     })
 
-    group.OnPOST("/user/:name", func(ctx *uRouter.Context) {
-        _ = ctx.WriteJSON(http.StatusOK, uRouter.Any{
+    group.OnPOST("/user/:name", func(ctx *xray.Context) {
+        _ = ctx.WriteJSON(http.StatusOK, xray.Any{
             "hello": ctx.Param("name"),
         })
     })
 
     router.Start()
     if err := http.ListenAndServe(":3000", httpAdapter.NewAdapter(router)); err != nil {
-        uRouter.Logger().Panic(err.Error())
+        xray.Logger().Panic(err.Error())
     }
 }
 ```
@@ -109,44 +109,44 @@ package main
 
 import (
     "github.com/lxzan/gws"
-    "github.com/lxzan/uRouter"
-    gwsAdapter "github.com/lxzan/uRouter/contrib/adapter/gws"
-    httpAdapter "github.com/lxzan/uRouter/contrib/adapter/http"
-    "github.com/lxzan/uRouter/contrib/codec/jsoniter"
-    "github.com/lxzan/uRouter/contrib/log/zerolog"
+    "github.com/lxzan/xray"
+    gwsAdapter "github.com/lxzan/xray/contrib/adapter/gws"
+    httpAdapter "github.com/lxzan/xray/contrib/adapter/http"
+    "github.com/lxzan/xray/contrib/codec/jsoniter"
+    "github.com/lxzan/xray/contrib/log/zerolog"
     "net/http"
 )
 
 func init() {
-    uRouter.SetLogger(zerolog.ZeroLogger)
-    uRouter.SetJsonCodec(jsoniter.JsoniterCodec)
+    xray.SetLogger(zerolog.ZeroLogger)
+    xray.SetJsonCodec(jsoniter.JsoniterCodec)
 }
 
 func main() {
-    router := uRouter.New()
-    router.Use(uRouter.Recovery(), uRouter.AccessLog())
+    router := xray.New()
+    router.Use(xray.Recovery(), xray.AccessLog())
 
     upgrader := gws.NewUpgrader(func(c *gws.Upgrader) {
         c.EventHandler = &WebSocketHandler{adapter: gwsAdapter.NewAdapter(router)}
     })
 
-    router.OnGET("/connect", func(ctx *uRouter.Context) {
+    router.OnGET("/connect", func(ctx *xray.Context) {
         socket, err := upgrader.Accept(ctx.Writer.Raw().(http.ResponseWriter), ctx.Request.Raw.(*http.Request))
         if err != nil {
-            uRouter.Logger().Error(err.Error())
+            xray.Logger().Error(err.Error())
             return
         }
         go socket.Listen()
     })
 
-    router.On("/greet", func(ctx *uRouter.Context) {
+    router.On("/greet", func(ctx *xray.Context) {
         ctx.Writer.Header().Set("content-type", "plain/text")
         _ = ctx.WriteString(int(gws.OpcodeText), "hello!")
     })
 
     router.Start()
     if err := http.ListenAndServe(":3000", httpAdapter.NewAdapter(router)); err != nil {
-        uRouter.Logger().Panic(err.Error())
+        xray.Logger().Panic(err.Error())
     }
 }
 
@@ -157,7 +157,7 @@ type WebSocketHandler struct {
 
 func (c *WebSocketHandler) OnMessage(socket *gws.Conn, message *gws.Message) {
     if err := c.adapter.ServeWebSocket(socket, message); err != nil {
-        uRouter.Logger().Error(err.Error())
+        xray.Logger().Error(err.Error())
     }
 }
 
@@ -175,13 +175,13 @@ ws.send('0033{"U-Path":"/greet","U-Action":""}{"hello":"world!"}');
 ##### Static
 
 ```go
-router.OnGET("/ping", func (ctx *uRouter.Context) {})
+router.OnGET("/ping", func (ctx *xray.Context) {})
 ```
 
 ##### Dynamic
 
 ```go
-router.OnPOST("/user/:id", func (ctx *uRouter.Context) {})
+router.OnPOST("/user/:id", func (ctx *xray.Context) {})
 ```
 
 #### Middleware
@@ -193,29 +193,29 @@ package main
 
 import (
     "fmt"
-    "github.com/lxzan/uRouter"
-    http2 "github.com/lxzan/uRouter/contrib/adapter/http"
+    "github.com/lxzan/xray"
+    http2 "github.com/lxzan/xray/contrib/adapter/http"
     "net/http"
 )
 
 func main() {
-    var router = uRouter.New()
+    var router = xray.New()
 
     var list []int
-    router.Use(func(ctx *uRouter.Context) {
+    router.Use(func(ctx *xray.Context) {
         list = append(list, 1)
         ctx.Next()
         list = append(list, 2)
         fmt.Printf("%v\n", list)
     })
 
-    var group = router.Group("/api/v1", func(ctx *uRouter.Context) {
+    var group = router.Group("/api/v1", func(ctx *xray.Context) {
         list = append(list, 3)
         ctx.Next()
         list = append(list, 4)
     })
 
-    group.OnGET("/greet", func(ctx *uRouter.Context) {
+    group.OnGET("/greet", func(ctx *xray.Context) {
         list = append(list, 5)
     })
 
@@ -237,8 +237,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/lxzan/uRouter"
-	"github.com/lxzan/uRouter/contrib/codec/wwwform"
+	"github.com/lxzan/xray"
+	"github.com/lxzan/xray/contrib/codec/wwwform"
 	"net/http"
 )
 
@@ -247,7 +247,7 @@ type Input struct {
 	Age  int    `form:"age"`
 }
 
-func (c *Controller) Test(ctx *uRouter.Context) {
+func (c *Controller) Test(ctx *xray.Context) {
 	defer ctx.Request.Close()
 	var input = &Input{}
 	_ = wwwform.FormCodec.NewDecoder(ctx.Request.Body).Decode(input)
@@ -265,14 +265,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/lxzan/uRouter"
-	"github.com/lxzan/uRouter/contrib/codec/jsoniter"
+	"github.com/lxzan/xray"
+	"github.com/lxzan/xray/contrib/codec/jsoniter"
 	"net/http"
 )
 
 func init() {
-	// Better performance than uRouter.StdJsonCodec 
-	uRouter.SetJsonCodec(jsoniter.JsoniterCodec)
+	// Better performance than xray.StdJsonCodec 
+	xray.SetJsonCodec(jsoniter.JsoniterCodec)
 }
 
 type Input struct {
@@ -280,10 +280,10 @@ type Input struct {
 	Age  int    `form:"age"`
 }
 
-func (c *Controller) Test(ctx *uRouter.Context) {
+func (c *Controller) Test(ctx *xray.Context) {
 	defer ctx.Request.Close()
 	var input = &Input{}
-	_ = uRouter.JsonCodec().NewDecoder(ctx.Request.Body).Decode(input)
+	_ = xray.JsonCodec().NewDecoder(ctx.Request.Body).Decode(input)
 
 	fmt.Printf("%v\n", input)
 	_ = ctx.WriteString(http.StatusOK, "success")
@@ -294,8 +294,8 @@ func (c *Controller) Test(ctx *uRouter.Context) {
 ##### Header Codec (Not applicable to HTTP)
 
 ```
-uRouter.TextMapHeader:   length_encoding=4 byte, max_header_length=9999  byte
-uRouter.BinaryMapHeader: length_encoding=2 byte, max_header_length=65535 byte
+xray.TextMapHeader:   length_encoding=4 byte, max_header_length=9999  byte
+xray.BinaryMapHeader: length_encoding=2 byte, max_header_length=65535 byte
 ```
 
 ```
@@ -324,10 +324,10 @@ swag init
 package main
 
 import (
-    "github.com/lxzan/uRouter"
-    httpAdapter "github.com/lxzan/uRouter/contrib/adapter/http"
-    "github.com/lxzan/uRouter/contrib/doc/swagger"
-    _ "github.com/lxzan/uRouter/examples/debug/docs"
+    "github.com/lxzan/xray"
+    httpAdapter "github.com/lxzan/xray/contrib/adapter/http"
+    "github.com/lxzan/xray/contrib/doc/swagger"
+    _ "github.com/lxzan/xray/examples/debug/docs"
     swaggerFiles "github.com/swaggo/files"
     "net/http"
 )
@@ -341,13 +341,13 @@ import (
 // @Produce json
 // @Success 200 {string} Helloworld
 // @Router /example/helloworld [get]
-func Helloworld(ctx *uRouter.Context) {
+func Helloworld(ctx *xray.Context) {
     _ = ctx.WriteJSON(http.StatusOK, "helloworld")
 }
 
 func main() {
-    var router = uRouter.New()
-    router.Use(uRouter.Recovery(), uRouter.AccessLog())
+    var router = xray.New()
+    router.Use(xray.Recovery(), xray.AccessLog())
 
     router.OnGET("/swagger/:any", swagger.WrapHandler(swaggerFiles.Handler))
 
@@ -356,7 +356,7 @@ func main() {
     router.Start()
 
     if err := http.ListenAndServe(":3000", httpAdapter.NewAdapter(router)); err != nil {
-        uRouter.Logger().Panic(err.Error())
+        xray.Logger().Panic(err.Error())
     }
 }
 ```
@@ -365,7 +365,7 @@ func main() {
 
 ##### RPS
 
-- `uRouter / Standard`
+- `xray / Standard`
 
 ```
 wrk -t4 -c100 -d10s http://127.0.0.1:3000/test
@@ -379,7 +379,7 @@ Requests/sec: 202250.69
 Transfer/sec:     22.95MB
 ```
 
-- `uRouter / FastHTTP`
+- `xray / FastHTTP`
 
 ```
 wrk -t4 -c100 -d10s http://127.0.0.1:3000/test
@@ -423,12 +423,12 @@ Transfer/sec:     53.93MB
 
 ##### Route Algorithm
 
-- `uRouter`
+- `xray`
 
 ```
 goos: darwin
 goarch: arm64
-pkg: github.com/lxzan/uRouter
+pkg: github.com/lxzan/xray
 BenchmarkOneRoute-8             	77647704	        13.53 ns/op	       0 B/op	       0 allocs/op
 BenchmarkOneRouteDynamic-8      	34728837	        34.69 ns/op	       0 B/op	       0 allocs/op
 BenchmarkRecoveryMiddleware-8   	70822222	        16.99 ns/op	       0 B/op	       0 allocs/op

@@ -1,8 +1,7 @@
 package wwwform
 
 import (
-	"github.com/go-playground/form/v4"
-	"github.com/lxzan/uRouter/codec"
+	"github.com/lxzan/xray/codec"
 	"io"
 	"net/url"
 )

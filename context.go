@@ -1,8 +1,8 @@
-package uRouter
+package xray
 
 import (
-	"github.com/lxzan/uRouter/constant"
-	"github.com/lxzan/uRouter/internal"
+	"github.com/lxzan/xray/constant"
+	"github.com/lxzan/xray/internal"
 	"io"
 	"strings"
 )
@@ -100,7 +100,7 @@ func NewContext(request *Request, writer ResponseWriter) *Context {
 
 // Close 关闭请求, 回收Header和Body资源
 func (c *Request) Close() {
-	c.Header.Close()
+	c.Header.PoolPut()
 	Close(c.Body)
 	c.Header = nil
 	c.Body = nil
