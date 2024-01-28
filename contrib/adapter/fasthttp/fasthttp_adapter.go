@@ -29,7 +29,7 @@ func (c *responseWriter) Code(code int) {
 	c.writer.SetStatusCode(code)
 }
 
-func (c *responseWriter) Raw() interface{} {
+func (c *responseWriter) Raw() any {
 	return c.writer
 }
 
@@ -57,15 +57,15 @@ func (c *Adapter) ServeFastHTTP(ctx *fasthttp.RequestCtx) {
 	var r = &xray.Request{
 		Raw:    &ctx.Request,
 		Header: &requestHeader{RequestHeader: &ctx.Request.Header},
-		Action: b2s(ctx.Method()),
+		Method: b2s(ctx.Method()),
 		Body:   bytes.NewBuffer(ctx.Request.Body()),
 	}
 
-	var uctx = xray.NewContext(r, &responseWriter{
+	var uctx = xray.NewContext(c.router, r, &responseWriter{
 		writer: &ctx.Response,
 		header: &responseHeader{ResponseHeader: &ctx.Response.Header},
 	})
-	c.router.EmitEvent(r.Action, b2s(ctx.Request.URI().Path()), uctx)
+	c.router.EmitEvent(r.Method, b2s(ctx.Request.URI().Path()), uctx)
 }
 
 // b2s converts byte slice to a string without memory allocation.
@@ -97,15 +97,19 @@ type requestHeader struct {
 	*fasthttp.RequestHeader
 }
 
-func (c *requestHeader) Generate() xray.Header { return nil }
-
-func (c *requestHeader) Close() {}
+func (c *requestHeader) New() xray.Header {
+	return &requestHeader{}
+}
 
 func (c *requestHeader) Get(key string) string { return b2s(c.Peek(key)) }
 
-func (c *requestHeader) Range(f func(key string, value string)) {
+func (c *requestHeader) Range(f func(key string, value string) bool) {
+	next := true
 	c.VisitAll(func(key, value []byte) {
-		f(b2s(key), b2s(value))
+		if !next {
+			return
+		}
+		next = f(b2s(key), b2s(value))
 	})
 }
 
@@ -113,14 +117,16 @@ type responseHeader struct {
 	*fasthttp.ResponseHeader
 }
 
-func (c *responseHeader) Generate() xray.Header { return nil }
-
-func (c *responseHeader) Close() {}
+func (c *responseHeader) New() xray.Header { return &responseHeader{} }
 
 func (c *responseHeader) Get(key string) string { return b2s(c.Peek(key)) }
 
-func (c *responseHeader) Range(f func(key string, value string)) {
+func (c *responseHeader) Range(f func(key string, value string) bool) {
+	next := true
 	c.VisitAll(func(key, value []byte) {
-		f(b2s(key), b2s(value))
+		if !next {
+			return
+		}
+		next = f(b2s(key), b2s(value))
 	})
 }

@@ -15,7 +15,7 @@ func newWriterPool() *writerPool {
 			New: func() any {
 				return &responseWriter{
 					buf:      &bytes.Buffer{},
-					payloads: make([][]byte, 1, 2),
+					payloads: make([][]byte, 0, 2),
 				}
 			},
 		},
@@ -28,8 +28,8 @@ func (c *writerPool) Get() *responseWriter {
 
 func (c *writerPool) Put(w *responseWriter) {
 	w.conn = nil
-	w.headerCodec = nil
 	w.code = 0
+	w.codec = nil
 	w.buf.Reset()
 	w.payloads = w.payloads[:0]
 	c.p.Put(w)

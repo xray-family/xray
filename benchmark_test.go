@@ -6,10 +6,11 @@ import (
 )
 
 func BenchmarkOneRoute(b *testing.B) {
-	router := New()
+	var option = WithGreeting(false, 0)
+	router := New(option)
 	router.OnGET("/ping", func(c *Context) {
 	})
-	ctx := newContextMocker()
+	ctx := newContextMocker(option)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -18,10 +19,11 @@ func BenchmarkOneRoute(b *testing.B) {
 }
 
 func BenchmarkOneRouteDynamic(b *testing.B) {
-	router := New()
+	option := WithGreeting(false, 0)
+	router := New(option)
 	router.OnGET("/user/:id", func(c *Context) {
 	})
-	ctx := newContextMocker()
+	ctx := newContextMocker(option)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -30,11 +32,12 @@ func BenchmarkOneRouteDynamic(b *testing.B) {
 }
 
 func BenchmarkRecoveryMiddleware(b *testing.B) {
-	router := New()
+	option := WithGreeting(false, 0)
+	router := New(option)
 	router.Use(Recovery())
 	router.OnGET("/", func(c *Context) {
 	})
-	ctx := newContextMocker()
+	ctx := newContextMocker(option)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -43,12 +46,12 @@ func BenchmarkRecoveryMiddleware(b *testing.B) {
 }
 
 func Benchmark5Params(b *testing.B) {
-	router := New()
+	option := WithGreeting(false, 0)
+	router := New(option)
 	router.Use(func(ctx *Context) {})
 	router.OnGET("/param/:param1/:params2/:param3/:param4/:param5", func(c *Context) {
 	})
-	//router.StartSilently()
-	ctx := newContextMocker()
+	ctx := newContextMocker(option)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -57,7 +60,8 @@ func Benchmark5Params(b *testing.B) {
 }
 
 func BenchmarkOneRouteJSON(b *testing.B) {
-	router := New()
+	option := WithGreeting(false, 0)
+	router := New(option)
 	router.Use(func(ctx *Context) {})
 	data := struct {
 		Status string `json:"status"`
@@ -66,7 +70,7 @@ func BenchmarkOneRouteJSON(b *testing.B) {
 		_ = c.WriteJSON(http.StatusOK, data)
 		c.Request.Close()
 	})
-	ctx := newContextMocker()
+	ctx := newContextMocker(option)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -75,10 +79,11 @@ func BenchmarkOneRouteJSON(b *testing.B) {
 }
 
 func Benchmark404(b *testing.B) {
-	router := New()
+	option := WithGreeting(false, 0)
+	router := New(option)
 	router.OnGET("/", func(c *Context) {})
 	router.OnGET("/something", func(c *Context) {})
-	ctx := newContextMocker()
+	ctx := newContextMocker(option)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -87,7 +92,8 @@ func Benchmark404(b *testing.B) {
 }
 
 func Benchmark404Many(b *testing.B) {
-	router := New()
+	option := WithGreeting(false, 0)
+	router := New(option)
 	router.OnGET("/", func(c *Context) {})
 	router.OnGET("/path/to/something", func(c *Context) {})
 	router.OnGET("/post/:id", func(c *Context) {})
@@ -96,7 +102,7 @@ func Benchmark404Many(b *testing.B) {
 	router.OnGET("/robots.txt", func(c *Context) {})
 	router.OnGET("/delete/:id", func(c *Context) {})
 	router.OnGET("/user/:id/:mode", func(c *Context) {})
-	ctx := newContextMocker()
+	ctx := newContextMocker(option)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

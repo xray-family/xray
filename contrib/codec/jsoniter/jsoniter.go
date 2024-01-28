@@ -12,11 +12,11 @@ type Codec struct {
 	API json.API
 }
 
-func (c Codec) Encode(v interface{}) ([]byte, error) {
+func (c Codec) Encode(v any) ([]byte, error) {
 	return c.API.Marshal(v)
 }
 
-func (c Codec) Decode(data []byte, v interface{}) error {
+func (c Codec) Decode(data []byte, v any) error {
 	return c.API.Unmarshal(data, v)
 }
 

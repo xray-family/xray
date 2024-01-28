@@ -2,6 +2,8 @@ package xray
 
 import (
 	_ "embed"
+	"github.com/lxzan/xray/codec"
+	"github.com/lxzan/xray/constant"
 	"github.com/lxzan/xray/internal"
 	"net/http"
 	"reflect"
@@ -10,11 +12,7 @@ import (
 	"time"
 )
 
-const (
-	SEP     = internal.Separator
-	XPath   = "X-Path"
-	XMethod = "X-Method"
-)
+const _sep = internal.Separator
 
 type (
 	// Router 路由器
@@ -53,7 +51,8 @@ type (
 
 // New 创建路由器
 func New(options ...Option) *Router {
-	conf := &config{greeting{enabled: true, delay: time.Second}}
+	conf := &config{greeting: greeting{enabled: true, delay: time.Second}}
+	options = append(options, withInit())
 	for _, f := range options {
 		f(conf)
 	}
@@ -66,7 +65,7 @@ func New(options ...Option) *Router {
 	}
 
 	r.SetHandlerNotFound(func(ctx *Context) {
-		if ctx.Writer.Protocol() == ProtocolHTTP {
+		if ctx.Writer.Protocol() == constant.ProtocolHTTP {
 			_ = ctx.WriteString(http.StatusNotFound, "not found")
 		}
 	})
@@ -79,6 +78,10 @@ func New(options ...Option) *Router {
 	}
 
 	return r
+}
+
+func (c *Router) JsonCodec() codec.Codec {
+	return c.conf.jsonCodec
 }
 
 // Use 设置全局中间件
@@ -100,7 +103,7 @@ func (c *Router) SetHandlerNotFound(handler HandlerFunc) {
 func (c *Router) Group(path string, middlewares ...HandlerFunc) *Group {
 	var group = &Group{
 		router:      c,
-		path:        internal.JoinPath(SEP, path),
+		path:        internal.JoinPath(_sep, path),
 		middlewares: append(internal.Clone(c.chainsGlobal), middlewares...),
 	}
 	return group
@@ -108,29 +111,29 @@ func (c *Router) Group(path string, middlewares ...HandlerFunc) *Group {
 
 // On 监听事件
 // listen to event
-func (c *Router) On(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
-	c.OnEvent("", path, handler, middlewares...)
+func (c *Router) On(path string, handlers ...HandlerFunc) {
+	c.OnEvent("", path, handlers...)
 }
 
-func (c *Router) OnGET(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
-	c.OnEvent(http.MethodGet, path, handler, middlewares...)
+func (c *Router) OnGET(path string, handlers ...HandlerFunc) {
+	c.OnEvent(http.MethodGet, path, handlers...)
 }
 
-func (c *Router) OnPOST(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
-	c.OnEvent(http.MethodPost, path, handler, middlewares...)
+func (c *Router) OnPOST(path string, handlers ...HandlerFunc) {
+	c.OnEvent(http.MethodPost, path, handlers...)
 }
 
-func (c *Router) OnPUT(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
-	c.OnEvent(http.MethodPut, path, handler, middlewares...)
+func (c *Router) OnPUT(path string, handlers ...HandlerFunc) {
+	c.OnEvent(http.MethodPut, path, handlers...)
 }
 
-func (c *Router) OnDELETE(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
-	c.OnEvent(http.MethodDelete, path, handler, middlewares...)
+func (c *Router) OnDELETE(path string, handlers ...HandlerFunc) {
+	c.OnEvent(http.MethodDelete, path, handlers...)
 }
 
 // 报告路由冲突
 func (c *Router) reportConflict(api1, api2 *apiHandler) {
-	Logger().Panic("method=%s, path=[ %s, %s ], msg=api path conflict", api1.Method, api1.Path, api2.Path)
+	c.conf.logger.Panic("method=%s, path=[ %s, %s ], msg=api path conflict", api1.Method, api1.Path, api2.Path)
 }
 
 // OnEvent 监听一个事件, 绑定处理函数
@@ -141,12 +144,11 @@ func (c *Router) reportConflict(api1, api2 *apiHandler) {
 // method: action modifier, case-sensitive, can be an empty string;
 // path: request path
 // handler: handler function
-func (c *Router) OnEvent(method string, path string, handler HandlerFunc, middlewares ...HandlerFunc) {
-	h := append(internal.Clone(c.chainsGlobal), middlewares...)
-	h = append(h, handler)
+func (c *Router) OnEvent(method string, path string, handlers ...HandlerFunc) {
+	h := append(internal.Clone(c.chainsGlobal), handlers...)
 	api := &apiHandler{
 		Method: method,
-		Path:   internal.JoinPath(SEP, path),
+		Path:   internal.JoinPath(_sep, path),
 		Funcs:  h,
 	}
 	setApiHandler(c, api.Method, api.Path, api)
@@ -195,9 +197,9 @@ func (c *Router) display() {
 		return a.Method < b.Method
 	})
 
-	Logger().Info(blessMessage + "\n\n")
-	Logger().Info("Xray is running")
-	Logger().Info("API List:")
+	c.conf.logger.Info(blessMessage + "\n\n")
+	c.conf.logger.Info("Xray is running")
+	c.conf.logger.Info("API List:")
 
 	var actions []string
 	var paths []string
@@ -211,7 +213,7 @@ func (c *Router) display() {
 	for _, v := range apis {
 		n := len(v.Funcs)
 		funcName := runtime.FuncForPC(reflect.ValueOf(v.Funcs[n-1]).Pointer()).Name()
-		Logger().Info(
+		c.conf.logger.Info(
 			"action=%s path=%s handler=%s",
 			internal.Padding(v.Method, actionLength),
 			internal.Padding(v.Path, pathLength),

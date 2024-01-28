@@ -1,6 +1,7 @@
 package xray
 
 import (
+	"github.com/lxzan/xray/constant"
 	"github.com/lxzan/xray/internal"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -15,6 +16,8 @@ func TestNew(t *testing.T) {
 	t.Run("static router", func(t *testing.T) {
 		var list []int
 		var r = New()
+		as.NotNil(r.JsonCodec())
+
 		r.Use(func(ctx *Context) {
 			list = append(list, 1)
 			ctx.Next()
@@ -33,16 +36,19 @@ func TestNew(t *testing.T) {
 			list = append(list, 6)
 		})
 
-		g1.OnEvent(http.MethodGet, "greet", func(ctx *Context) {
-			list = append(list, 9)
-		}, func(ctx *Context) {
-			list = append(list, 7)
-			ctx.Next()
-			list = append(list, 8)
-		})
+		g1.OnEvent(http.MethodGet, "greet",
+			func(ctx *Context) {
+				list = append(list, 7)
+				ctx.Next()
+				list = append(list, 8)
+			},
+			func(ctx *Context) {
+				list = append(list, 9)
+			},
+		)
 
 		path := "/api/v1/greet"
-		ctx := NewContext(&Request{}, newResponseWriterMocker())
+		ctx := NewContext(r, &Request{}, newResponseWriterMocker())
 		r.EmitEvent(http.MethodGet, path, ctx)
 
 		as.Equal(9, len(list))
@@ -78,18 +84,22 @@ func TestNew(t *testing.T) {
 			list = append(list, 6)
 		})
 
-		g1.On("greet/:id", func(ctx *Context) {
-			list = append(list, 9)
-			as.Equal("1", ctx.Param("id"))
-		}, func(ctx *Context) {
-			list = append(list, 7)
-			ctx.Next()
-			list = append(list, 8)
-		})
+		g1.On("greet/:id",
+			func(ctx *Context) {
+				list = append(list, 7)
+				ctx.Next()
+				list = append(list, 8)
+			},
+			func(ctx *Context) {
+				list = append(list, 9)
+				as.Equal("1", ctx.Param("id"))
+			},
+		)
 
 		path := "/api/v1/greet/1"
 		ctx := NewContext(
-			&Request{Header: NewHttpHeader(http.Header{"X-Path": []string{path}})},
+			r,
+			&Request{Header: &HttpHeader{http.Header{"X-Path": []string{path}}}},
 			newResponseWriterMocker(),
 		)
 
@@ -128,17 +138,18 @@ func TestNew(t *testing.T) {
 		})
 
 		g1.On("greet", func(ctx *Context) {
-			list = append(list, 9)
-			as.Equal("v1", ctx.Param("version"))
-		}, func(ctx *Context) {
 			list = append(list, 7)
 			ctx.Next()
 			list = append(list, 8)
+		}, func(ctx *Context) {
+			list = append(list, 9)
+			as.Equal("v1", ctx.Param("version"))
 		})
 
 		path := "/api/v1/greet"
 		ctx := NewContext(
-			&Request{Header: NewHttpHeader(http.Header{"X-Path": []string{path}})},
+			r,
+			&Request{Header: &HttpHeader{http.Header{"X-Path": []string{path}}}},
 			newResponseWriterMocker(),
 		)
 		r.Emit(path, ctx)
@@ -160,16 +171,17 @@ func TestNew(t *testing.T) {
 		var list []int
 
 		r.On("test", func(ctx *Context) {
-			list = append(list, 3)
-		}, func(ctx *Context) {
 			list = append(list, 1)
 			ctx.Next()
 			list = append(list, 2)
+		}, func(ctx *Context) {
+			list = append(list, 3)
 		})
 
 		path := "/test"
 		ctx := NewContext(
-			&Request{Header: NewHttpHeader(http.Header{"X-Path": []string{path}}), Body: nil},
+			r,
+			&Request{Header: &HttpHeader{http.Header{"X-Path": []string{path}}}, Body: nil},
 			newResponseWriterMocker(),
 		)
 		r.Emit(path, ctx)
@@ -190,7 +202,8 @@ func TestNew(t *testing.T) {
 
 		path := "/test"
 		ctx := NewContext(
-			&Request{Header: NewHttpHeader(http.Header{"X-Path": []string{}}), Body: nil},
+			r,
+			&Request{Header: &HttpHeader{http.Header{"X-Path": []string{}}}, Body: nil},
 			newResponseWriterMocker(),
 		)
 		r.Emit(path, ctx)
@@ -207,8 +220,9 @@ func TestNew(t *testing.T) {
 
 		path := "/test"
 		ctx := NewContext(
+			r,
 			&Request{
-				Header: NewHttpHeader(http.Header{XPath: []string{path}}), Body: nil,
+				Header: &HttpHeader{http.Header{constant.XPath: []string{path}}}, Body: nil,
 			},
 			newResponseWriterMocker(),
 		)
@@ -245,7 +259,8 @@ func TestRouter_OnNoMatch(t *testing.T) {
 			go func() {
 				var path = "test"
 				var ctx = NewContext(
-					&Request{Header: NewHttpHeader(http.Header{XPath: []string{path}})},
+					r,
+					&Request{Header: &HttpHeader{http.Header{constant.XPath: []string{path}}}},
 					newResponseWriterMocker(),
 				)
 				r.Emit(path, ctx)
@@ -289,11 +304,11 @@ func TestRouter_OnNoMatch(t *testing.T) {
 		r.SetHandlerNotFound(func(ctx *Context) {
 			list = append(list, 10)
 		})
-		//r.StartSilently()
 
 		path := "/api/v1/xxx"
 		ctx := NewContext(
-			&Request{Header: NewHttpHeader(http.Header{"X-Path": []string{path}})},
+			r,
+			&Request{Header: &HttpHeader{http.Header{"X-Path": []string{path}}}},
 			newResponseWriterMocker(),
 		)
 		r.Emit(path, ctx)
@@ -405,7 +420,7 @@ func TestRouter_Dynamic(t *testing.T) {
 		})
 		//r.StartSilently()
 
-		ctx := NewContext(&Request{}, newResponseWriterMocker())
+		ctx := NewContext(r, &Request{}, newResponseWriterMocker())
 		r.EmitEvent(http.MethodGet, "/user/1/profile", ctx)
 		as.Equal(1, sum)
 	})
@@ -424,7 +439,7 @@ func TestRouter_Dynamic(t *testing.T) {
 		r.OnEvent(http.MethodGet, "/user/:id", func(ctx *Context) {
 
 		})
-		ctx := NewContext(&Request{}, newResponseWriterMocker())
+		ctx := NewContext(r, &Request{}, newResponseWriterMocker())
 		r.EmitEvent(http.MethodPost, "/user/1/profile", ctx)
 		as.Equal(0, sum)
 	})
@@ -453,7 +468,7 @@ func TestRouter_EmitRandom(t *testing.T) {
 			s3 = ":" + s3
 		}
 
-		paths = append(paths, internal.JoinPath(SEP, s0, s1, s2, s3))
+		paths = append(paths, internal.JoinPath(_sep, s0, s1, s2, s3))
 	}
 
 	var mapping = map[string]uint8{}

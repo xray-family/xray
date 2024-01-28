@@ -32,7 +32,7 @@ func isVar(s string) bool {
 func hasVar(s string) bool {
 	var n = len(s)
 	for i := 0; i < n-1; i++ {
-		if s[i] == SEP[0] && s[i+1] == defaultVarPrefix {
+		if s[i] == _sep[0] && s[i+1] == defaultVarPrefix {
 			return true
 		}
 	}

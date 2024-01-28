@@ -21,7 +21,7 @@ func (c *responseWriter) Code(code int) {
 	c.ResponseWriter.WriteHeader(code)
 }
 
-func (c *responseWriter) Raw() interface{} {
+func (c *responseWriter) Raw() any {
 	return c.ResponseWriter
 }
 

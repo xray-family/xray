@@ -2,6 +2,7 @@ package xray
 
 import (
 	"fmt"
+	"github.com/lxzan/xray/constant"
 	"net/http"
 	"runtime"
 	"strings"
@@ -14,10 +15,10 @@ func AccessLog() HandlerFunc {
 		var startTime = time.Now()
 		ctx.Next()
 
-		Logger().Debug(
+		ctx.conf.logger.Debug(
 			"access: protocol=%s, method=%s, path=%s, cost=%s",
 			ctx.Writer.Protocol(),
-			ctx.Request.Action,
+			ctx.Request.Method,
 			ctx.Request.RPath,
 			time.Since(startTime).String(),
 		)
@@ -40,9 +41,9 @@ func Recovery() HandlerFunc {
 						msg = append(msg, fmt.Sprintf("caller: %s, line: %d\n", caller, line)...)
 					}
 				}
-				Logger().Info(string(msg))
+				ctx.conf.logger.Info(string(msg))
 
-				if ctx.Writer.Protocol() == ProtocolHTTP {
+				if ctx.Writer.Protocol() == constant.ProtocolHTTP {
 					_ = ctx.WriteString(http.StatusInternalServerError, "internal server error")
 				}
 			}
@@ -57,7 +58,7 @@ func HttpRequired(methods ...string) HandlerFunc {
 		methods[i] = strings.ToUpper(v)
 	}
 	return func(ctx *Context) {
-		if ctx.Writer.Protocol() != ProtocolHTTP {
+		if ctx.Writer.Protocol() != constant.ProtocolHTTP {
 			return
 		}
 
@@ -76,7 +77,7 @@ func HttpRequired(methods ...string) HandlerFunc {
 // WebSocketRequired 只允许WebSocket协议请求通过
 func WebSocketRequired() HandlerFunc {
 	return func(ctx *Context) {
-		if ctx.Writer.Protocol() == ProtocolWebSocket {
+		if ctx.Writer.Protocol() == constant.ProtocolWebSocket {
 			ctx.Next()
 		}
 	}

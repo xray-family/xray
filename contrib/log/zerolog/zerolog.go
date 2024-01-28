@@ -18,22 +18,22 @@ func (c *ZLogger) UnWrap() zerolog.Logger {
 	return c.Logger
 }
 
-func (c *ZLogger) Debug(format string, v ...interface{}) {
+func (c *ZLogger) Debug(format string, v ...any) {
 	c.Logger.Debug().Msgf(format, v...)
 }
 
-func (c *ZLogger) Info(format string, v ...interface{}) {
+func (c *ZLogger) Info(format string, v ...any) {
 	c.Logger.Info().Msgf(format, v...)
 }
 
-func (c *ZLogger) Warn(format string, v ...interface{}) {
+func (c *ZLogger) Warn(format string, v ...any) {
 	c.Logger.Warn().Msgf(format, v...)
 }
 
-func (c *ZLogger) Error(format string, v ...interface{}) {
+func (c *ZLogger) Error(format string, v ...any) {
 	c.Logger.Error().Msgf(format, v...)
 }
 
-func (c *ZLogger) Panic(format string, v ...interface{}) {
+func (c *ZLogger) Panic(format string, v ...any) {
 	c.Logger.Panic().Msgf(format, v...)
 }

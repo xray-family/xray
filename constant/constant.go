@@ -5,6 +5,8 @@ package constant
 */
 
 const (
+	XPath       = "X-Path"
+	XMethod     = "X-Method"
 	XRealIP     = "X-Real-Ip"
 	ContentType = "Content-Type"
 )
@@ -15,17 +17,7 @@ const (
 	MimeStream  = "application/octet-stream"
 )
 
-// buffer level
 const (
-	KiB           = 1024
-	BufferLeveL1  = KiB
-	BufferLeveL2  = 2 * KiB
-	BufferLeveL4  = 4 * KiB
-	BufferLeveL8  = 8 * KiB
-	BufferLeveL16 = 16 * KiB
-)
-
-const (
-	IdHttpHeader = iota
-	IdMapHeader
+	ProtocolHTTP      = "http"
+	ProtocolWebSocket = "websocket"
 )

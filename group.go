@@ -18,7 +18,7 @@ type Group struct {
 func (c *Group) Group(path string, middlewares ...HandlerFunc) *Group {
 	group := &Group{
 		router:      c.router,
-		path:        internal.JoinPath(SEP, c.path, path),
+		path:        internal.JoinPath(_sep, c.path, path),
 		middlewares: append(internal.Clone(c.middlewares), middlewares...),
 	}
 	return group
@@ -26,34 +26,33 @@ func (c *Group) Group(path string, middlewares ...HandlerFunc) *Group {
 
 // OnEvent 监听事件
 // listen to event
-func (c *Group) OnEvent(method string, path string, handler HandlerFunc, middlewares ...HandlerFunc) {
-	h := append(internal.Clone(c.middlewares), middlewares...)
-	h = append(h, handler)
+func (c *Group) OnEvent(method string, path string, handlers ...HandlerFunc) {
+	h := append(internal.Clone(c.middlewares), handlers...)
 	api := &apiHandler{
 		Method: method,
-		Path:   internal.JoinPath(SEP, c.path, path),
+		Path:   internal.JoinPath(_sep, c.path, path),
 		Funcs:  h,
 	}
 	setApiHandler(c.router, api.Method, api.Path, api)
 }
 
 // On  类似OnEvent方法, 但是没有操作方法
-func (c *Group) On(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
-	c.OnEvent("", path, handler, middlewares...)
+func (c *Group) On(path string, handlers ...HandlerFunc) {
+	c.OnEvent("", path, handlers...)
 }
 
-func (c *Group) OnGET(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
-	c.OnEvent(http.MethodGet, path, handler, middlewares...)
+func (c *Group) OnGET(path string, handlers ...HandlerFunc) {
+	c.OnEvent(http.MethodGet, path, handlers...)
 }
 
-func (c *Group) OnPOST(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
-	c.OnEvent(http.MethodPost, path, handler, middlewares...)
+func (c *Group) OnPOST(path string, handlers ...HandlerFunc) {
+	c.OnEvent(http.MethodPost, path, handlers...)
 }
 
-func (c *Group) OnPUT(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
-	c.OnEvent(http.MethodPut, path, handler, middlewares...)
+func (c *Group) OnPUT(path string, handlers ...HandlerFunc) {
+	c.OnEvent(http.MethodPut, path, handlers...)
 }
 
-func (c *Group) OnDELETE(path string, handler HandlerFunc, middlewares ...HandlerFunc) {
-	c.OnEvent(http.MethodDelete, path, handler, middlewares...)
+func (c *Group) OnDELETE(path string, handlers ...HandlerFunc) {
+	c.OnEvent(http.MethodDelete, path, handlers...)
 }
