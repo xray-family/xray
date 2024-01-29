@@ -2,113 +2,130 @@ package gws
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/lxzan/gws"
-	"github.com/lxzan/uRouter"
-	"sync"
+	"github.com/lxzan/xray"
+	"github.com/lxzan/xray/codec"
+	"github.com/lxzan/xray/internal"
+	"io"
+	"strconv"
 )
 
 type (
 	websocketWrapper interface {
-		WriteMessage(opcode gws.Opcode, payload []byte) error
+		Writev(opcode gws.Opcode, payloads ...[]byte) error
 	}
 
 	responseWriter struct {
-		once        sync.Once
-		conn        websocketWrapper
-		headerCodec *uRouter.HeaderCodec
-		header      uRouter.Header
-		code        gws.Opcode
-		buf         *bytes.Buffer
+		conn     websocketWrapper
+		opcode   gws.Opcode
+		codec    codec.Codec
+		header   xray.Header
+		buf      *bytes.Buffer
+		payloads [][]byte
 	}
 )
 
-func newResponseWriter(socket websocketWrapper, codec *uRouter.HeaderCodec) *responseWriter {
-	return &responseWriter{
-		once:        sync.Once{},
-		code:        gws.OpcodeText,
-		conn:        socket,
-		headerCodec: codec,
-		header:      codec.Generate(),
-	}
-}
-
 func (c *responseWriter) Protocol() string {
-	return uRouter.ProtocolWebSocket
+	return xray.ProtocolWebSocket
 }
 
-func (c *responseWriter) Raw() interface{} {
+func (c *responseWriter) Raw() any {
 	return c.conn
 }
 
-func (c *responseWriter) Header() uRouter.Header {
+func (c *responseWriter) Header() xray.Header {
 	return c.header
 }
 
-func (c *responseWriter) Code(opcode int) {
-	c.code = gws.Opcode(opcode)
+func (c *responseWriter) Code(code int) {
+	c.header.Set(xray.XStatus, strconv.Itoa(code))
 }
 
-func (c *responseWriter) RawResponseWriter() interface{} {
+func (c *responseWriter) RawResponseWriter() any {
 	return c.conn
 }
 
 func (c *responseWriter) Write(p []byte) (n int, err error) {
-	c.once.Do(func() {
-		c.buf = uRouter.BufferPool().Get(len(p) + 256)
-		err = c.headerCodec.Encode(c.buf, c.header)
-		n = c.buf.Len()
-	})
-	if err != nil {
-		return
-	}
-	return c.buf.Write(p)
+	c.payloads = append(c.payloads, internal.Clone(p))
+	return len(p), nil
 }
 
 func (c *responseWriter) Flush() error {
-	if err := c.conn.WriteMessage(c.code, c.buf.Bytes()); err != nil {
+	if err := marshalHeader(c.codec, c.buf, c.header); err != nil {
 		return err
 	}
-	uRouter.BufferPool().Put(c.buf)
-	c.header.Close()
-	c.buf = nil
-	c.header = nil
-	return nil
+	c.payloads[0] = c.buf.Bytes()
+	return c.conn.Writev(c.opcode, c.payloads...)
 }
 
-func NewAdapter(router *uRouter.Router) *Adapter {
+func NewAdapter(router *xray.Router) *Adapter {
 	return &Adapter{
 		router: router,
-		codec:  uRouter.TextMapHeader,
+		tpl:    &xray.SliceHeader{},
+		pool:   newWriterPool(),
 	}
 }
 
 type Adapter struct {
-	router *uRouter.Router
-	codec  *uRouter.HeaderCodec
+	router *xray.Router
+	pool   *writerPool
+	tpl    xray.Header
 }
 
-// SetHeaderCodec 设置头部编码方式
-func (c *Adapter) SetHeaderCodec(codec *uRouter.HeaderCodec) *Adapter {
-	c.codec = codec
+// SetHeaderTpl 设置头部编码方式
+func (c *Adapter) SetHeaderTpl(tpl xray.Header) *Adapter {
+	c.tpl = tpl
 	return c
 }
 
 // ServeWebSocket 服务WebSocket
 func (c *Adapter) ServeWebSocket(socket *gws.Conn, message *gws.Message) error {
-	r := &uRouter.Request{
-		Raw:    message,
-		Body:   message,
-		Action: "",
-	}
-	ctx := uRouter.NewContext(r, newResponseWriter(socket, c.codec))
+	r := &xray.Request{Raw: message, Body: message}
+	w := c.pool.Get()
+	w.conn = socket
+	w.opcode = message.Opcode
+	w.codec = c.router.JsonCodec()
+	w.header = c.tpl.New()
+	w.payloads = append(w.payloads, nil)
+	ctx := xray.NewContext(c.router, r, w)
 
-	header, err := c.codec.Decode(message.Data)
-	if err != nil {
+	header := c.tpl.New()
+	if err := unmarshalHeader(c.router.JsonCodec(), message.Data, header); err != nil {
 		return err
 	}
 
-	r.Action = header.Get(uRouter.UAction)
+	r.Method = header.Get(xray.XMethod)
 	ctx.Request.Header = header
-	c.router.EmitEvent(r.Action, header.Get(uRouter.UPath), ctx)
+	c.router.EmitEvent(r.Method, header.Get(xray.XPath), ctx)
+	c.pool.Put(w)
 	return nil
+}
+
+func marshalHeader(jsonCodec codec.Codec, w *bytes.Buffer, v xray.Header) error {
+	if v.Len() == 0 {
+		w.WriteString("0002[]")
+		return nil
+	}
+	w.WriteString("0000")
+	if err := jsonCodec.NewEncoder(w).Encode(v); err != nil {
+		return err
+	}
+	copy(w.Bytes()[:4], fmt.Sprintf("%04d", w.Len()-4))
+	return nil
+}
+
+func unmarshalHeader(jsonCodec codec.Codec, r *bytes.Buffer, v xray.Header) error {
+	if r.Len() < 4 {
+		return io.ErrShortBuffer
+	}
+	length, err := strconv.Atoi(string(r.Next(4)))
+	if err != nil {
+		return err
+	}
+	p := r.Next(length)
+	if len(p) < length {
+		return io.ErrShortBuffer
+	}
+	return jsonCodec.Decode(p, v)
 }

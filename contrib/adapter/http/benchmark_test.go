@@ -3,15 +3,14 @@ package http
 import (
 	"bytes"
 	_ "embed"
-	"github.com/lxzan/uRouter"
+	"github.com/lxzan/xray"
 	"net/http"
 	"testing"
 )
 
 func BenchmarkAdapter_ServeHTTP(b *testing.B) {
-	var router = uRouter.New()
-	router.OnGET("/", func(ctx *uRouter.Context) {})
-	router.StartSilently()
+	var router = xray.New()
+	router.OnGET("/", func(ctx *xray.Context) {})
 	adapter := NewAdapter(router)
 	w := &responseWriter{ResponseWriter: newWriterMocker()}
 	r, _ := http.NewRequest(http.MethodGet, "http://example.com/", bytes.NewBufferString(""))

@@ -2,24 +2,24 @@ package wwwform
 
 import (
 	"github.com/go-playground/form/v4"
-	"github.com/lxzan/uRouter/codec"
+	"github.com/lxzan/xray/codec"
 	"io"
 	"net/url"
 )
 
-var FormCodec = new(Codec)
+var Codec = new(formCodec)
 
-type Codec struct{}
+type formCodec struct{}
 
-func (c *Codec) NewEncoder(w io.Writer) codec.Encoder {
+func (c *formCodec) NewEncoder(w io.Writer) codec.Encoder {
 	return &Encoder{writer: w}
 }
 
-func (c *Codec) NewDecoder(r io.Reader) codec.Decoder {
+func (c *formCodec) NewDecoder(r io.Reader) codec.Decoder {
 	return &Decoder{reader: r}
 }
 
-func (c *Codec) Encode(v interface{}) ([]byte, error) {
+func (c *formCodec) Encode(v any) ([]byte, error) {
 	values, err := form.NewEncoder().Encode(v)
 	if err != nil {
 		return nil, err
@@ -27,7 +27,7 @@ func (c *Codec) Encode(v interface{}) ([]byte, error) {
 	return []byte(values.Encode()), nil
 }
 
-func (c *Codec) EncodeToString(v interface{}) (string, error) {
+func (c *formCodec) EncodeToString(v any) (string, error) {
 	values, err := form.NewEncoder().Encode(v)
 	if err != nil {
 		return "", err
@@ -35,7 +35,7 @@ func (c *Codec) EncodeToString(v interface{}) (string, error) {
 	return values.Encode(), nil
 }
 
-func (c *Codec) DecodeFromString(data string, v interface{}) error {
+func (c *formCodec) DecodeFromString(data string, v any) error {
 	values, err := url.ParseQuery(data)
 	if err != nil {
 		return err
@@ -43,7 +43,7 @@ func (c *Codec) DecodeFromString(data string, v interface{}) error {
 	return form.NewDecoder().Decode(v, values)
 }
 
-func (c *Codec) Decode(data []byte, v interface{}) error {
+func (c *formCodec) Decode(data []byte, v any) error {
 	values, err := url.ParseQuery(string(data))
 	if err != nil {
 		return err
@@ -55,7 +55,7 @@ type Encoder struct {
 	writer io.Writer
 }
 
-func (c *Encoder) Encode(v interface{}) error {
+func (c *Encoder) Encode(v any) error {
 	values, err := form.NewEncoder().Encode(v)
 	if err != nil {
 		return err
@@ -68,7 +68,7 @@ type Decoder struct {
 	reader io.Reader
 }
 
-func (c *Decoder) Decode(v interface{}) error {
+func (c *Decoder) Decode(v any) error {
 	data, err := io.ReadAll(c.reader)
 	if err != nil {
 		return err

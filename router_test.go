@@ -1,11 +1,12 @@
-package uRouter
+package xray
 
 import (
-	"github.com/lxzan/uRouter/internal"
+	"github.com/lxzan/xray/internal"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"sync"
 	"testing"
+	"time"
 )
 
 func TestNew(t *testing.T) {
@@ -14,6 +15,8 @@ func TestNew(t *testing.T) {
 	t.Run("static router", func(t *testing.T) {
 		var list []int
 		var r = New()
+		as.NotNil(r.JsonCodec())
+
 		r.Use(func(ctx *Context) {
 			list = append(list, 1)
 			ctx.Next()
@@ -32,18 +35,19 @@ func TestNew(t *testing.T) {
 			list = append(list, 6)
 		})
 
-		g1.OnEvent(http.MethodGet, "greet", func(ctx *Context) {
-			list = append(list, 9)
-		}, func(ctx *Context) {
-			list = append(list, 7)
-			ctx.Next()
-			list = append(list, 8)
-		})
-
-		r.StartSilently()
+		g1.OnEvent(http.MethodGet, "greet",
+			func(ctx *Context) {
+				list = append(list, 7)
+				ctx.Next()
+				list = append(list, 8)
+			},
+			func(ctx *Context) {
+				list = append(list, 9)
+			},
+		)
 
 		path := "/api/v1/greet"
-		ctx := NewContext(&Request{}, newResponseWriterMocker())
+		ctx := NewContext(r, &Request{}, newResponseWriterMocker())
 		r.EmitEvent(http.MethodGet, path, ctx)
 
 		as.Equal(9, len(list))
@@ -79,21 +83,24 @@ func TestNew(t *testing.T) {
 			list = append(list, 6)
 		})
 
-		g1.On("greet/:id", func(ctx *Context) {
-			list = append(list, 9)
-			as.Equal("1", ctx.Param("id"))
-		}, func(ctx *Context) {
-			list = append(list, 7)
-			ctx.Next()
-			list = append(list, 8)
-		})
+		g1.On("greet/:id",
+			func(ctx *Context) {
+				list = append(list, 7)
+				ctx.Next()
+				list = append(list, 8)
+			},
+			func(ctx *Context) {
+				list = append(list, 9)
+				as.Equal("1", ctx.Param("id"))
+			},
+		)
 
 		path := "/api/v1/greet/1"
 		ctx := NewContext(
-			&Request{Header: NewHttpHeader(http.Header{"X-Path": []string{path}})},
+			r,
+			&Request{Header: &HttpHeader{http.Header{"X-Path": []string{path}}}},
 			newResponseWriterMocker(),
 		)
-		r.StartSilently()
 
 		r.Emit(path, ctx)
 		as.Equal(9, len(list))
@@ -130,19 +137,18 @@ func TestNew(t *testing.T) {
 		})
 
 		g1.On("greet", func(ctx *Context) {
-			list = append(list, 9)
-			as.Equal("v1", ctx.Param("version"))
-		}, func(ctx *Context) {
 			list = append(list, 7)
 			ctx.Next()
 			list = append(list, 8)
+		}, func(ctx *Context) {
+			list = append(list, 9)
+			as.Equal("v1", ctx.Param("version"))
 		})
-
-		r.StartSilently()
 
 		path := "/api/v1/greet"
 		ctx := NewContext(
-			&Request{Header: NewHttpHeader(http.Header{"X-Path": []string{path}})},
+			r,
+			&Request{Header: &HttpHeader{http.Header{"X-Path": []string{path}}}},
 			newResponseWriterMocker(),
 		)
 		r.Emit(path, ctx)
@@ -164,17 +170,17 @@ func TestNew(t *testing.T) {
 		var list []int
 
 		r.On("test", func(ctx *Context) {
-			list = append(list, 3)
-		}, func(ctx *Context) {
 			list = append(list, 1)
 			ctx.Next()
 			list = append(list, 2)
+		}, func(ctx *Context) {
+			list = append(list, 3)
 		})
-		r.StartSilently()
 
 		path := "/test"
 		ctx := NewContext(
-			&Request{Header: NewHttpHeader(http.Header{"X-Path": []string{path}}), Body: nil},
+			r,
+			&Request{Header: &HttpHeader{http.Header{"X-Path": []string{path}}}, Body: nil},
 			newResponseWriterMocker(),
 		)
 		r.Emit(path, ctx)
@@ -189,12 +195,14 @@ func TestNew(t *testing.T) {
 		var r = New()
 		var list []int
 
-		r.OnNotFound = func(ctx *Context) { list = append(list, 1) }
-		r.StartSilently()
+		r.SetHandlerNotFound(func(ctx *Context) {
+			list = append(list, 1)
+		})
 
 		path := "/test"
 		ctx := NewContext(
-			&Request{Header: NewHttpHeader(http.Header{"X-Path": []string{}}), Body: nil},
+			r,
+			&Request{Header: &HttpHeader{http.Header{"X-Path": []string{}}}, Body: nil},
 			newResponseWriterMocker(),
 		)
 		r.Emit(path, ctx)
@@ -211,14 +219,19 @@ func TestNew(t *testing.T) {
 
 		path := "/test"
 		ctx := NewContext(
+			r,
 			&Request{
-				Header: NewHttpHeader(http.Header{UPath: []string{path}}), Body: nil,
+				Header: &HttpHeader{http.Header{XPath: []string{path}}}, Body: nil,
 			},
 			newResponseWriterMocker(),
 		)
 		r.Emit(path, ctx)
 
-		r.staticRoutes["404"] = nil
+		r.staticMatcher.Set(&apiHandler{
+			Method: http.MethodPost,
+			Path:   "/404",
+			Funcs:  []HandlerFunc{AccessLog()},
+		})
 
 		as.Equal(len(list), 0)
 	})
@@ -237,7 +250,6 @@ func TestRouter_OnNoMatch(t *testing.T) {
 			ctx.Set("sum", val.(int)+2)
 			ctx.Next()
 		})
-		r.StartSilently()
 
 		const count = 10
 		var wg = &sync.WaitGroup{}
@@ -246,7 +258,8 @@ func TestRouter_OnNoMatch(t *testing.T) {
 			go func() {
 				var path = "test"
 				var ctx = NewContext(
-					&Request{Header: NewHttpHeader(http.Header{UPath: []string{path}})},
+					r,
+					&Request{Header: &HttpHeader{http.Header{XPath: []string{path}}}},
 					newResponseWriterMocker(),
 				)
 				r.Emit(path, ctx)
@@ -287,12 +300,14 @@ func TestRouter_OnNoMatch(t *testing.T) {
 			list = append(list, 8)
 		})
 
-		r.OnNotFound = func(ctx *Context) { list = append(list, 10) }
-		r.StartSilently()
+		r.SetHandlerNotFound(func(ctx *Context) {
+			list = append(list, 10)
+		})
 
 		path := "/api/v1/xxx"
 		ctx := NewContext(
-			&Request{Header: NewHttpHeader(http.Header{"X-Path": []string{path}})},
+			r,
+			&Request{Header: &HttpHeader{http.Header{"X-Path": []string{path}}}},
 			newResponseWriterMocker(),
 		)
 		r.Emit(path, ctx)
@@ -317,7 +332,6 @@ func TestRouter_Conflict(t *testing.T) {
 		var g = r.Group("user")
 		g.On("1", AccessLog())
 		r.On("user/1", AccessLog())
-		r.StartSilently()
 	})
 
 	t.Run("route conflict 2", func(t *testing.T) {
@@ -329,7 +343,6 @@ func TestRouter_Conflict(t *testing.T) {
 		var r = New()
 		r.On("user/:id", AccessLog())
 		r.On("user/1", AccessLog())
-		r.StartSilently()
 	})
 
 	t.Run("route conflict 3", func(t *testing.T) {
@@ -342,7 +355,6 @@ func TestRouter_Conflict(t *testing.T) {
 		r.On("user/:id", AccessLog())
 		var g = r.Group("user")
 		g.On("1", AccessLog())
-		r.StartSilently()
 	})
 
 	t.Run("route conflict 4", func(t *testing.T) {
@@ -355,7 +367,6 @@ func TestRouter_Conflict(t *testing.T) {
 		r.On("user/1", AccessLog())
 		var g = r.Group("user")
 		g.On(":id", AccessLog())
-		r.StartSilently()
 	})
 
 	t.Run("route conflict 5", func(t *testing.T) {
@@ -367,40 +378,29 @@ func TestRouter_Conflict(t *testing.T) {
 		var r = New()
 		r.On("user/:id", AccessLog())
 		r.On("user/:name", AccessLog())
-		r.StartSilently()
 	})
-}
-
-func TestRouter_Display(t *testing.T) {
-	r := New()
-	r.OnEvent(http.MethodGet, "/user/list", func(ctx *Context) {})
-	r.OnEvent(http.MethodPost, "/user/:id", func(ctx *Context) {})
-	r.StartSilently()
 }
 
 func TestRouter_Dynamic(t *testing.T) {
 	var as = assert.New(t)
 
 	t.Run("", func(t *testing.T) {
-		defer func() {
-			e := recover()
-			as.NotNil(e)
-		}()
 		r := New()
-		r.OnEvent(http.MethodGet, "/user/list", func(ctx *Context) {})
-		r.OnEvent(http.MethodGet, "/user/:id", func(ctx *Context) {})
-		r.StartSilently()
+		err := internal.Catch(func() {
+			r.OnEvent(http.MethodGet, "/user/list", func(ctx *Context) {})
+			r.OnEvent(http.MethodGet, "/user/:id", func(ctx *Context) {})
+		})
+		assert.Error(t, err)
 	})
 
 	t.Run("", func(t *testing.T) {
-		defer func() {
-			e := recover()
-			as.Nil(e)
-		}()
 		r := New()
-		r.OnEvent(http.MethodGet, "/user/list", func(ctx *Context) {})
-		r.OnEvent(http.MethodDelete, "/user/:id", func(ctx *Context) {})
-		r.OnEvent(http.MethodPost, "/user/:id", func(ctx *Context) {})
+		err := internal.Catch(func() {
+			r.OnEvent(http.MethodGet, "/user/list", func(ctx *Context) {})
+			r.OnEvent(http.MethodDelete, "/user/:id", func(ctx *Context) {})
+			r.OnEvent(http.MethodPost, "/user/:id", func(ctx *Context) {})
+		})
+		as.NoError(err)
 	})
 
 	t.Run("", func(t *testing.T) {
@@ -417,9 +417,9 @@ func TestRouter_Dynamic(t *testing.T) {
 		r.OnEvent(http.MethodGet, "/user/:id", func(ctx *Context) {
 
 		})
-		r.StartSilently()
+		//r.StartSilently()
 
-		ctx := NewContext(&Request{}, newResponseWriterMocker())
+		ctx := NewContext(r, &Request{}, newResponseWriterMocker())
 		r.EmitEvent(http.MethodGet, "/user/1/profile", ctx)
 		as.Equal(1, sum)
 	})
@@ -438,7 +438,7 @@ func TestRouter_Dynamic(t *testing.T) {
 		r.OnEvent(http.MethodGet, "/user/:id", func(ctx *Context) {
 
 		})
-		ctx := NewContext(&Request{}, newResponseWriterMocker())
+		ctx := NewContext(r, &Request{}, newResponseWriterMocker())
 		r.EmitEvent(http.MethodPost, "/user/1/profile", ctx)
 		as.Equal(0, sum)
 	})
@@ -467,7 +467,7 @@ func TestRouter_EmitRandom(t *testing.T) {
 			s3 = ":" + s3
 		}
 
-		paths = append(paths, internal.JoinPath(SEP, s0, s1, s2, s3))
+		paths = append(paths, internal.JoinPath(_sep, s0, s1, s2, s3))
 	}
 
 	var mapping = map[string]uint8{}
@@ -479,7 +479,6 @@ func TestRouter_EmitRandom(t *testing.T) {
 			mapping[ctx.Request.VPath] = 1
 		})
 	}
-	r.StartSilently()
 
 	var prefix = "/api/v1"
 	for i := 0; i < count; i++ {
@@ -488,16 +487,18 @@ func TestRouter_EmitRandom(t *testing.T) {
 	}
 	as.Equal(count, len(mapping))
 
-	var exists = func(p string) bool {
-		for _, v := range r.apis {
-			if v.Path == p {
-				return true
+	var exists = func(m matcher, p string) bool {
+		var exists = false
+		m.Range(func(h *apiHandler) {
+			if h.Path == p {
+				exists = true
+				return
 			}
 
-			list1 := internal.Split(v.Path)
+			list1 := internal.Split(h.Path)
 			list2 := internal.Split(p)
 			if len(list1) != len(list2) {
-				continue
+				return
 			}
 
 			var counter = 0
@@ -507,10 +508,11 @@ func TestRouter_EmitRandom(t *testing.T) {
 				}
 			}
 			if counter == len(list1) {
-				return true
+				exists = true
+				return
 			}
-		}
-		return false
+		})
+		return exists
 	}
 
 	//遍历去验证
@@ -533,7 +535,7 @@ func TestRouter_EmitRandom(t *testing.T) {
 		var arr = []string{prefix}
 		arr = append(arr, segments...)
 		path := internal.JoinPath(arr...)
-		if exists(path) {
+		if exists(r.staticMatcher, path) || exists(r.dynamicMatcher, path) {
 			expected++
 		}
 		r.EmitEvent(http.MethodGet, path, ctx)
@@ -550,7 +552,6 @@ func TestRouter_Actions(t *testing.T) {
 		r.OnGET("/test", func(ctx *Context) {
 			sum++
 		})
-		r.StartSilently()
 		r.EmitEvent(http.MethodGet, "/test", newContextMocker())
 		as.Equal(1, sum)
 	})
@@ -561,7 +562,6 @@ func TestRouter_Actions(t *testing.T) {
 		r.OnPOST("/test", func(ctx *Context) {
 			sum++
 		})
-		r.StartSilently()
 		r.EmitEvent(http.MethodPost, "/test", newContextMocker())
 		as.Equal(1, sum)
 	})
@@ -572,7 +572,6 @@ func TestRouter_Actions(t *testing.T) {
 		r.OnPUT("/test", func(ctx *Context) {
 			sum++
 		})
-		r.StartSilently()
 		r.EmitEvent(http.MethodPut, "/test", newContextMocker())
 		as.Equal(1, sum)
 	})
@@ -583,7 +582,6 @@ func TestRouter_Actions(t *testing.T) {
 		r.OnDELETE("/test", func(ctx *Context) {
 			sum++
 		})
-		r.StartSilently()
 		r.EmitEvent(http.MethodDelete, "/test", newContextMocker())
 		as.Equal(1, sum)
 	})
@@ -599,7 +597,6 @@ func TestGroup_Actions(t *testing.T) {
 		g.OnGET("/test", func(ctx *Context) {
 			sum++
 		})
-		r.StartSilently()
 		r.EmitEvent(http.MethodGet, "/api/v1/test", newContextMocker())
 		as.Equal(1, sum)
 	})
@@ -611,7 +608,6 @@ func TestGroup_Actions(t *testing.T) {
 		g.OnPOST("/test", func(ctx *Context) {
 			sum++
 		})
-		r.StartSilently()
 		r.EmitEvent(http.MethodPost, "/api/v1/test", newContextMocker())
 		as.Equal(1, sum)
 	})
@@ -623,7 +619,6 @@ func TestGroup_Actions(t *testing.T) {
 		g.OnPUT("/test", func(ctx *Context) {
 			sum++
 		})
-		r.StartSilently()
 		r.EmitEvent(http.MethodPut, "/api/v1/test", newContextMocker())
 		as.Equal(1, sum)
 	})
@@ -635,8 +630,16 @@ func TestGroup_Actions(t *testing.T) {
 		g.OnDELETE("/test", func(ctx *Context) {
 			sum++
 		})
-		r.StartSilently()
 		r.EmitEvent(http.MethodDelete, "/api/v1/test", newContextMocker())
 		as.Equal(1, sum)
 	})
+}
+
+func TestRouter_Display(t *testing.T) {
+	r := New(WithGreeting(true, 100*time.Millisecond))
+	r.OnGET("eat", AccessLog())
+	r.OnPOST("eat", AccessLog())
+	r.OnGET("speak", AccessLog())
+	r.OnGET("speak/:msg", AccessLog())
+	time.Sleep(200 * time.Millisecond)
 }

@@ -1,7 +1,7 @@
 package swagger
 
 import (
-	"github.com/lxzan/uRouter"
+	"github.com/lxzan/xray"
 	"github.com/swaggo/swag"
 	"golang.org/x/net/webdav"
 	"html/template"
@@ -104,7 +104,7 @@ func Oauth2DefaultClientID(oauth2DefaultClientID string) func(*Config) {
 }
 
 // WrapHandler wraps `http.Handler` into `gin.HandlerFunc`.
-func WrapHandler(handler *webdav.Handler, options ...func(*Config)) uRouter.HandlerFunc {
+func WrapHandler(handler *webdav.Handler, options ...func(*Config)) xray.HandlerFunc {
 	var config = Config{
 		URL:                      "doc.json",
 		DocExpansion:             "list",
@@ -124,7 +124,7 @@ func WrapHandler(handler *webdav.Handler, options ...func(*Config)) uRouter.Hand
 }
 
 // CustomWrapHandler wraps `http.Handler` into `gin.HandlerFunc`.
-func CustomWrapHandler(config *Config, handler *webdav.Handler) uRouter.HandlerFunc {
+func CustomWrapHandler(config *Config, handler *webdav.Handler) xray.HandlerFunc {
 	var once sync.Once
 
 	if config.InstanceName == "" {
@@ -140,8 +140,8 @@ func CustomWrapHandler(config *Config, handler *webdav.Handler) uRouter.HandlerF
 
 	var matcher = regexp.MustCompile(`(.*)(index\.html|doc\.json|favicon-16x16\.png|favicon-32x32\.png|/oauth2-redirect\.html|swagger-ui\.css|swagger-ui\.css\.map|swagger-ui\.js|swagger-ui\.js\.map|swagger-ui-bundle\.js|swagger-ui-bundle\.js\.map|swagger-ui-standalone-preset\.js|swagger-ui-standalone-preset\.js\.map)[?|.]*`)
 
-	return func(ctx *uRouter.Context) {
-		if ctx.Request.Action != http.MethodGet {
+	return func(ctx *xray.Context) {
+		if ctx.Request.Method != http.MethodGet {
 			_ = ctx.WriteBytes(http.StatusMethodNotAllowed, nil)
 			return
 		}
@@ -193,9 +193,9 @@ func CustomWrapHandler(config *Config, handler *webdav.Handler) uRouter.HandlerF
 
 // DisablingWrapHandler turn handler off
 // if specified environment variable passed.
-func DisablingWrapHandler(handler *webdav.Handler, envName string) uRouter.HandlerFunc {
+func DisablingWrapHandler(handler *webdav.Handler, envName string) xray.HandlerFunc {
 	if os.Getenv(envName) != "" {
-		return func(c *uRouter.Context) {
+		return func(c *xray.Context) {
 			// Simulate behavior when route unspecified and
 			// return 404 HTTP code
 			_ = c.WriteString(http.StatusNotFound, "")
@@ -207,9 +207,9 @@ func DisablingWrapHandler(handler *webdav.Handler, envName string) uRouter.Handl
 
 // DisablingCustomWrapHandler turn handler off
 // if specified environment variable passed.
-func DisablingCustomWrapHandler(config *Config, handler *webdav.Handler, envName string) uRouter.HandlerFunc {
+func DisablingCustomWrapHandler(config *Config, handler *webdav.Handler, envName string) xray.HandlerFunc {
 	if os.Getenv(envName) != "" {
-		return func(c *uRouter.Context) {
+		return func(c *xray.Context) {
 			// Simulate behavior when route unspecified and
 			// return 404 HTTP code
 			_ = c.WriteString(http.StatusNotFound, "")

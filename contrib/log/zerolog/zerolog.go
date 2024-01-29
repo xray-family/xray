@@ -6,34 +6,36 @@ import (
 	"os"
 )
 
-var ZeroLogger = newLogger()
+var Logger = newLogger()
 
-func newLogger() *ZLogger { return &ZLogger{Logger: log.Output(zerolog.ConsoleWriter{Out: os.Stderr})} }
+func newLogger() *ZeroLogger {
+	return &ZeroLogger{Logger: log.Output(zerolog.ConsoleWriter{Out: os.Stderr})}
+}
 
-type ZLogger struct {
+type ZeroLogger struct {
 	Logger zerolog.Logger
 }
 
-func (c *ZLogger) UnWrap() zerolog.Logger {
+func (c *ZeroLogger) UnWrap() zerolog.Logger {
 	return c.Logger
 }
 
-func (c *ZLogger) Debug(format string, v ...interface{}) {
+func (c *ZeroLogger) Debug(format string, v ...any) {
 	c.Logger.Debug().Msgf(format, v...)
 }
 
-func (c *ZLogger) Info(format string, v ...interface{}) {
+func (c *ZeroLogger) Info(format string, v ...any) {
 	c.Logger.Info().Msgf(format, v...)
 }
 
-func (c *ZLogger) Warn(format string, v ...interface{}) {
+func (c *ZeroLogger) Warn(format string, v ...any) {
 	c.Logger.Warn().Msgf(format, v...)
 }
 
-func (c *ZLogger) Error(format string, v ...interface{}) {
+func (c *ZeroLogger) Error(format string, v ...any) {
 	c.Logger.Error().Msgf(format, v...)
 }
 
-func (c *ZLogger) Panic(format string, v ...interface{}) {
+func (c *ZeroLogger) Panic(format string, v ...any) {
 	c.Logger.Panic().Msgf(format, v...)
 }

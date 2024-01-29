@@ -1,4 +1,4 @@
-package uRouter
+package xray
 
 import (
 	"fmt"
@@ -14,10 +14,10 @@ func AccessLog() HandlerFunc {
 		var startTime = time.Now()
 		ctx.Next()
 
-		Logger().Debug(
-			"access: protocol=%s, action=%s, path=%s, cost=%s",
+		ctx.conf.logger.Debug(
+			"access: protocol=%s, method=%s, path=%s, cost=%s",
 			ctx.Writer.Protocol(),
-			ctx.Request.Action,
+			ctx.Request.Method,
 			ctx.Request.RPath,
 			time.Since(startTime).String(),
 		)
@@ -40,7 +40,7 @@ func Recovery() HandlerFunc {
 						msg = append(msg, fmt.Sprintf("caller: %s, line: %d\n", caller, line)...)
 					}
 				}
-				Logger().Info(string(msg))
+				ctx.conf.logger.Info(string(msg))
 
 				if ctx.Writer.Protocol() == ProtocolHTTP {
 					_ = ctx.WriteString(http.StatusInternalServerError, "internal server error")

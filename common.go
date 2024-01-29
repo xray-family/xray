@@ -1,41 +1,16 @@
-package uRouter
+package xray
 
 import (
-	"bytes"
 	"io"
 )
 
-const (
-	ProtocolHTTP      = "http"
-	ProtocolWebSocket = "websocket"
-)
+type BytesReader interface {
+	io.Reader
+	Bytes() []byte
+}
 
 type (
-	LoggerInterface interface {
-		Debug(format string, v ...interface{})
-		Info(format string, v ...interface{})
-		Warn(format string, v ...interface{})
-		Error(format string, v ...interface{})
-		Panic(format string, v ...interface{})
-	}
-
-	BufferPoolInterface interface {
-		Get(n int) *bytes.Buffer
-		Put(b *bytes.Buffer)
-	}
-
-	BytesReader interface {
-		io.Reader
-		Bytes() []byte
-	}
-
-	Closer interface {
-		Close()
-	}
-)
-
-type (
-	Any map[string]interface{}
+	Any map[string]any
 
 	Form map[string]string
 )

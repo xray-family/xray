@@ -1,4 +1,4 @@
-package uRouter
+package xray
 
 import (
 	"bytes"
@@ -24,7 +24,7 @@ func TestWebSocket(t *testing.T) {
 			sum++
 		})
 		var ctx = newContextMocker()
-		ctx.Request.Header.Set(UPath, "test")
+		ctx.Request.Header.Set(XPath, "test")
 		r.Emit("test", ctx)
 		assert.Equal(t, 0, sum)
 	})
@@ -42,11 +42,10 @@ func TestWebSocket(t *testing.T) {
 		r.OnEvent(http.MethodPost, "/aha", func(ctx *Context) {
 			sum += 4
 		})
-		r.Start()
 
 		var ctx = newContextMocker()
 		ctx.Writer.(*responseWriterMocker).SetProtocol(ProtocolWebSocket)
-		ctx.Request.Header.Set(UPath, "/test")
+		ctx.Request.Header.Set(XPath, "/test")
 		r.EmitEvent(http.MethodGet, "/test", ctx)
 		assert.Equal(t, 1, sum)
 	})
@@ -63,7 +62,6 @@ func TestWebSocket(t *testing.T) {
 		r.On(path, func(ctx *Context) {
 			panic("recovery test")
 		})
-		r.StartSilently()
 
 		r.Emit(path, newContextMocker())
 	})
@@ -80,7 +78,7 @@ func TestHTTP(t *testing.T) {
 
 		var ctx = newContextMocker()
 		ctx.Request.Raw = &http.Request{Method: http.MethodGet}
-		ctx.Request.Header.Set(UPath, "test")
+		ctx.Request.Header.Set(XPath, "test")
 		r.Emit("test", ctx)
 		assert.Equal(t, 0, sum)
 	})
@@ -96,7 +94,7 @@ func TestHTTP(t *testing.T) {
 		var ctx = newContextMocker()
 		ctx.Writer.(*responseWriterMocker).SetProtocol(ProtocolWebSocket)
 		ctx.Request.Raw = &http.Request{Method: http.MethodPost}
-		ctx.Request.Header.Set(UPath, "test")
+		ctx.Request.Header.Set(XPath, "test")
 		r.Emit("test", ctx)
 		assert.Equal(t, 0, sum)
 	})
@@ -109,7 +107,6 @@ func TestHTTP(t *testing.T) {
 		r.OnEvent(http.MethodGet, path, func(ctx *Context) {
 			sum++
 		})
-		r.StartSilently()
 
 		var ctx = newContextMocker()
 		ctx.Request.Raw = &http.Request{}
@@ -125,7 +122,6 @@ func TestHTTP(t *testing.T) {
 		r.OnEvent(http.MethodGet, path, func(ctx *Context) {
 			sum++
 		})
-		r.StartSilently()
 
 		var ctx = newContextMocker()
 		ctx.Request.Raw = &http.Request{}
@@ -141,11 +137,10 @@ func TestHTTP(t *testing.T) {
 		var sum = 0
 		r.Use(HttpRequired(http.MethodPost))
 		r.On("/test", func(ctx *Context) { sum++ })
-		r.StartSilently()
 
 		var ctx = newContextMocker()
 		ctx.Request.Raw = &http.Request{Method: http.MethodPost}
-		ctx.Request.Header.Set(UPath, "/test")
+		ctx.Request.Header.Set(XPath, "/test")
 		r.Emit("/test", ctx)
 		assert.Equal(t, 1, sum)
 	})
@@ -167,7 +162,7 @@ func TestRecovery(t *testing.T) {
 			panic("1")
 		})
 		var ctx = newContextMocker()
-		ctx.Request.Header.Set(UPath, "/test")
+		ctx.Request.Header.Set(XPath, "/test")
 		r.Emit("/test", ctx)
 	})
 
@@ -182,10 +177,9 @@ func TestRecovery(t *testing.T) {
 		r.On("/test", func(ctx *Context) {
 			panic("1")
 		})
-		r.StartSilently()
 
 		var ctx = newContextMocker()
-		ctx.Request.Header.Set(UPath, "/test")
+		ctx.Request.Header.Set(XPath, "/test")
 		r.Emit("/test", ctx)
 		println(1)
 	})
@@ -198,31 +192,8 @@ func (c *closerMocker) Close() {}
 func TestClose(t *testing.T) {
 	t.Run("", func(t *testing.T) {
 		var c = io.NopCloser(bytes.NewBuffer(nil))
-		Close(c)
+		c.Close()
 	})
-
-	t.Run("", func(t *testing.T) {
-		var c = &closerMocker{}
-		Close(c)
-	})
-
-	t.Run("", func(t *testing.T) {
-		var c = bytes.NewBuffer(nil)
-		Close(c)
-	})
-}
-
-func TestLogger(t *testing.T) {
-	defer func() {
-		recover()
-	}()
-
-	SetLogger(defaultLogger)
-	Logger().Debug("1")
-	Logger().Info("2")
-	Logger().Warn("3")
-	Logger().Error("4")
-	Logger().Panic("5")
 }
 
 func TestAny(t *testing.T) {
@@ -240,5 +211,4 @@ func TestAny(t *testing.T) {
 	as.Equal(0, m.ToInt("xxx"))
 	as.Equal(int64(0), m.ToInt64("xxx"))
 	as.Equal("", m.ToString("xxx"))
-	HeaderPool()
 }

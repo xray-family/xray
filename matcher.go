@@ -1,10 +1,16 @@
-package uRouter
+package xray
 
 import (
-	"github.com/lxzan/uRouter/internal"
+	"github.com/lxzan/xray/internal"
 )
 
 const defaultVarPrefix = ':' // 默认变量前缀
+
+type matcher interface {
+	Set(handler *apiHandler)
+	Get(action, path string) (*apiHandler, bool)
+	Range(f func(h *apiHandler))
+}
 
 type routeTree struct {
 	Value    *apiHandler
@@ -26,7 +32,7 @@ func isVar(s string) bool {
 func hasVar(s string) bool {
 	var n = len(s)
 	for i := 0; i < n-1; i++ {
-		if s[i] == SEP[0] && s[i+1] == defaultVarPrefix {
+		if s[i] == _sep[0] && s[i+1] == defaultVarPrefix {
 			return true
 		}
 	}
@@ -90,20 +96,6 @@ func (c *routeTree) Get(path string) (*apiHandler, bool) {
 	return nil, false
 }
 
-//func (c *routeTree) doGet(node *routeTree, index int, list []string) (*apiHandler, bool) {
-//	if index == len(list) {
-//		return node.Value, node.Value != nil
-//	}
-//	var segment = list[index]
-//	if v, ok := node.Children[segment]; ok {
-//		return c.doGet(v, index+1, list)
-//	}
-//	if v, ok := node.Children["*"]; ok {
-//		return c.doGet(v, index+1, list)
-//	}
-//	return nil, false
-//}
-
 func (c *routeTree) Range(f func(h *apiHandler)) {
 	c.doRange(c, f)
 }
@@ -120,37 +112,83 @@ func (c *routeTree) doRange(node *routeTree, f func(h *apiHandler)) {
 	}
 }
 
+type staticMatcher map[string]map[string]*apiHandler
+
+func (c staticMatcher) Set(h *apiHandler) {
+	if _, ok := c[h.Method]; !ok {
+		c[h.Method] = make(map[string]*apiHandler)
+	}
+	c[h.Method][h.Path] = h
+}
+
+func (c staticMatcher) Get(action, path string) (*apiHandler, bool) {
+	v1, ok1 := c[action]
+	if !ok1 {
+		return nil, false
+	}
+	v2, ok2 := v1[path]
+	return v2, ok2
+}
+
+func (c staticMatcher) Range(f func(h *apiHandler)) {
+	for _, routes := range c {
+		for _, handler := range routes {
+			f(handler)
+		}
+	}
+}
+
+type dynamicMatcher map[string]*routeTree
+
+func (c dynamicMatcher) Set(h *apiHandler) {
+	if _, ok := c[h.Method]; !ok {
+		c[h.Method] = newRouteTree()
+	}
+	c[h.Method].Set(h)
+}
+
+func (c dynamicMatcher) Get(action, path string) (*apiHandler, bool) {
+	v1, ok1 := c[action]
+	if !ok1 {
+		return nil, false
+	}
+	return v1.Get(path)
+}
+
+func (c dynamicMatcher) Range(f func(h *apiHandler)) {
+	for _, tree := range c {
+		tree.Range(f)
+	}
+}
+
 // 查找接口绑定的处理函数
 func getApiHandler(r *Router, action string, path string) (*apiHandler, bool) {
-	if v1, ok1 := r.staticRoutes[action]; ok1 {
-		if v2, ok2 := v1[path]; ok2 {
-			return v2, true
-		}
+	if v, ok := r.staticMatcher.Get(action, path); ok {
+		return v, ok
 	}
-	if v1, ok1 := r.dynamicRoutes[action]; ok1 {
-		if v2, ok2 := v1.Get(path); ok2 {
-			return v2, true
-		}
-	}
-	return nil, false
+	return r.dynamicMatcher.Get(action, path)
 }
 
 // 设置接口绑定的处理函数
 func setApiHandler(r *Router, action string, path string, api *apiHandler) {
+	// 检测冲突
+	if v, exists := getApiHandler(r, action, path); exists {
+		r.reportConflict(api, v)
+	}
+
+	// 静态路由
 	if !hasVar(path) {
-		m, ok := r.staticRoutes[action]
-		if !ok {
-			m = map[string]*apiHandler{}
-			r.staticRoutes[action] = m
-		}
-		m[path] = api
+		r.staticMatcher.Set(api)
 		return
 	}
 
-	m, ok := r.dynamicRoutes[action]
-	if !ok {
-		m = newRouteTree()
-		r.dynamicRoutes[action] = m
-	}
-	m.Set(api)
+	// 动态路由
+	r.dynamicMatcher.Set(api)
+
+	// 检测冲突
+	r.staticMatcher.Range(func(h *apiHandler) {
+		if _, exists := r.dynamicMatcher.Get(h.Method, h.Path); exists {
+			r.reportConflict(api, h)
+		}
+	})
 }

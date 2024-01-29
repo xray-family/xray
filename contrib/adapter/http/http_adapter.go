@@ -1,27 +1,25 @@
 package http
 
 import (
-	"github.com/lxzan/uRouter"
+	"github.com/lxzan/xray"
 	"net/http"
 )
 
-type responseWriter struct {
-	http.ResponseWriter
-}
+type responseWriter struct{ http.ResponseWriter }
 
 func (c *responseWriter) Protocol() string {
-	return uRouter.ProtocolHTTP
+	return xray.ProtocolHTTP
 }
 
-func (c *responseWriter) Header() uRouter.Header {
-	return uRouter.NewHttpHeader(c.ResponseWriter.Header())
+func (c *responseWriter) Header() xray.Header {
+	return &xray.HttpHeader{Header: c.ResponseWriter.Header()}
 }
 
 func (c *responseWriter) Code(code int) {
 	c.ResponseWriter.WriteHeader(code)
 }
 
-func (c *responseWriter) Raw() interface{} {
+func (c *responseWriter) Raw() any {
 	return c.ResponseWriter
 }
 
@@ -29,29 +27,23 @@ func (c *responseWriter) Flush() error {
 	return nil
 }
 
-func NewAdapter(router *uRouter.Router) *Adapter {
+func NewAdapter(router *xray.Router) *Adapter {
 	return &Adapter{router: router}
 }
 
 // Adapter HTTP适配器
 type Adapter struct {
-	router *uRouter.Router
-}
-
-// SetRouter 设置路由器
-func (c *Adapter) SetRouter(r *uRouter.Router) *Adapter {
-	c.router = r
-	return c
+	router *xray.Router
 }
 
 // ServeHTTP 服务HTTP
 func (c *Adapter) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	var r = &uRouter.Request{
+	var r = &xray.Request{
 		Raw:    request,
-		Header: uRouter.NewHttpHeader(request.Header),
+		Header: &xray.HttpHeader{Header: request.Header},
 		Body:   request.Body,
-		Action: request.Method,
+		Method: request.Method,
 	}
-	var ctx = uRouter.NewContext(r, &responseWriter{ResponseWriter: writer})
-	c.router.EmitEvent(r.Action, request.URL.Path, ctx)
+	var ctx = xray.NewContext(c.router, r, &responseWriter{ResponseWriter: writer})
+	c.router.EmitEvent(r.Method, request.URL.Path, ctx)
 }

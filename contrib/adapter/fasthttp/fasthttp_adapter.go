@@ -2,15 +2,27 @@ package fasthttp
 
 import (
 	"bytes"
-	"github.com/lxzan/uRouter"
+	"github.com/lxzan/xray"
 	"github.com/valyala/fasthttp"
+	"io"
 	"reflect"
 	"unsafe"
 )
 
+type readCloser struct {
+	payload []byte
+	reader  io.Reader
+}
+
+func (c *readCloser) Close() error { return nil }
+
+func (c *readCloser) Read(p []byte) (n int, err error) { return c.reader.Read(p) }
+
+func (c *readCloser) Bytes() []byte { return c.payload }
+
 type responseWriter struct {
 	writer *fasthttp.Response
-	header uRouter.Header
+	header xray.Header
 }
 
 func (c *responseWriter) Write(p []byte) (n int, err error) {
@@ -18,10 +30,10 @@ func (c *responseWriter) Write(p []byte) (n int, err error) {
 }
 
 func (c *responseWriter) Protocol() string {
-	return uRouter.ProtocolHTTP
+	return xray.ProtocolHTTP
 }
 
-func (c *responseWriter) Header() uRouter.Header {
+func (c *responseWriter) Header() xray.Header {
 	return c.header
 }
 
@@ -29,7 +41,7 @@ func (c *responseWriter) Code(code int) {
 	c.writer.SetStatusCode(code)
 }
 
-func (c *responseWriter) Raw() interface{} {
+func (c *responseWriter) Raw() any {
 	return c.writer
 }
 
@@ -37,35 +49,36 @@ func (c *responseWriter) Flush() error {
 	return nil
 }
 
-func NewAdapter(router *uRouter.Router) *Adapter {
+func NewAdapter(router *xray.Router) *Adapter {
 	return &Adapter{router: router}
 }
 
 // Adapter FastHTTP适配器
 type Adapter struct {
-	router *uRouter.Router
+	router *xray.Router
 }
 
 // SetRouter 设置路由器
-func (c *Adapter) SetRouter(r *uRouter.Router) *Adapter {
+func (c *Adapter) SetRouter(r *xray.Router) *Adapter {
 	c.router = r
 	return c
 }
 
 // ServeFastHTTP 服务HTTP
 func (c *Adapter) ServeFastHTTP(ctx *fasthttp.RequestCtx) {
-	var r = &uRouter.Request{
+	var body = ctx.Request.Body()
+	var r = &xray.Request{
 		Raw:    &ctx.Request,
 		Header: &requestHeader{RequestHeader: &ctx.Request.Header},
-		Action: b2s(ctx.Method()),
-		Body:   bytes.NewBuffer(ctx.Request.Body()),
+		Method: b2s(ctx.Method()),
+		Body:   &readCloser{payload: body, reader: bytes.NewReader(body)},
 	}
 
-	var uctx = uRouter.NewContext(r, &responseWriter{
+	var uctx = xray.NewContext(c.router, r, &responseWriter{
 		writer: &ctx.Response,
 		header: &responseHeader{ResponseHeader: &ctx.Response.Header},
 	})
-	c.router.EmitEvent(r.Action, b2s(ctx.Request.URI().Path()), uctx)
+	c.router.EmitEvent(r.Method, b2s(ctx.Request.URI().Path()), uctx)
 }
 
 // b2s converts byte slice to a string without memory allocation.
@@ -97,15 +110,19 @@ type requestHeader struct {
 	*fasthttp.RequestHeader
 }
 
-func (c *requestHeader) Generate() uRouter.Header { return nil }
-
-func (c *requestHeader) Close() {}
+func (c *requestHeader) New() xray.Header {
+	return &requestHeader{}
+}
 
 func (c *requestHeader) Get(key string) string { return b2s(c.Peek(key)) }
 
-func (c *requestHeader) Range(f func(key string, value string)) {
+func (c *requestHeader) Range(f func(key string, value string) bool) {
+	next := true
 	c.VisitAll(func(key, value []byte) {
-		f(b2s(key), b2s(value))
+		if !next {
+			return
+		}
+		next = f(b2s(key), b2s(value))
 	})
 }
 
@@ -113,14 +130,16 @@ type responseHeader struct {
 	*fasthttp.ResponseHeader
 }
 
-func (c *responseHeader) Generate() uRouter.Header { return nil }
-
-func (c *responseHeader) Close() {}
+func (c *responseHeader) New() xray.Header { return &responseHeader{} }
 
 func (c *responseHeader) Get(key string) string { return b2s(c.Peek(key)) }
 
-func (c *responseHeader) Range(f func(key string, value string)) {
+func (c *responseHeader) Range(f func(key string, value string) bool) {
+	next := true
 	c.VisitAll(func(key, value []byte) {
-		f(b2s(key), b2s(value))
+		if !next {
+			return
+		}
+		next = f(b2s(key), b2s(value))
 	})
 }

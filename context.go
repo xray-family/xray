@@ -1,10 +1,8 @@
-package uRouter
+package xray
 
 import (
-	"github.com/lxzan/uRouter/constant"
-	"github.com/lxzan/uRouter/internal"
+	"github.com/lxzan/xray/internal"
 	"io"
-	"strings"
 )
 
 type (
@@ -26,24 +24,23 @@ type (
 		Flush() error
 
 		// Raw 获取原生响应写入器
-		Raw() interface{}
+		Raw() any
 	}
 
 	// Request 请求
 	Request struct {
 		// 原始请求结构
 		// original request structure
-		Raw interface{}
+		Raw any
 
 		// 请求头
 		Header Header
 
 		// 请求体
-		Body io.Reader
+		Body io.ReadCloser
 
-		// 请求动作修饰词
-		// 在HTTP里它是必选的; 其它协议中可选;
-		Action string
+		// 请求方法
+		Method string
 
 		// 接口定义的虚拟路径
 		// The virtual path defined in the interface
@@ -59,6 +56,9 @@ type (
 		// 中间件游标
 		// middleware cursor
 		index int
+
+		// 配置
+		conf *config
 
 		// 缓存
 		// session storage
@@ -76,34 +76,15 @@ type (
 	}
 )
 
-// Close 关闭资源
-// close the resource
-func Close(resource interface{}) {
-	if v, ok := resource.(io.Closer); ok {
-		_ = v.Close()
-		return
-	}
-	if v, ok := resource.(Closer); ok {
-		v.Close()
-	}
-}
-
-func NewContext(request *Request, writer ResponseWriter) *Context {
+func NewContext(router *Router, request *Request, writer ResponseWriter) *Context {
 	return &Context{
 		index:    0,
+		conf:     router.conf,
 		storage:  Any{},
 		handlers: []HandlerFunc{},
 		Request:  request,
 		Writer:   writer,
 	}
-}
-
-// Close 关闭请求, 回收Header和Body资源
-func (c *Request) Close() {
-	c.Header.Close()
-	Close(c.Body)
-	c.Header = nil
-	c.Body = nil
 }
 
 // Next 执行下一个中间件
@@ -115,23 +96,23 @@ func (c *Context) Next() {
 }
 
 // Set 设置缓存内容
-func (c *Context) Set(key string, val interface{}) {
+func (c *Context) Set(key string, val any) {
 	c.storage[key] = val
 }
 
 // Get 获取缓存内容
-func (c *Context) Get(key string) (interface{}, bool) {
+func (c *Context) Get(key string) (any, bool) {
 	val, ok := c.storage[key]
 	return val, ok
 }
 
 // WriteJSON 写入JSON
-func (c *Context) WriteJSON(code int, v interface{}) error {
+func (c *Context) WriteJSON(code int, v any) error {
 	if c.Writer.Protocol() == ProtocolHTTP {
-		c.Writer.Header().Set(constant.ContentType, constant.MimeJson)
+		c.Writer.Header().Set(ContentType, MimeJson)
 	}
 	c.Writer.Code(code)
-	if err := JsonCodec().NewEncoder(c.Writer).Encode(v); err != nil {
+	if err := c.conf.jsonCodec.NewEncoder(c.Writer).Encode(v); err != nil {
 		return err
 	}
 	return c.Writer.Flush()
@@ -148,29 +129,16 @@ func (c *Context) WriteBytes(code int, p []byte) error {
 
 // WriteString 写入字节流
 func (c *Context) WriteString(code int, s string) error {
-	return c.WriteReader(code, strings.NewReader(s))
-}
-
-// WriteReader 写入Reader
-func (c *Context) WriteReader(code int, r io.Reader) (err error) {
-	c.Writer.Code(code)
-	if v, ok := r.(BytesReader); ok {
-		err = internal.Write(c.Writer, v.Bytes())
-	} else {
-		err = internal.Copy(c.Writer, r)
-	}
-	if err != nil {
-		return err
-	}
-	return c.Writer.Flush()
+	return c.WriteBytes(code, []byte(s))
 }
 
 // BindJSON 绑定请求数据
-func (c *Context) BindJSON(v interface{}) error {
+func (c *Context) BindJSON(v any) error {
+	defer c.Request.Body.Close()
 	if r, ok := c.Request.Body.(BytesReader); ok {
-		return JsonCodec().Decode(r.Bytes(), v)
+		return c.conf.jsonCodec.Decode(r.Bytes(), v)
 	}
-	return JsonCodec().NewDecoder(c.Request.Body).Decode(v)
+	return c.conf.jsonCodec.NewDecoder(c.Request.Body).Decode(v)
 }
 
 // Param 获取路径中的参数

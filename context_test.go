@@ -1,27 +1,24 @@
-package uRouter
+package xray
 
 import (
 	"bytes"
 	"errors"
-	"github.com/lxzan/uRouter/codec"
-	"github.com/lxzan/uRouter/constant"
+	"github.com/lxzan/xray/codec"
 	"github.com/stretchr/testify/assert"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
 )
 
-func newMapHeader() *MapHeader {
-	return MapHeaderTemplate.Generate().(*MapHeader)
-}
-
-func newContextMocker() *Context {
+func newContextMocker(options ...Option) *Context {
+	var router = New(options...)
 	var request = &Request{
 		Header: HttpHeader{Header: http.Header{}},
-		Body:   bytes.NewBuffer(nil),
+		Body:   io.NopCloser(bytes.NewBuffer(nil)),
 	}
 	var writer = newResponseWriterMocker()
-	var ctx = NewContext(request, writer)
+	var ctx = NewContext(router, request, writer)
 	return ctx
 }
 
@@ -54,7 +51,7 @@ func (c *responseWriterMocker) Header() Header {
 }
 
 func (c *responseWriterMocker) Write(p []byte) (int, error) {
-	if len(p) == 0 {
+	if strings.TrimSpace(string(p)) == `"err"` {
 		return 0, errors.New("test error")
 	}
 	return c.buf.Write(p)
@@ -68,7 +65,7 @@ func (c *responseWriterMocker) Flush() error {
 	return nil
 }
 
-func (c *responseWriterMocker) Raw() interface{} {
+func (c *responseWriterMocker) Raw() any {
 	return nil
 }
 
@@ -77,7 +74,7 @@ func TestContext_BindJSON(t *testing.T) {
 
 	t.Run("", func(t *testing.T) {
 		var ctx = newContextMocker()
-		ctx.Request.Body = bytes.NewBufferString(`{"age":1}`)
+		ctx.Request.Body = io.NopCloser(bytes.NewBufferString(`{"age":1}`))
 		var params = struct {
 			Age int `json:"age"`
 		}{}
@@ -87,7 +84,7 @@ func TestContext_BindJSON(t *testing.T) {
 
 	t.Run("", func(t *testing.T) {
 		var ctx = newContextMocker()
-		ctx.Request.Body = strings.NewReader(`{"age":1}`)
+		ctx.Request.Body = io.NopCloser(strings.NewReader(`{"age":1}`))
 		var params = struct {
 			Age int `json:"age"`
 		}{}
@@ -97,7 +94,7 @@ func TestContext_BindJSON(t *testing.T) {
 
 	t.Run("", func(t *testing.T) {
 		var ctx = newContextMocker()
-		ctx.Request.Body = bytes.NewBufferString(`{"age":"1}`)
+		ctx.Request.Body = io.NopCloser(bytes.NewBufferString(`{"age":"1}`))
 		var params = struct {
 			Age int `json:"age"`
 		}{}
@@ -125,17 +122,10 @@ func TestContext_Write(t *testing.T) {
 		}
 		var writer = ctx.Writer.(*responseWriterMocker)
 		as.Equal(http.StatusOK, writer.statusCode)
-		as.Equal(constant.MimeJson, writer.header.Get(constant.ContentType))
+		as.Equal(MimeJson, writer.header.Get(ContentType))
 		var buf = bytes.NewBufferString("")
-		defaultJsonCodec.NewEncoder(buf).Encode(params)
+		codec.StdJsonCodec.NewEncoder(buf).Encode(params)
 		as.Equal(buf.Len(), writer.buf.Len())
-	})
-
-	t.Run("write json 2", func(t *testing.T) {
-		var ctx = newContextMocker()
-		var header = &headerMocker{newMapHeader()}
-		header.Set(constant.ContentType, constant.MimeJson)
-		as.Error(ctx.WriteJSON(http.StatusOK, header))
 	})
 
 	t.Run("write string", func(t *testing.T) {
@@ -147,7 +137,7 @@ func TestContext_Write(t *testing.T) {
 		}
 		var writer = ctx.Writer.(*responseWriterMocker)
 		as.Equal(http.StatusOK, writer.statusCode)
-		as.Equal("", writer.header.Get(constant.ContentType))
+		as.Equal("", writer.header.Get(ContentType))
 		as.Equal(params, writer.buf.String())
 	})
 
@@ -160,25 +150,19 @@ func TestContext_Write(t *testing.T) {
 		}
 		var writer = ctx.Writer.(*responseWriterMocker)
 		as.Equal(http.StatusOK, writer.statusCode)
-		as.Equal("", writer.header.Get(constant.ContentType))
+		as.Equal("", writer.header.Get(ContentType))
 		as.Equal(string(params), writer.buf.String())
-	})
-
-	t.Run("write reader 1", func(t *testing.T) {
-		var ctx = newContextMocker()
-		var header = &headerMocker{newMapHeader()}
-		header.Set(constant.ContentType, constant.MimeJson)
-		as.Error(ctx.WriteReader(http.StatusOK, header))
-	})
-
-	t.Run("write reader 2", func(t *testing.T) {
-		var ctx = newContextMocker()
-		as.Error(ctx.WriteReader(http.StatusOK, bytes.NewBufferString("")))
 	})
 
 	t.Run("write bytes", func(t *testing.T) {
 		var ctx = newContextMocker()
-		as.Error(ctx.WriteBytes(http.StatusOK, []byte{}))
+		as.Error(ctx.WriteBytes(http.StatusOK, []byte(`"err"`)))
+	})
+
+	t.Run("write json", func(t *testing.T) {
+		var ctx = newContextMocker()
+		var err = ctx.WriteJSON(200, "err")
+		as.Error(err)
 	})
 }
 
@@ -197,21 +181,13 @@ func TestContext_Storage(t *testing.T) {
 	}
 }
 
-func TestContext_Others(t *testing.T) {
-	var as = assert.New(t)
-	var ctx = newContextMocker()
-	SetJsonCodec(codec.StdJsonCodec)
-	SetBufferPool(newBufferPool())
-	as.Nil(ctx.Request.Raw)
-	as.Nil(ctx.Writer.Raw())
-}
-
 func TestContext_Param(t *testing.T) {
 	var as = assert.New(t)
+	var router = New()
 
 	t.Run("", func(t *testing.T) {
-		var ctx = NewContext(&Request{
-			Header: NewHttpHeader(http.Header{}),
+		var ctx = NewContext(router, &Request{
+			Header: &HttpHeader{http.Header{}},
 			VPath:  "/:id",
 		}, newResponseWriterMocker())
 		id := ctx.Param("id")
@@ -219,8 +195,8 @@ func TestContext_Param(t *testing.T) {
 	})
 
 	t.Run("", func(t *testing.T) {
-		var ctx = NewContext(&Request{
-			Header: NewHttpHeader(http.Header{}),
+		var ctx = NewContext(router, &Request{
+			Header: &HttpHeader{http.Header{}},
 			VPath:  "/api/v1",
 		}, newResponseWriterMocker())
 		id := ctx.Param("id")
@@ -228,7 +204,7 @@ func TestContext_Param(t *testing.T) {
 	})
 
 	t.Run("", func(t *testing.T) {
-		var ctx = NewContext(&Request{
+		var ctx = NewContext(router, &Request{
 			VPath: "/api/v1",
 			RPath: "/api/v1",
 		}, newResponseWriterMocker())
@@ -237,9 +213,15 @@ func TestContext_Param(t *testing.T) {
 	})
 }
 
+type closer struct{ *bytes.Buffer }
+
+func (c *closer) Close() error { return nil }
+
 func TestRequest_Close(t *testing.T) {
-	var r = &Request{Header: NewHttpHeader(http.Header{}), Body: bytes.NewBufferString("")}
-	r.Close()
-	assert.Nil(t, r.Body)
-	assert.Nil(t, r.Header)
+	var req = &Request{Header: &HttpHeader{http.Header{}}, Body: &closer{bytes.NewBufferString(`{"hello":"world"}`)}}
+	var ctx = newContextMocker()
+	ctx.Request = req
+	var res = make(map[string]string)
+	ctx.BindJSON(&res)
+	assert.Equal(t, res["hello"], "world")
 }

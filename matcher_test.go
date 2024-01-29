@@ -1,7 +1,7 @@
-package uRouter
+package xray
 
 import (
-	"github.com/lxzan/uRouter/internal"
+	"github.com/lxzan/xray/internal"
 	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
@@ -82,7 +82,7 @@ func BenchmarkRouteTree_Get(b *testing.B) {
 			arr = append(arr, ele)
 		}
 
-		path := SEP + strings.Join(arr, SEP)
+		path := _sep + strings.Join(arr, _sep)
 		list = append(list, path)
 		api := &apiHandler{Path: path}
 		tree.Set(api)

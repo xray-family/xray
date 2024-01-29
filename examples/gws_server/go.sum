@@ -10,8 +10,8 @@ github.com/klauspost/compress v1.16.5 h1:IFV2oUNUzZaz+XyusxpLzpzS8Pt5rh0Z16For/d
 github.com/klauspost/compress v1.16.5/go.mod h1:ntbaceVETuRiXiv4DpjP66DpAtAGkEQskQzEyD//IeE=
 github.com/lxzan/gws v1.5.1 h1:0ZAk1zK8cP0voUWd6f3GmfuuBYfPJjgN4jDTFWnmsLA=
 github.com/lxzan/gws v1.5.1/go.mod h1:dsC6S7kJNh+iWqqu2HiO8tnNCji04HwyJCYfTOS+6iY=
-github.com/lxzan/uRouter/contrib/codec/jsoniter v0.0.0-20230208023827-6baa50a514b5 h1:3eNC7Y0TnepLYOxzLYKAcH9IQaz3nLF1ChaT4QVCEGU=
-github.com/lxzan/uRouter/contrib/codec/jsoniter v0.0.0-20230208023827-6baa50a514b5/go.mod h1:y69wPiDX48SbcrRS4l4EkmJxmHaFIEHt6kh9NdC9V0E=
+github.com/lxzan/xray/contrib/codec/jsoniter v0.0.0-20230208023827-6baa50a514b5 h1:3eNC7Y0TnepLYOxzLYKAcH9IQaz3nLF1ChaT4QVCEGU=
+github.com/lxzan/xray/contrib/codec/jsoniter v0.0.0-20230208023827-6baa50a514b5/go.mod h1:y69wPiDX48SbcrRS4l4EkmJxmHaFIEHt6kh9NdC9V0E=
 github.com/mattn/go-colorable v0.1.12 h1:jF+Du6AlPIjs2BiUiQlKOX0rt3SujHxPnksPKZbaA40=
 github.com/mattn/go-colorable v0.1.12/go.mod h1:u5H1YNBxpqRaxsYJYSkiCWKzEfiAb1Gb520KVy5xxl4=
 github.com/mattn/go-isatty v0.0.14 h1:yVuAays6BHfxijgZPzw+3Zlu5yQgKGP2/hcQbHb7S9Y=

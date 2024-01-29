@@ -1,0 +1,16 @@
+go 1.18
+
+use (
+	.
+	./contrib/adapter/fasthttp
+	./contrib/adapter/gws
+	./contrib/adapter/http
+	./contrib/codec/jsoniter
+	./contrib/codec/wwwform
+	./contrib/doc/swagger
+	./contrib/log/zerolog
+	./examples/fasthttp_server
+	./examples/gws_server
+	./examples/http3_server
+	./examples/http_server
+)
