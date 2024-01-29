@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/lxzan/xray"
-	httpAdapter "github.com/lxzan/xray/contrib/adapter/http"
+	"github.com/xray-family/xray"
+	httpAdapter "github.com/xray-family/xray/contrib/adapter/http"
 	"net/http"
 )
 
@@ -16,7 +16,7 @@ func NewController() *Controller {
 
 func (c *Controller) Mapping(group *xray.Group) *Controller {
 	group.OnEvent(http.MethodGet, "/greet/:name", c.Greet)
-	group.OnPOST("/test", c.Test)
+	group.POST("/test", c.Test)
 	return c
 }
 

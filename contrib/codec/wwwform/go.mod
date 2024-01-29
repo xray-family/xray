@@ -1,13 +1,13 @@
-module github.com/lxzan/xray/contrib/codec/wwwform
+module github.com/xray-family/xray/contrib/codec/wwwform
 
 go 1.18
 
-replace github.com/lxzan/xray => ../../../
+replace github.com/xray-family/xray v0.0.1 => ../../../
 
 require (
 	github.com/go-playground/form/v4 v4.2.1
-	github.com/lxzan/xray v1.0.0
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.4
+	github.com/xray-family/xray v0.0.1
 )
 
 require (

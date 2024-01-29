@@ -2,7 +2,7 @@ package jsoniter
 
 import (
 	json "github.com/json-iterator/go"
-	"github.com/lxzan/xray/codec"
+	"github.com/xray-family/xray/codec"
 	"io"
 )
 

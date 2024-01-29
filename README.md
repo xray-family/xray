@@ -1,30 +1,28 @@
-# xray
+# Xray
 
 universal router for http, websocket and custom protocol, one is all.
 
-Hats off to express, koa, gin!
-
 [![Build Status][1]][2] [![MIT licensed][3]][4] [![Go Version][5]][6] [![codecov][7]][8] [![Go Report Card][9]][10]
 
-[1]: https://github.com/lxzan/xray/workflows/Go%20Test/badge.svg?branch=main
+[1]: https://github.com/xray-family/xray/workflows/Go%20Test/badge.svg?branch=main
 
-[2]: https://github.com/lxzan/xray/actions?query=branch%3Amain
+[2]: https://github.com/xray-family/xray/actions?query=branch%3Amain
 
 [3]: https://img.shields.io/badge/license-MIT-blue.svg
 
 [4]: LICENSE
 
-[5]: https://img.shields.io/badge/go-%3E%3D1.16-30dff3?style=flat-square&logo=go
+[5]: https://img.shields.io/badge/go-%3E%3D1.18-30dff3?style=flat-square&logo=go
 
-[6]: https://github.com/lxzan/xray
+[6]: https://github.com/xray-family/xray
 
 [7]: https://codecov.io/gh/lxzan/xray/branch/main/graph/badge.svg?token=0Tx9xH9Lvd
 
 [8]: https://codecov.io/gh/lxzan/xray
 
-[9]: https://goreportcard.com/badge/github.com/lxzan/xray
+[9]: https://goreportcard.com/badge/github.com/xray-family/xray
 
-[10]: https://goreportcard.com/report/github.com/lxzan/xray
+[10]: https://goreportcard.com/report/github.com/xray-family/xray
 
 #### Feature
 
@@ -32,29 +30,29 @@ Hats off to express, koa, gin!
 - no dependence
 - dynamic separation matching request paths, powered by map and trie
 - the onion model middleware, router group
-- adapt to `http`, `http2`, `http3`, `fasthttp`, `lxzan/gws`, `gorilla/websocket` ...
+- adapt to `http`, `fasthttp`, `lxzan/gws` ...
 
 #### Index
 
-- [xray](#xray)
-    - [Feature](#feature)
-    - [Quick Start](#quick-start)
-    - [WebSocket](#websocket)
-        - [Server](#server)
-        - [Client](#client)
-    - [Route](#route)
-        - [Static](#static)
-        - [Dynamic](#dynamic)
-    - [Middleware](#middleware)
-    - [Codec](#codec)
-        - [WWW Form Codec](#www-form-codec)
-        - [JSON Codec](#json-codec)
-        - [Header Codec (Not applicable to HTTP)](#header-codec-not-applicable-to-http)
-    - [Swagger](#swagger)
-    - [Benchmark](#benchmark)
-        - [RPS](#rps)
-        - [Route Algorithm](#route-algorithm)
-    - [Acknowledgements](#acknowledgements)
+- [Xray](#xray)
+  - [Feature](#feature)
+  - [Index](#index)
+  - [Quick Start](#quick-start)
+  - [WebSocket](#websocket)
+    - [Server](#server)
+    - [Client](#client)
+  - [Route](#route)
+    - [Static](#static)
+    - [Dynamic](#dynamic)
+  - [Middleware](#middleware)
+  - [Codec](#codec)
+    - [WWW Form Codec](#www-form-codec)
+    - [JSON Codec](#json-codec)
+  - [Swagger](#swagger)
+  - [Benchmark](#benchmark)
+    - [RPS](#rps)
+    - [Route Algorithm](#route-algorithm)
+  - [Acknowledgements](#acknowledgements)
 
 #### Quick Start
 
@@ -62,38 +60,36 @@ Hats off to express, koa, gin!
 package main
 
 import (
-    "github.com/lxzan/xray"
-    httpAdapter "github.com/lxzan/xray/contrib/adapter/http"
-    "github.com/lxzan/xray/contrib/codec/jsoniter"
-    "github.com/lxzan/xray/contrib/log/zerolog"
+    "github.com/xray-family/xray"
+    httpAdapter "github.com/xray-family/xray/contrib/adapter/http"
+    "github.com/xray-family/xray/contrib/codec/jsoniter"
+    "github.com/xray-family/xray/contrib/log/zerolog"
     "net/http"
 )
 
-func init() {
-    xray.SetJsonCodec(jsoniter.JsoniterCodec)
-    xray.SetLogger(zerolog.ZeroLogger)
-}
-
 func main() {
-    var router = xray.New()
+    var router = xray.New(
+        xray.WithJsonCodec(jsoniter.Codec),
+        xray.WithLogger(zerolog.Logger),
+    )
     router.Use(xray.Recovery(), xray.AccessLog())
     var group = router.Group("/api/v1")
 
-    group.OnGET("/user/list", func(ctx *xray.Context) {
+    group.GET("/user/list", func(ctx *xray.Context) {
         _ = ctx.WriteJSON(http.StatusOK, []string{"ming", "hong"})
     })
 
-    group.OnPOST("/user/:name", func(ctx *xray.Context) {
+    group.POST("/user/:name", func(ctx *xray.Context) {
         _ = ctx.WriteJSON(http.StatusOK, xray.Any{
             "hello": ctx.Param("name"),
         })
     })
 
-    router.Start()
     if err := http.ListenAndServe(":3000", httpAdapter.NewAdapter(router)); err != nil {
-        xray.Logger().Panic(err.Error())
+        zerolog.Logger.Panic(err.Error())
     }
 }
+
 ```
 
 - Output
@@ -109,55 +105,51 @@ package main
 
 import (
     "github.com/lxzan/gws"
-    "github.com/lxzan/xray"
-    gwsAdapter "github.com/lxzan/xray/contrib/adapter/gws"
-    httpAdapter "github.com/lxzan/xray/contrib/adapter/http"
-    "github.com/lxzan/xray/contrib/codec/jsoniter"
-    "github.com/lxzan/xray/contrib/log/zerolog"
+    "github.com/xray-family/xray"
+    gwsAdapter "github.com/xray-family/xray/contrib/adapter/gws"
+    httpAdapter "github.com/xray-family/xray/contrib/adapter/http"
+    "github.com/xray-family/xray/contrib/codec/jsoniter"
+    "github.com/xray-family/xray/contrib/log/zerolog"
     "net/http"
 )
 
-func init() {
-    xray.SetLogger(zerolog.ZeroLogger)
-    xray.SetJsonCodec(jsoniter.JsoniterCodec)
-}
-
 func main() {
-    router := xray.New()
+    router := xray.New(
+        xray.WithLogger(zerolog.Logger),
+        xray.WithJsonCodec(jsoniter.Codec),
+    )
     router.Use(xray.Recovery(), xray.AccessLog())
 
-    upgrader := gws.NewUpgrader(func(c *gws.Upgrader) {
-        c.EventHandler = &WebSocketHandler{adapter: gwsAdapter.NewAdapter(router)}
-    })
+    handler := &WebSocketHandler{adapter: gwsAdapter.NewAdapter(router)}
+    upgrader := gws.NewUpgrader(handler, nil)
 
-    router.OnGET("/connect", func(ctx *xray.Context) {
-        socket, err := upgrader.Accept(ctx.Writer.Raw().(http.ResponseWriter), ctx.Request.Raw.(*http.Request))
+    router.GET("/connect", func(ctx *xray.Context) {
+        socket, err := upgrader.Upgrade(ctx.Writer.Raw().(http.ResponseWriter), ctx.Request.Raw.(*http.Request))
         if err != nil {
-            xray.Logger().Error(err.Error())
+            zerolog.Logger.Error(err.Error())
             return
         }
-        go socket.Listen()
+        go socket.ReadLoop()
     })
 
-    router.On("/greet", func(ctx *xray.Context) {
-        ctx.Writer.Header().Set("content-type", "plain/text")
-        _ = ctx.WriteString(int(gws.OpcodeText), "hello!")
+    router.GET("/greet/:name", func(ctx *xray.Context) {
+        ctx.Writer.Header().Set(xray.ContentType, "plain/text")
+        _ = ctx.WriteString(http.StatusOK, "world!")
     })
 
-    router.Start()
     if err := http.ListenAndServe(":3000", httpAdapter.NewAdapter(router)); err != nil {
-        xray.Logger().Panic(err.Error())
+        zerolog.Logger.Panic(err.Error())
     }
 }
 
 type WebSocketHandler struct {
-    gws.BuiltinEventEngine
+    gws.BuiltinEventHandler
     adapter *gwsAdapter.Adapter
 }
 
 func (c *WebSocketHandler) OnMessage(socket *gws.Conn, message *gws.Message) {
     if err := c.adapter.ServeWebSocket(socket, message); err != nil {
-        xray.Logger().Error(err.Error())
+        zerolog.Logger.Error(err.Error())
     }
 }
 
@@ -167,7 +159,7 @@ func (c *WebSocketHandler) OnMessage(socket *gws.Conn, message *gws.Message) {
 
 ```js
 let ws = new WebSocket('ws://127.0.0.1:3000/connect');
-ws.send('0033{"U-Path":"/greet","U-Action":""}{"hello":"world!"}');
+ws.send('0047[["X-Path","/greet/caster"],["X-Method","GET"]]hello');
 ```
 
 #### Route
@@ -175,13 +167,13 @@ ws.send('0033{"U-Path":"/greet","U-Action":""}{"hello":"world!"}');
 ##### Static
 
 ```go
-router.OnGET("/ping", func (ctx *xray.Context) {})
+router.GET("/ping", func (ctx *xray.Context) {})
 ```
 
 ##### Dynamic
 
 ```go
-router.OnPOST("/user/:id", func (ctx *xray.Context) {})
+router.POST("/user/:id", func (ctx *xray.Context) {})
 ```
 
 #### Middleware
@@ -192,36 +184,33 @@ router.OnPOST("/user/:id", func (ctx *xray.Context) {})
 package main
 
 import (
-    "fmt"
-    "github.com/lxzan/xray"
-    http2 "github.com/lxzan/xray/contrib/adapter/http"
+    "github.com/xray-family/xray"
+    httpAdapter "github.com/xray-family/xray/contrib/adapter/http"
     "net/http"
 )
 
 func main() {
     var router = xray.New()
 
-    var list []int
     router.Use(func(ctx *xray.Context) {
-        list = append(list, 1)
+        print(1)
         ctx.Next()
-        list = append(list, 2)
-        fmt.Printf("%v\n", list)
+        print(2)
     })
 
     var group = router.Group("/api/v1", func(ctx *xray.Context) {
-        list = append(list, 3)
+        print(3)
         ctx.Next()
-        list = append(list, 4)
+        print(4)
     })
 
-    group.OnGET("/greet", func(ctx *xray.Context) {
-        list = append(list, 5)
+    group.GET("/greet", func(ctx *xray.Context) {
+        print(5)
     })
 
-    router.Start()
-    _ = http.ListenAndServe(":3000", http2.NewAdapter(router))
+    _ = http.ListenAndServe(":3000", httpAdapter.NewAdapter(router))
 }
+
 ```
 
 ```
@@ -233,75 +222,30 @@ output: 1, 3, 5, 4, 2
 ##### WWW Form Codec
 
 ```go
-package main
+func Greet(ctx *xray.Context) {
+    type Input struct {
+        Name string `form:"name"`
+        Age  int    `form:"age"`
+    }
 
-import (
-	"fmt"
-	"github.com/lxzan/xray"
-	"github.com/lxzan/xray/contrib/codec/wwwform"
-	"net/http"
-)
-
-type Input struct {
-	Name string `form:"name"`
-	Age  int    `form:"age"`
+    var input = &Input{}
+    _ = wwwform.Codec.NewDecoder(ctx.Request.Body).Decode(input)
+    _ = ctx.Request.Body.Close()
 }
-
-func (c *Controller) Test(ctx *xray.Context) {
-	defer ctx.Request.Close()
-	var input = &Input{}
-	_ = wwwform.FormCodec.NewDecoder(ctx.Request.Body).Decode(input)
-
-	fmt.Printf("%v\n", input)
-	_ = ctx.WriteString(http.StatusOK, "success")
-}
-
 ```
 
 ##### JSON Codec
 
 ```go
-package main
-
-import (
-	"fmt"
-	"github.com/lxzan/xray"
-	"github.com/lxzan/xray/contrib/codec/jsoniter"
-	"net/http"
-)
-
-func init() {
-	// Better performance than xray.StdJsonCodec 
-	xray.SetJsonCodec(jsoniter.JsoniterCodec)
+func Greet(ctx *xray.Context) {
+    type Input struct {
+        Name string `json:"name"`
+        Age  int    `json:"age"`
+    }
+    
+    var input = &Input{}
+    ctx.BindJSON(input)
 }
-
-type Input struct {
-	Name string `form:"name"`
-	Age  int    `form:"age"`
-}
-
-func (c *Controller) Test(ctx *xray.Context) {
-	defer ctx.Request.Close()
-	var input = &Input{}
-	_ = xray.JsonCodec().NewDecoder(ctx.Request.Body).Decode(input)
-
-	fmt.Printf("%v\n", input)
-	_ = ctx.WriteString(http.StatusOK, "success")
-}
-
-```
-
-##### Header Codec (Not applicable to HTTP)
-
-```
-xray.TextMapHeader:   length_encoding=4 byte, max_header_length=9999  byte
-xray.BinaryMapHeader: length_encoding=2 byte, max_header_length=65535 byte
-```
-
-```
-// TextMapHeader Example
-// header length => header payload => body
-0033{"U-Path":"/greet","U-Action":""}{"hello":"world!"}
 ```
 
 #### Swagger
@@ -324,11 +268,12 @@ swag init
 package main
 
 import (
-    "github.com/lxzan/xray"
-    httpAdapter "github.com/lxzan/xray/contrib/adapter/http"
-    "github.com/lxzan/xray/contrib/doc/swagger"
-    _ "github.com/lxzan/xray/examples/debug/docs"
     swaggerFiles "github.com/swaggo/files"
+    "github.com/xray-family/xray"
+    httpAdapter "github.com/xray-family/xray/contrib/adapter/http"
+    "github.com/xray-family/xray/contrib/doc/swagger"
+    "github.com/xray-family/xray/contrib/log/zerolog"
+    _ "github.com/xray-family/xray/examples/debug/docs"
     "net/http"
 )
 
@@ -349,16 +294,15 @@ func main() {
     var router = xray.New()
     router.Use(xray.Recovery(), xray.AccessLog())
 
-    router.OnGET("/swagger/:any", swagger.WrapHandler(swaggerFiles.Handler))
+    router.GET("/swagger/:any", swagger.WrapHandler(swaggerFiles.Handler))
 
-    router.OnGET("/api/v1/example/helloworld", Helloworld)
-
-    router.Start()
+    router.GET("/api/v1/example/helloworld", Helloworld)
 
     if err := http.ListenAndServe(":3000", httpAdapter.NewAdapter(router)); err != nil {
-        xray.Logger().Panic(err.Error())
+        zerolog.Logger.Panic(err.Error())
     }
 }
+
 ```
 
 #### Benchmark
@@ -426,31 +370,34 @@ Transfer/sec:     53.93MB
 - `xray`
 
 ```
-goos: darwin
-goarch: arm64
-pkg: github.com/lxzan/xray
-BenchmarkOneRoute-8             	77647704	        13.53 ns/op	       0 B/op	       0 allocs/op
-BenchmarkOneRouteDynamic-8      	34728837	        34.69 ns/op	       0 B/op	       0 allocs/op
-BenchmarkRecoveryMiddleware-8   	70822222	        16.99 ns/op	       0 B/op	       0 allocs/op
-Benchmark5Params-8              	15952770	        73.23 ns/op	       0 B/op	       0 allocs/op
-BenchmarkOneRouteJSON-8         	89840808	        13.39 ns/op	       0 B/op	       0 allocs/op
-Benchmark404-8                  	81540667	        14.89 ns/op	       0 B/op	       0 allocs/op
-Benchmark404Many-8              	35411809	        34.11 ns/op	       0 B/op	       0 allocs/op
+go test -benchmem -run=^$ -bench . github.com/xray-family/xray
+goos: linux
+goarch: amd64
+pkg: github.com/xray-family/xray
+cpu: 13th Gen Intel(R) Core(TM) i5-1340P
+BenchmarkOneRoute-16                    80629566                14.47 ns/op            0 B/op          0 allocs/op
+BenchmarkOneRouteDynamic-16             32121697                36.72 ns/op            0 B/op          0 allocs/op
+BenchmarkRecoveryMiddleware-16          64666132                18.72 ns/op            0 B/op          0 allocs/op
+Benchmark5Params-16                     15670220                77.95 ns/op            0 B/op          0 allocs/op
+BenchmarkOneRouteJSON-16                76349024                14.26 ns/op            0 B/op          0 allocs/op
+Benchmark404-16                         65392963                18.02 ns/op            0 B/op          0 allocs/op
+Benchmark404Many-16                     31475818                37.31 ns/op            0 B/op          0 allocs/op
 PASS
 ```
 
 - gin
 
 ```
-goos: darwin
-goarch: arm64
+goos: linux
+goarch: amd64
 pkg: github.com/gin-gonic/gin
-BenchmarkOneRoute-8             	45460980	        26.13 ns/op	       0 B/op	       0 allocs/op
-BenchmarkRecoveryMiddleware-8   	38337534	        31.00 ns/op	       0 B/op	       0 allocs/op
-Benchmark5Params-8              	18889320	        63.42 ns/op	       0 B/op	       0 allocs/op
-BenchmarkOneRouteJSON-8         	 7542141	       162.7 ns/op	      48 B/op	       3 allocs/op
-Benchmark404-8                  	29467527	        43.23 ns/op	       0 B/op	       0 allocs/op
-Benchmark404Many-8              	27458932	        43.92 ns/op	       0 B/op	       0 allocs/op
+cpu: 13th Gen Intel(R) Core(TM) i5-1340P
+BenchmarkOneRoute-16                    46832172                25.24 ns/op            0 B/op          0 allocs/op
+BenchmarkRecoveryMiddleware-16          39644233                30.11 ns/op            0 B/op          0 allocs/op
+Benchmark5Params-16                     17872981                63.42 ns/op            0 B/op          0 allocs/op
+BenchmarkOneRouteJSON-16                 6274351               190.3 ns/op            48 B/op          3 allocs/op
+Benchmark404-16                         34617291                34.86 ns/op            0 B/op          0 allocs/op
+Benchmark404Many-16                     28456966                41.69 ns/op            0 B/op          0 allocs/op
 PASS
 ```
 

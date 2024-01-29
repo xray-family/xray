@@ -7,6 +7,7 @@ const (
 	XPath       = "X-Path"
 	XMethod     = "X-Method"
 	XStatus     = "X-Status"
+	XToken      = "X-Token"
 	XRealIP     = "X-Real-Ip"
 	ContentType = "Content-Type"
 

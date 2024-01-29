@@ -1,7 +1,7 @@
 package xray
 
 import (
-	"github.com/lxzan/xray/internal"
+	"github.com/xray-family/xray/internal"
 )
 
 const defaultVarPrefix = ':' // 默认变量前缀

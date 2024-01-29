@@ -2,7 +2,7 @@ package gws
 
 import (
 	"github.com/lxzan/gws"
-	"github.com/lxzan/xray"
+	"github.com/xray-family/xray"
 	"testing"
 )
 

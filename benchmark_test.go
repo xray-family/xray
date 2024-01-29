@@ -8,7 +8,7 @@ import (
 func BenchmarkOneRoute(b *testing.B) {
 	var option = WithGreeting(false, 0)
 	router := New(option)
-	router.OnGET("/ping", func(c *Context) {
+	router.GET("/ping", func(c *Context) {
 	})
 	ctx := newContextMocker(option)
 
@@ -21,7 +21,7 @@ func BenchmarkOneRoute(b *testing.B) {
 func BenchmarkOneRouteDynamic(b *testing.B) {
 	option := WithGreeting(false, 0)
 	router := New(option)
-	router.OnGET("/user/:id", func(c *Context) {
+	router.GET("/user/:id", func(c *Context) {
 	})
 	ctx := newContextMocker(option)
 
@@ -35,7 +35,7 @@ func BenchmarkRecoveryMiddleware(b *testing.B) {
 	option := WithGreeting(false, 0)
 	router := New(option)
 	router.Use(Recovery())
-	router.OnGET("/", func(c *Context) {
+	router.GET("/", func(c *Context) {
 	})
 	ctx := newContextMocker(option)
 
@@ -49,7 +49,7 @@ func Benchmark5Params(b *testing.B) {
 	option := WithGreeting(false, 0)
 	router := New(option)
 	router.Use(func(ctx *Context) {})
-	router.OnGET("/param/:param1/:params2/:param3/:param4/:param5", func(c *Context) {
+	router.GET("/param/:param1/:params2/:param3/:param4/:param5", func(c *Context) {
 	})
 	ctx := newContextMocker(option)
 
@@ -66,7 +66,7 @@ func BenchmarkOneRouteJSON(b *testing.B) {
 	data := struct {
 		Status string `json:"status"`
 	}{"ok"}
-	router.OnGET("/json", func(c *Context) {
+	router.GET("/json", func(c *Context) {
 		defer c.Request.Body.Close()
 		_ = c.WriteJSON(http.StatusOK, data)
 	})
@@ -81,8 +81,8 @@ func BenchmarkOneRouteJSON(b *testing.B) {
 func Benchmark404(b *testing.B) {
 	option := WithGreeting(false, 0)
 	router := New(option)
-	router.OnGET("/", func(c *Context) {})
-	router.OnGET("/something", func(c *Context) {})
+	router.GET("/", func(c *Context) {})
+	router.GET("/something", func(c *Context) {})
 	ctx := newContextMocker(option)
 
 	b.ResetTimer()
@@ -94,14 +94,14 @@ func Benchmark404(b *testing.B) {
 func Benchmark404Many(b *testing.B) {
 	option := WithGreeting(false, 0)
 	router := New(option)
-	router.OnGET("/", func(c *Context) {})
-	router.OnGET("/path/to/something", func(c *Context) {})
-	router.OnGET("/post/:id", func(c *Context) {})
-	router.OnGET("/view/:id", func(c *Context) {})
-	router.OnGET("/favicon.ico", func(c *Context) {})
-	router.OnGET("/robots.txt", func(c *Context) {})
-	router.OnGET("/delete/:id", func(c *Context) {})
-	router.OnGET("/user/:id/:mode", func(c *Context) {})
+	router.GET("/", func(c *Context) {})
+	router.GET("/path/to/something", func(c *Context) {})
+	router.GET("/post/:id", func(c *Context) {})
+	router.GET("/view/:id", func(c *Context) {})
+	router.GET("/favicon.ico", func(c *Context) {})
+	router.GET("/robots.txt", func(c *Context) {})
+	router.GET("/delete/:id", func(c *Context) {})
+	router.GET("/user/:id/:mode", func(c *Context) {})
 	ctx := newContextMocker(option)
 
 	b.ResetTimer()

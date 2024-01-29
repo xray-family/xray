@@ -1,12 +1,12 @@
-module github.com/lxzan/xray/contrib/adapter/http
+module github.com/xray-family/xray/contrib/adapter/http
 
 go 1.18
 
-replace github.com/lxzan/xray => ../../../
+replace github.com/xray-family/xray v0.0.1 => ../../../
 
 require (
-	github.com/lxzan/xray v1.0.0
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.4
+	github.com/xray-family/xray v0.0.1
 )
 
 require (

@@ -1,4 +1,5 @@
-go 1.18
+go 1.21
+
 
 use (
 	.
@@ -11,6 +12,5 @@ use (
 	./contrib/log/zerolog
 	./examples/fasthttp_server
 	./examples/gws_server
-	./examples/http3_server
 	./examples/http_server
 )

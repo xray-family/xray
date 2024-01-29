@@ -1,8 +1,8 @@
 package fasthttp
 
 import (
-	"github.com/lxzan/xray"
 	"github.com/valyala/fasthttp"
+	"github.com/xray-family/xray"
 	"strings"
 )
 

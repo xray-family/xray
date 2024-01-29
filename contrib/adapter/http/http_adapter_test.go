@@ -2,8 +2,8 @@ package http
 
 import (
 	"bytes"
-	"github.com/lxzan/xray"
 	"github.com/stretchr/testify/assert"
+	"github.com/xray-family/xray"
 	"net/http"
 	"net/url"
 	"testing"

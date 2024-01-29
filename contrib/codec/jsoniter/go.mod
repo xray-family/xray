@@ -1,12 +1,12 @@
-module github.com/lxzan/xray/contrib/codec/jsoniter
+module github.com/xray-family/xray/contrib/codec/jsoniter
 
 go 1.18
 
-replace github.com/lxzan/xray => ../../../
+replace github.com/xray-family/xray v0.0.1 => ../../../
 
 require (
 	github.com/json-iterator/go v1.1.12
-	github.com/lxzan/xray v1.0.0
+	github.com/xray-family/xray v0.0.1
 )
 
 require (

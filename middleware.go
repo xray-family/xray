@@ -29,7 +29,7 @@ func Recovery() HandlerFunc {
 	return func(ctx *Context) {
 		defer func() {
 			if fatalError := recover(); fatalError != nil {
-				var msg = make([]byte, 0, 256)
+				var msg = make([]byte, 0, 1024)
 				msg = append(msg, fmt.Sprintf("fatal error: %v\n", fatalError)...)
 				for i := 1; true; i++ {
 					_, caller, line, ok := runtime.Caller(i)
@@ -40,7 +40,7 @@ func Recovery() HandlerFunc {
 						msg = append(msg, fmt.Sprintf("caller: %s, line: %d\n", caller, line)...)
 					}
 				}
-				ctx.conf.logger.Info(string(msg))
+				ctx.conf.logger.Error(string(msg))
 
 				if ctx.Writer.Protocol() == ProtocolHTTP {
 					_ = ctx.WriteString(http.StatusInternalServerError, "internal server error")

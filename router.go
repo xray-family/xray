@@ -2,9 +2,9 @@ package xray
 
 import (
 	_ "embed"
-	"github.com/lxzan/xray/codec"
-	"github.com/lxzan/xray/internal"
-	"github.com/lxzan/xray/log"
+	"github.com/xray-family/xray/codec"
+	"github.com/xray-family/xray/internal"
+	"github.com/xray-family/xray/log"
 	"net/http"
 	"reflect"
 	"runtime"
@@ -121,19 +121,19 @@ func (c *Router) On(path string, handlers ...HandlerFunc) {
 	c.OnEvent("", path, handlers...)
 }
 
-func (c *Router) OnGET(path string, handlers ...HandlerFunc) {
+func (c *Router) GET(path string, handlers ...HandlerFunc) {
 	c.OnEvent(http.MethodGet, path, handlers...)
 }
 
-func (c *Router) OnPOST(path string, handlers ...HandlerFunc) {
+func (c *Router) POST(path string, handlers ...HandlerFunc) {
 	c.OnEvent(http.MethodPost, path, handlers...)
 }
 
-func (c *Router) OnPUT(path string, handlers ...HandlerFunc) {
+func (c *Router) PUT(path string, handlers ...HandlerFunc) {
 	c.OnEvent(http.MethodPut, path, handlers...)
 }
 
-func (c *Router) OnDELETE(path string, handlers ...HandlerFunc) {
+func (c *Router) DELETE(path string, handlers ...HandlerFunc) {
 	c.OnEvent(http.MethodDelete, path, handlers...)
 }
 

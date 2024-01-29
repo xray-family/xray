@@ -2,7 +2,7 @@ package wwwform
 
 import (
 	"github.com/go-playground/form/v4"
-	"github.com/lxzan/xray/codec"
+	"github.com/xray-family/xray/codec"
 	"io"
 	"net/url"
 )

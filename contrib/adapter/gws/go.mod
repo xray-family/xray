@@ -1,13 +1,13 @@
-module github.com/lxzan/xray/contrib/adapter/gws
+module github.com/xray-family/xray/contrib/adapter/gws
 
 go 1.18
 
-replace github.com/lxzan/xray => ../../../
+replace github.com/xray-family/xray v0.0.1 => ../../../
 
 require (
 	github.com/lxzan/gws v1.8.0
-	github.com/lxzan/xray v1.0.0
 	github.com/stretchr/testify v1.8.4
+	github.com/xray-family/xray v0.0.1
 )
 
 require (
