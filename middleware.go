@@ -2,7 +2,6 @@ package xray
 
 import (
 	"fmt"
-	"github.com/lxzan/xray/constant"
 	"net/http"
 	"runtime"
 	"strings"
@@ -43,7 +42,7 @@ func Recovery() HandlerFunc {
 				}
 				ctx.conf.logger.Info(string(msg))
 
-				if ctx.Writer.Protocol() == constant.ProtocolHTTP {
+				if ctx.Writer.Protocol() == ProtocolHTTP {
 					_ = ctx.WriteString(http.StatusInternalServerError, "internal server error")
 				}
 			}
@@ -58,7 +57,7 @@ func HttpRequired(methods ...string) HandlerFunc {
 		methods[i] = strings.ToUpper(v)
 	}
 	return func(ctx *Context) {
-		if ctx.Writer.Protocol() != constant.ProtocolHTTP {
+		if ctx.Writer.Protocol() != ProtocolHTTP {
 			return
 		}
 
@@ -77,7 +76,7 @@ func HttpRequired(methods ...string) HandlerFunc {
 // WebSocketRequired 只允许WebSocket协议请求通过
 func WebSocketRequired() HandlerFunc {
 	return func(ctx *Context) {
-		if ctx.Writer.Protocol() == constant.ProtocolWebSocket {
+		if ctx.Writer.Protocol() == ProtocolWebSocket {
 			ctx.Next()
 		}
 	}

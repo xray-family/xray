@@ -28,7 +28,7 @@ func (c *writerPool) Get() *responseWriter {
 
 func (c *writerPool) Put(w *responseWriter) {
 	w.conn = nil
-	w.code = 0
+	w.opcode = 0
 	w.codec = nil
 	w.buf.Reset()
 	w.payloads = w.payloads[:0]

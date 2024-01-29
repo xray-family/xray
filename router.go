@@ -3,8 +3,8 @@ package xray
 import (
 	_ "embed"
 	"github.com/lxzan/xray/codec"
-	"github.com/lxzan/xray/constant"
 	"github.com/lxzan/xray/internal"
+	"github.com/lxzan/xray/log"
 	"net/http"
 	"reflect"
 	"runtime"
@@ -65,7 +65,7 @@ func New(options ...Option) *Router {
 	}
 
 	r.SetHandlerNotFound(func(ctx *Context) {
-		if ctx.Writer.Protocol() == constant.ProtocolHTTP {
+		if ctx.Writer.Protocol() == ProtocolHTTP {
 			_ = ctx.WriteString(http.StatusNotFound, "not found")
 		}
 	})
@@ -80,8 +80,14 @@ func New(options ...Option) *Router {
 	return r
 }
 
+// JsonCodec 获取JSON编码器
 func (c *Router) JsonCodec() codec.Codec {
 	return c.conf.jsonCodec
+}
+
+// Logger 获取日志工具
+func (c *Router) Logger() log.Logger {
+	return c.conf.logger
 }
 
 // Use 设置全局中间件
@@ -133,7 +139,7 @@ func (c *Router) OnDELETE(path string, handlers ...HandlerFunc) {
 
 // 报告路由冲突
 func (c *Router) reportConflict(api1, api2 *apiHandler) {
-	c.conf.logger.Panic("method=%s, path=[ %s, %s ], msg=api path conflict", api1.Method, api1.Path, api2.Path)
+	c.Logger().Panic("method=%s, path=[ %s, %s ], msg=api path conflict", api1.Method, api1.Path, api2.Path)
 }
 
 // OnEvent 监听一个事件, 绑定处理函数

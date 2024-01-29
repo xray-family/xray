@@ -1,7 +1,6 @@
 package xray
 
 import (
-	"github.com/lxzan/xray/constant"
 	"github.com/lxzan/xray/internal"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -222,7 +221,7 @@ func TestNew(t *testing.T) {
 		ctx := NewContext(
 			r,
 			&Request{
-				Header: &HttpHeader{http.Header{constant.XPath: []string{path}}}, Body: nil,
+				Header: &HttpHeader{http.Header{XPath: []string{path}}}, Body: nil,
 			},
 			newResponseWriterMocker(),
 		)
@@ -260,7 +259,7 @@ func TestRouter_OnNoMatch(t *testing.T) {
 				var path = "test"
 				var ctx = NewContext(
 					r,
-					&Request{Header: &HttpHeader{http.Header{constant.XPath: []string{path}}}},
+					&Request{Header: &HttpHeader{http.Header{XPath: []string{path}}}},
 					newResponseWriterMocker(),
 				)
 				r.Emit(path, ctx)

@@ -2,7 +2,6 @@ package http
 
 import (
 	"github.com/lxzan/xray"
-	"github.com/lxzan/xray/constant"
 	"net/http"
 	"strings"
 )
@@ -24,7 +23,7 @@ func (c *RootController) GetResponseWriter(ctx *xray.Context) http.ResponseWrite
 // ClientIP 获取客户端IP, 优先从X-Real-IP中获取
 // get the client IP, preferably from the X-Real-IP
 func (c *RootController) ClientIP(ctx *xray.Context) string {
-	if v := ctx.Request.Header.Get(constant.XRealIP); v != "" {
+	if v := ctx.Request.Header.Get(xray.XRealIP); v != "" {
 		return v
 	}
 	list := strings.Split(c.GetRequest(ctx).RemoteAddr, ":")

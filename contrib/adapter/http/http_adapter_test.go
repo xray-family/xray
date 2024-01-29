@@ -3,7 +3,6 @@ package http
 import (
 	"bytes"
 	"github.com/lxzan/xray"
-	"github.com/lxzan/xray/constant"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/url"
@@ -110,20 +109,20 @@ func TestNewAdapter(t *testing.T) {
 
 		g0.On("/t1", func(ctx *xray.Context) {
 			v, _ := ctx.Get("sum")
+			ctx.Set("sum", v.(int)+2)
+			ctx.Next()
+		}, func(ctx *xray.Context) {
+			v, _ := ctx.Get("sum")
 			as.Equal(3, v.(int))
+			as.Equal(ctx.Writer.Protocol(), xray.ProtocolHTTP)
 
 			{
-				ctx.Writer.Header().Set(constant.ContentType, "plain/text")
+				ctx.Writer.Header().Set(xray.ContentType, "plain/text")
 				as.NoError(ctx.WriteString(http.StatusOK, "OK"))
 				_, ok := ctx.Writer.Raw().(http.ResponseWriter)
 				as.Equal(true, ok)
-				as.Equal("plain/text", ctx.Writer.Header().Get(constant.ContentType))
+				as.Equal("plain/text", ctx.Writer.Header().Get(xray.ContentType))
 			}
-
-		}, func(ctx *xray.Context) {
-			v, _ := ctx.Get("sum")
-			ctx.Set("sum", v.(int)+2)
-			ctx.Next()
 		})
 
 		g0.On("t2", func(ctx *xray.Context) {

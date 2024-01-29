@@ -67,8 +67,8 @@ func BenchmarkOneRouteJSON(b *testing.B) {
 		Status string `json:"status"`
 	}{"ok"}
 	router.OnGET("/json", func(c *Context) {
+		defer c.Request.Body.Close()
 		_ = c.WriteJSON(http.StatusOK, data)
-		c.Request.Close()
 	})
 	ctx := newContextMocker(option)
 

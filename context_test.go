@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"github.com/lxzan/xray/codec"
-	"github.com/lxzan/xray/constant"
 	"github.com/stretchr/testify/assert"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -15,7 +15,7 @@ func newContextMocker(options ...Option) *Context {
 	var router = New(options...)
 	var request = &Request{
 		Header: HttpHeader{Header: http.Header{}},
-		Body:   bytes.NewBuffer(nil),
+		Body:   io.NopCloser(bytes.NewBuffer(nil)),
 	}
 	var writer = newResponseWriterMocker()
 	var ctx = NewContext(router, request, writer)
@@ -24,7 +24,7 @@ func newContextMocker(options ...Option) *Context {
 
 func newResponseWriterMocker() *responseWriterMocker {
 	return &responseWriterMocker{
-		protocol:   constant.ProtocolHTTP,
+		protocol:   ProtocolHTTP,
 		statusCode: 0,
 		header:     HttpHeader{Header: http.Header{}},
 		buf:        bytes.NewBuffer(nil),
@@ -74,7 +74,7 @@ func TestContext_BindJSON(t *testing.T) {
 
 	t.Run("", func(t *testing.T) {
 		var ctx = newContextMocker()
-		ctx.Request.Body = bytes.NewBufferString(`{"age":1}`)
+		ctx.Request.Body = io.NopCloser(bytes.NewBufferString(`{"age":1}`))
 		var params = struct {
 			Age int `json:"age"`
 		}{}
@@ -84,7 +84,7 @@ func TestContext_BindJSON(t *testing.T) {
 
 	t.Run("", func(t *testing.T) {
 		var ctx = newContextMocker()
-		ctx.Request.Body = strings.NewReader(`{"age":1}`)
+		ctx.Request.Body = io.NopCloser(strings.NewReader(`{"age":1}`))
 		var params = struct {
 			Age int `json:"age"`
 		}{}
@@ -94,7 +94,7 @@ func TestContext_BindJSON(t *testing.T) {
 
 	t.Run("", func(t *testing.T) {
 		var ctx = newContextMocker()
-		ctx.Request.Body = bytes.NewBufferString(`{"age":"1}`)
+		ctx.Request.Body = io.NopCloser(bytes.NewBufferString(`{"age":"1}`))
 		var params = struct {
 			Age int `json:"age"`
 		}{}
@@ -122,7 +122,7 @@ func TestContext_Write(t *testing.T) {
 		}
 		var writer = ctx.Writer.(*responseWriterMocker)
 		as.Equal(http.StatusOK, writer.statusCode)
-		as.Equal(constant.MimeJson, writer.header.Get(constant.ContentType))
+		as.Equal(MimeJson, writer.header.Get(ContentType))
 		var buf = bytes.NewBufferString("")
 		codec.StdJsonCodec.NewEncoder(buf).Encode(params)
 		as.Equal(buf.Len(), writer.buf.Len())
@@ -137,7 +137,7 @@ func TestContext_Write(t *testing.T) {
 		}
 		var writer = ctx.Writer.(*responseWriterMocker)
 		as.Equal(http.StatusOK, writer.statusCode)
-		as.Equal("", writer.header.Get(constant.ContentType))
+		as.Equal("", writer.header.Get(ContentType))
 		as.Equal(params, writer.buf.String())
 	})
 
@@ -150,7 +150,7 @@ func TestContext_Write(t *testing.T) {
 		}
 		var writer = ctx.Writer.(*responseWriterMocker)
 		as.Equal(http.StatusOK, writer.statusCode)
-		as.Equal("", writer.header.Get(constant.ContentType))
+		as.Equal("", writer.header.Get(ContentType))
 		as.Equal(string(params), writer.buf.String())
 	})
 
@@ -213,8 +213,15 @@ func TestContext_Param(t *testing.T) {
 	})
 }
 
+type closer struct{ *bytes.Buffer }
+
+func (c *closer) Close() error { return nil }
+
 func TestRequest_Close(t *testing.T) {
-	var r = &Request{Header: &HttpHeader{http.Header{}}, Body: bytes.NewBufferString("")}
-	r.Close()
-	assert.Nil(t, r.Body)
+	var req = &Request{Header: &HttpHeader{http.Header{}}, Body: &closer{bytes.NewBufferString(`{"hello":"world"}`)}}
+	var ctx = newContextMocker()
+	ctx.Request = req
+	var res = make(map[string]string)
+	ctx.BindJSON(&res)
+	assert.Equal(t, res["hello"], "world")
 }

@@ -7,19 +7,19 @@ import (
 	"net/url"
 )
 
-var FormCodec = new(Codec)
+var Codec = new(formCodec)
 
-type Codec struct{}
+type formCodec struct{}
 
-func (c *Codec) NewEncoder(w io.Writer) codec.Encoder {
+func (c *formCodec) NewEncoder(w io.Writer) codec.Encoder {
 	return &Encoder{writer: w}
 }
 
-func (c *Codec) NewDecoder(r io.Reader) codec.Decoder {
+func (c *formCodec) NewDecoder(r io.Reader) codec.Decoder {
 	return &Decoder{reader: r}
 }
 
-func (c *Codec) Encode(v any) ([]byte, error) {
+func (c *formCodec) Encode(v any) ([]byte, error) {
 	values, err := form.NewEncoder().Encode(v)
 	if err != nil {
 		return nil, err
@@ -27,7 +27,7 @@ func (c *Codec) Encode(v any) ([]byte, error) {
 	return []byte(values.Encode()), nil
 }
 
-func (c *Codec) EncodeToString(v any) (string, error) {
+func (c *formCodec) EncodeToString(v any) (string, error) {
 	values, err := form.NewEncoder().Encode(v)
 	if err != nil {
 		return "", err
@@ -35,7 +35,7 @@ func (c *Codec) EncodeToString(v any) (string, error) {
 	return values.Encode(), nil
 }
 
-func (c *Codec) DecodeFromString(data string, v any) error {
+func (c *formCodec) DecodeFromString(data string, v any) error {
 	values, err := url.ParseQuery(data)
 	if err != nil {
 		return err
@@ -43,7 +43,7 @@ func (c *Codec) DecodeFromString(data string, v any) error {
 	return form.NewDecoder().Decode(v, values)
 }
 
-func (c *Codec) Decode(data []byte, v any) error {
+func (c *formCodec) Decode(data []byte, v any) error {
 	values, err := url.ParseQuery(string(data))
 	if err != nil {
 		return err

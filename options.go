@@ -9,7 +9,7 @@ import (
 type (
 	config struct {
 		greeting  greeting
-		logger    log.Interface
+		logger    log.Logger
 		jsonCodec codec.Codec
 	}
 
@@ -29,7 +29,7 @@ func WithGreeting(enabled bool, delay time.Duration) Option {
 	}
 }
 
-func WithLogger(logger log.Interface) Option {
+func WithLogger(logger log.Logger) Option {
 	return func(c *config) {
 		c.logger = logger
 	}

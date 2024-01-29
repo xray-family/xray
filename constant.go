@@ -1,23 +1,16 @@
-package constant
-
-/*
-定义了内部使用的一些常量
-*/
-
-const (
-	XPath       = "X-Path"
-	XMethod     = "X-Method"
-	XRealIP     = "X-Real-Ip"
-	ContentType = "Content-Type"
-)
-
-const (
-	MimeJson    = "application/json; charset=utf-8"
-	MimeWWWForm = "application/x-www-form-urlencoded"
-	MimeStream  = "application/octet-stream"
-)
+package xray
 
 const (
 	ProtocolHTTP      = "http"
 	ProtocolWebSocket = "websocket"
+
+	XPath       = "X-Path"
+	XMethod     = "X-Method"
+	XStatus     = "X-Status"
+	XRealIP     = "X-Real-Ip"
+	ContentType = "Content-Type"
+
+	MimeJson    = "application/json; charset=utf-8"
+	MimeWWWForm = "application/x-www-form-urlencoded"
+	MimeStream  = "application/octet-stream"
 )

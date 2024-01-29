@@ -20,7 +20,7 @@ func main() {
 		if err := fasthttp.ListenAndServe(":3001", func(ctx *fasthttp.RequestCtx) {
 			ctx.SetBody([]byte("hello"))
 		}); err != nil {
-			xray.Logger().Panic(err.Error())
+			router.Logger().Panic(err.Error())
 		}
 	}()
 
@@ -29,11 +29,11 @@ func main() {
 		if err := http.ListenAndServe(":3002", http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			_, _ = writer.Write([]byte("hello"))
 		})); err != nil {
-			xray.Logger().Panic(err.Error())
+			router.Logger().Panic(err.Error())
 		}
 	}()
 
 	if err := fasthttp.ListenAndServe(":3000", fasthttpAdapter.NewAdapter(router).ServeFastHTTP); err != nil {
-		xray.Logger().Panic(err.Error())
+		router.Logger().Panic(err.Error())
 	}
 }

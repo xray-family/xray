@@ -2,7 +2,6 @@ package codec
 
 import (
 	"bytes"
-	"github.com/lxzan/xray/constant"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
@@ -10,7 +9,7 @@ import (
 
 func TestStdJsonCodec_Encode(t *testing.T) {
 	var v = http.Header{}
-	v.Set(constant.ContentType, constant.MimeJson)
+	v.Set("content-type", "application/json")
 	_, err := StdJsonCodec.Encode(v)
 	assert.NoError(t, err)
 }

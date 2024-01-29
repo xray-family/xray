@@ -1,7 +1,6 @@
 package xray
 
 import (
-	"github.com/lxzan/xray/constant"
 	"github.com/lxzan/xray/internal"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -11,12 +10,12 @@ import (
 func TestHttpHeader(t *testing.T) {
 	var as = assert.New(t)
 	var header = HttpHeader{Header: http.Header{}}
-	header.Set(constant.ContentType, constant.MimeJson)
-	header.Set(constant.XPath, "")
+	header.Set(ContentType, MimeJson)
+	header.Set(XPath, "")
 	as.Equal(2, header.Len())
 
 	var keys []string
-	header.Del(constant.XPath)
+	header.Del(XPath)
 	header.Range(func(key string, value string) bool {
 		keys = append(keys, key)
 		return true

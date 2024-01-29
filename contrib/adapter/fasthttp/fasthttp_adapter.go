@@ -4,9 +4,21 @@ import (
 	"bytes"
 	"github.com/lxzan/xray"
 	"github.com/valyala/fasthttp"
+	"io"
 	"reflect"
 	"unsafe"
 )
+
+type readCloser struct {
+	payload []byte
+	reader  io.Reader
+}
+
+func (c *readCloser) Close() error { return nil }
+
+func (c *readCloser) Read(p []byte) (n int, err error) { return c.reader.Read(p) }
+
+func (c *readCloser) Bytes() []byte { return c.payload }
 
 type responseWriter struct {
 	writer *fasthttp.Response
@@ -54,11 +66,12 @@ func (c *Adapter) SetRouter(r *xray.Router) *Adapter {
 
 // ServeFastHTTP 服务HTTP
 func (c *Adapter) ServeFastHTTP(ctx *fasthttp.RequestCtx) {
+	var body = ctx.Request.Body()
 	var r = &xray.Request{
 		Raw:    &ctx.Request,
 		Header: &requestHeader{RequestHeader: &ctx.Request.Header},
 		Method: b2s(ctx.Method()),
-		Body:   bytes.NewBuffer(ctx.Request.Body()),
+		Body:   &readCloser{payload: body, reader: bytes.NewReader(body)},
 	}
 
 	var uctx = xray.NewContext(c.router, r, &responseWriter{

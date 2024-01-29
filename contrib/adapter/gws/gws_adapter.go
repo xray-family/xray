@@ -6,6 +6,8 @@ import (
 	"github.com/lxzan/gws"
 	"github.com/lxzan/xray"
 	"github.com/lxzan/xray/codec"
+	"github.com/lxzan/xray/internal"
+	"io"
 	"strconv"
 )
 
@@ -16,7 +18,7 @@ type (
 
 	responseWriter struct {
 		conn     websocketWrapper
-		code     gws.Opcode
+		opcode   gws.Opcode
 		codec    codec.Codec
 		header   xray.Header
 		buf      *bytes.Buffer
@@ -36,8 +38,8 @@ func (c *responseWriter) Header() xray.Header {
 	return c.header
 }
 
-func (c *responseWriter) Code(opcode int) {
-	c.code = gws.Opcode(opcode)
+func (c *responseWriter) Code(code int) {
+	c.header.Set(xray.XStatus, strconv.Itoa(code))
 }
 
 func (c *responseWriter) RawResponseWriter() any {
@@ -45,7 +47,7 @@ func (c *responseWriter) RawResponseWriter() any {
 }
 
 func (c *responseWriter) Write(p []byte) (n int, err error) {
-	c.payloads = append(c.payloads, p)
+	c.payloads = append(c.payloads, internal.Clone(p))
 	return len(p), nil
 }
 
@@ -54,7 +56,7 @@ func (c *responseWriter) Flush() error {
 		return err
 	}
 	c.payloads[0] = c.buf.Bytes()
-	return c.conn.Writev(c.code, c.payloads...)
+	return c.conn.Writev(c.opcode, c.payloads...)
 }
 
 func NewAdapter(router *xray.Router) *Adapter {
@@ -82,7 +84,7 @@ func (c *Adapter) ServeWebSocket(socket *gws.Conn, message *gws.Message) error {
 	r := &xray.Request{Raw: message, Body: message}
 	w := c.pool.Get()
 	w.conn = socket
-	w.code = message.Opcode
+	w.opcode = message.Opcode
 	w.codec = c.router.JsonCodec()
 	w.header = c.tpl.New()
 	w.payloads = append(w.payloads, nil)
@@ -96,11 +98,13 @@ func (c *Adapter) ServeWebSocket(socket *gws.Conn, message *gws.Message) error {
 	r.Method = header.Get(xray.XMethod)
 	ctx.Request.Header = header
 	c.router.EmitEvent(r.Method, header.Get(xray.XPath), ctx)
+	c.pool.Put(w)
 	return nil
 }
 
 func marshalHeader(jsonCodec codec.Codec, w *bytes.Buffer, v xray.Header) error {
 	if v.Len() == 0 {
+		w.WriteString("0002[]")
 		return nil
 	}
 	w.WriteString("0000")
@@ -113,11 +117,15 @@ func marshalHeader(jsonCodec codec.Codec, w *bytes.Buffer, v xray.Header) error 
 
 func unmarshalHeader(jsonCodec codec.Codec, r *bytes.Buffer, v xray.Header) error {
 	if r.Len() < 4 {
-		return nil
+		return io.ErrShortBuffer
 	}
 	length, err := strconv.Atoi(string(r.Next(4)))
 	if err != nil {
 		return err
 	}
-	return jsonCodec.Decode(r.Next(length), v)
+	p := r.Next(length)
+	if len(p) < length {
+		return io.ErrShortBuffer
+	}
+	return jsonCodec.Decode(p, v)
 }

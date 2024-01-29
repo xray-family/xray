@@ -4,16 +4,10 @@ import (
 	"io"
 )
 
-type (
-	BytesReader interface {
-		io.Reader
-		Bytes() []byte
-	}
-
-	Closer interface {
-		Close()
-	}
-)
+type BytesReader interface {
+	io.Reader
+	Bytes() []byte
+}
 
 type (
 	Any map[string]any

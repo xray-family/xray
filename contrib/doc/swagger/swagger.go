@@ -141,7 +141,7 @@ func CustomWrapHandler(config *Config, handler *webdav.Handler) xray.HandlerFunc
 	var matcher = regexp.MustCompile(`(.*)(index\.html|doc\.json|favicon-16x16\.png|favicon-32x32\.png|/oauth2-redirect\.html|swagger-ui\.css|swagger-ui\.css\.map|swagger-ui\.js|swagger-ui\.js\.map|swagger-ui-bundle\.js|swagger-ui-bundle\.js\.map|swagger-ui-standalone-preset\.js|swagger-ui-standalone-preset\.js\.map)[?|.]*`)
 
 	return func(ctx *xray.Context) {
-		if ctx.Request.Action != http.MethodGet {
+		if ctx.Request.Method != http.MethodGet {
 			_ = ctx.WriteBytes(http.StatusMethodNotAllowed, nil)
 			return
 		}

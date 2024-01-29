@@ -1,7 +1,6 @@
 package xray
 
 import (
-	"github.com/lxzan/xray/constant"
 	"github.com/lxzan/xray/internal"
 	"io"
 )
@@ -38,7 +37,7 @@ type (
 		Header Header
 
 		// 请求体
-		Body io.Reader
+		Body io.ReadCloser
 
 		// 请求方法
 		Method string
@@ -77,18 +76,6 @@ type (
 	}
 )
 
-// Close 关闭资源
-// close the resource
-func Close(resource any) {
-	if v, ok := resource.(io.Closer); ok {
-		_ = v.Close()
-		return
-	}
-	if v, ok := resource.(Closer); ok {
-		v.Close()
-	}
-}
-
 func NewContext(router *Router, request *Request, writer ResponseWriter) *Context {
 	return &Context{
 		index:    0,
@@ -98,12 +85,6 @@ func NewContext(router *Router, request *Request, writer ResponseWriter) *Contex
 		Request:  request,
 		Writer:   writer,
 	}
-}
-
-// Close 关闭请求, 回收Header和Body资源
-func (c *Request) Close() {
-	Close(c.Body)
-	c.Body = nil
 }
 
 // Next 执行下一个中间件
@@ -127,8 +108,8 @@ func (c *Context) Get(key string) (any, bool) {
 
 // WriteJSON 写入JSON
 func (c *Context) WriteJSON(code int, v any) error {
-	if c.Writer.Protocol() == constant.ProtocolHTTP {
-		c.Writer.Header().Set(constant.ContentType, constant.MimeJson)
+	if c.Writer.Protocol() == ProtocolHTTP {
+		c.Writer.Header().Set(ContentType, MimeJson)
 	}
 	c.Writer.Code(code)
 	if err := c.conf.jsonCodec.NewEncoder(c.Writer).Encode(v); err != nil {
@@ -153,6 +134,7 @@ func (c *Context) WriteString(code int, s string) error {
 
 // BindJSON 绑定请求数据
 func (c *Context) BindJSON(v any) error {
+	defer c.Request.Body.Close()
 	if r, ok := c.Request.Body.(BytesReader); ok {
 		return c.conf.jsonCodec.Decode(r.Bytes(), v)
 	}

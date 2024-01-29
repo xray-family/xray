@@ -43,7 +43,7 @@ package gws
 //	}
 //
 //	for i := 0; i < b.N; i++ {
-//		ctx.Request.Header.Set(constant.XRealIP, "127.0.0.1")
+//		ctx.Request.Header.Set(XRealIP, "127.0.0.1")
 //		ctx.Request.Header.Set(xray.XPath, "/test")
 //		_ = ctx.WriteJSON(int(gws.OpcodeText), &v)
 //
@@ -68,7 +68,7 @@ package gws
 //
 //	for i := 0; i < b.N; i++ {
 //		ctx.Request.Header = xray.HeaderPool().Get(constant.MapHeaderNumber)
-//		ctx.Request.Header.Set(constant.XRealIP, "127.0.0.1")
+//		ctx.Request.Header.Set(XRealIP, "127.0.0.1")
 //		ctx.Request.Header.Set(xray.XPath, "/test")
 //		_ = ctx.WriteJSON(int(gws.OpcodeText), &v)
 //
