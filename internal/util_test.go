@@ -150,3 +150,10 @@ func TestClone(t *testing.T) {
 	var b = Clone(a)
 	assert.ElementsMatch(t, a, b)
 }
+
+func TestCatch(t *testing.T) {
+	var err = Catch(func() {
+		panic(1)
+	})
+	assert.Error(t, err)
+}
