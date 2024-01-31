@@ -1,7 +1,7 @@
 package xray
 
 import (
-	"github.com/lxzan/xray/internal"
+	"github.com/xray-family/xray/internal"
 	"net/http"
 )
 
@@ -41,18 +41,18 @@ func (c *Group) On(path string, handlers ...HandlerFunc) {
 	c.OnEvent("", path, handlers...)
 }
 
-func (c *Group) OnGET(path string, handlers ...HandlerFunc) {
+func (c *Group) GET(path string, handlers ...HandlerFunc) {
 	c.OnEvent(http.MethodGet, path, handlers...)
 }
 
-func (c *Group) OnPOST(path string, handlers ...HandlerFunc) {
+func (c *Group) POST(path string, handlers ...HandlerFunc) {
 	c.OnEvent(http.MethodPost, path, handlers...)
 }
 
-func (c *Group) OnPUT(path string, handlers ...HandlerFunc) {
+func (c *Group) PUT(path string, handlers ...HandlerFunc) {
 	c.OnEvent(http.MethodPut, path, handlers...)
 }
 
-func (c *Group) OnDELETE(path string, handlers ...HandlerFunc) {
+func (c *Group) DELETE(path string, handlers ...HandlerFunc) {
 	c.OnEvent(http.MethodDelete, path, handlers...)
 }

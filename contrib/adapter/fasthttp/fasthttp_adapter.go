@@ -2,8 +2,8 @@ package fasthttp
 
 import (
 	"bytes"
-	"github.com/lxzan/xray"
 	"github.com/valyala/fasthttp"
+	"github.com/xray-family/xray"
 	"io"
 	"reflect"
 	"unsafe"

@@ -1,9 +1,9 @@
 package xray
 
 import (
-	"github.com/lxzan/xray/codec"
-	"github.com/lxzan/xray/log"
 	"github.com/stretchr/testify/assert"
+	"github.com/xray-family/xray/codec"
+	"github.com/xray-family/xray/log"
 	"testing"
 	"time"
 )

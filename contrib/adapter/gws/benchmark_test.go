@@ -4,15 +4,15 @@ package gws
 //import (
 //	"bytes"
 //	"github.com/lxzan/gws"
-//	"github.com/lxzan/xray"
-//	"github.com/lxzan/xray/constant"
-//	"github.com/lxzan/xray/internal"
+//	"github.com/xray-family/xray"
+//	"github.com/xray-family/xray/constant"
+//	"github.com/xray-family/xray/internal"
 //	"testing"
 //)
 //
 //func BenchmarkAdapter_ServeHTTP(b *testing.B) {
 //	var router = xray.New()
-//	router.OnGET("/", func(ctx *xray.Context) {})
+//	router.GET("/", func(ctx *xray.Context) {})
 //	adapter := NewAdapter(router)
 //
 //	socket := &gws.Conn{}

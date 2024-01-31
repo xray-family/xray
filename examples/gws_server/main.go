@@ -2,12 +2,12 @@ package main
 
 import (
 	"github.com/lxzan/gws"
-	"github.com/lxzan/xray"
-	gwsAdapter "github.com/lxzan/xray/contrib/adapter/gws"
-	httpAdapter "github.com/lxzan/xray/contrib/adapter/http"
-	"github.com/lxzan/xray/contrib/codec/jsoniter"
-	"github.com/lxzan/xray/contrib/log/zerolog"
-	"github.com/lxzan/xray/log"
+	"github.com/xray-family/xray"
+	gwsAdapter "github.com/xray-family/xray/contrib/adapter/gws"
+	httpAdapter "github.com/xray-family/xray/contrib/adapter/http"
+	"github.com/xray-family/xray/contrib/codec/jsoniter"
+	"github.com/xray-family/xray/contrib/log/zerolog"
+	"github.com/xray-family/xray/log"
 	"net/http"
 )
 
@@ -20,7 +20,7 @@ func main() {
 
 	upgrader := gws.NewUpgrader(&WebSocketHandler{logger: router.Logger(), adapter: gwsAdapter.NewAdapter(router)}, nil)
 
-	router.OnGET("/connect", func(ctx *xray.Context) {
+	router.GET("/connect", func(ctx *xray.Context) {
 		socket, err := upgrader.Upgrade(ctx.Writer.Raw().(http.ResponseWriter), ctx.Request.Raw.(*http.Request))
 		if err != nil {
 			router.Logger().Error(err.Error())

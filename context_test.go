@@ -3,8 +3,8 @@ package xray
 import (
 	"bytes"
 	"errors"
-	"github.com/lxzan/xray/codec"
 	"github.com/stretchr/testify/assert"
+	"github.com/xray-family/xray/codec"
 	"io"
 	"net/http"
 	"strings"

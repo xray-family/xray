@@ -1,8 +1,8 @@
 package swagger
 
 import (
-	"github.com/lxzan/xray"
 	"github.com/swaggo/swag"
+	"github.com/xray-family/xray"
 	"golang.org/x/net/webdav"
 	"html/template"
 	"net/http"

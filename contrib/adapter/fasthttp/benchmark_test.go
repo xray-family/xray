@@ -1,8 +1,8 @@
 package fasthttp
 
 import (
-	"github.com/lxzan/xray"
 	"github.com/valyala/fasthttp"
+	"github.com/xray-family/xray"
 	"testing"
 )
 
@@ -12,7 +12,7 @@ func BenchmarkAdapter_ServeFastHTTP(b *testing.B) {
 		Response: fasthttp.Response{},
 	}
 	var router = xray.New()
-	router.OnGET("/", func(ctx *xray.Context) {})
+	router.GET("/", func(ctx *xray.Context) {})
 	adapter := NewAdapter(router)
 
 	b.ResetTimer()

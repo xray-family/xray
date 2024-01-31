@@ -1,8 +1,8 @@
 package xray
 
 import (
-	"github.com/lxzan/xray/internal"
 	"github.com/stretchr/testify/assert"
+	"github.com/xray-family/xray/internal"
 	"net/http"
 	"sync"
 	"testing"
@@ -475,7 +475,7 @@ func TestRouter_EmitRandom(t *testing.T) {
 	var g0 = r.Group("api")
 	var g1 = g0.Group("v1")
 	for _, v := range paths {
-		g1.OnGET(v, func(ctx *Context) {
+		g1.GET(v, func(ctx *Context) {
 			mapping[ctx.Request.VPath] = 1
 		})
 	}
@@ -549,7 +549,7 @@ func TestRouter_Actions(t *testing.T) {
 	t.Run("get", func(t *testing.T) {
 		var r = New()
 		var sum = 0
-		r.OnGET("/test", func(ctx *Context) {
+		r.GET("/test", func(ctx *Context) {
 			sum++
 		})
 		r.EmitEvent(http.MethodGet, "/test", newContextMocker())
@@ -559,7 +559,7 @@ func TestRouter_Actions(t *testing.T) {
 	t.Run("post", func(t *testing.T) {
 		var r = New()
 		var sum = 0
-		r.OnPOST("/test", func(ctx *Context) {
+		r.POST("/test", func(ctx *Context) {
 			sum++
 		})
 		r.EmitEvent(http.MethodPost, "/test", newContextMocker())
@@ -569,7 +569,7 @@ func TestRouter_Actions(t *testing.T) {
 	t.Run("put", func(t *testing.T) {
 		var r = New()
 		var sum = 0
-		r.OnPUT("/test", func(ctx *Context) {
+		r.PUT("/test", func(ctx *Context) {
 			sum++
 		})
 		r.EmitEvent(http.MethodPut, "/test", newContextMocker())
@@ -579,7 +579,7 @@ func TestRouter_Actions(t *testing.T) {
 	t.Run("delete", func(t *testing.T) {
 		var r = New()
 		var sum = 0
-		r.OnDELETE("/test", func(ctx *Context) {
+		r.DELETE("/test", func(ctx *Context) {
 			sum++
 		})
 		r.EmitEvent(http.MethodDelete, "/test", newContextMocker())
@@ -594,7 +594,7 @@ func TestGroup_Actions(t *testing.T) {
 		var r = New()
 		var g = r.Group("api/v1")
 		var sum = 0
-		g.OnGET("/test", func(ctx *Context) {
+		g.GET("/test", func(ctx *Context) {
 			sum++
 		})
 		r.EmitEvent(http.MethodGet, "/api/v1/test", newContextMocker())
@@ -605,7 +605,7 @@ func TestGroup_Actions(t *testing.T) {
 		var r = New()
 		var g = r.Group("api/v1")
 		var sum = 0
-		g.OnPOST("/test", func(ctx *Context) {
+		g.POST("/test", func(ctx *Context) {
 			sum++
 		})
 		r.EmitEvent(http.MethodPost, "/api/v1/test", newContextMocker())
@@ -616,7 +616,7 @@ func TestGroup_Actions(t *testing.T) {
 		var r = New()
 		var g = r.Group("api/v1")
 		var sum = 0
-		g.OnPUT("/test", func(ctx *Context) {
+		g.PUT("/test", func(ctx *Context) {
 			sum++
 		})
 		r.EmitEvent(http.MethodPut, "/api/v1/test", newContextMocker())
@@ -627,7 +627,7 @@ func TestGroup_Actions(t *testing.T) {
 		var r = New()
 		var g = r.Group("api/v1")
 		var sum = 0
-		g.OnDELETE("/test", func(ctx *Context) {
+		g.DELETE("/test", func(ctx *Context) {
 			sum++
 		})
 		r.EmitEvent(http.MethodDelete, "/api/v1/test", newContextMocker())
@@ -637,9 +637,9 @@ func TestGroup_Actions(t *testing.T) {
 
 func TestRouter_Display(t *testing.T) {
 	r := New(WithGreeting(true, 100*time.Millisecond))
-	r.OnGET("eat", AccessLog())
-	r.OnPOST("eat", AccessLog())
-	r.OnGET("speak", AccessLog())
-	r.OnGET("speak/:msg", AccessLog())
+	r.GET("eat", AccessLog())
+	r.POST("eat", AccessLog())
+	r.GET("speak", AccessLog())
+	r.GET("speak/:msg", AccessLog())
 	time.Sleep(200 * time.Millisecond)
 }

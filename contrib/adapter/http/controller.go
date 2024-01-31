@@ -1,7 +1,7 @@
 package http
 
 import (
-	"github.com/lxzan/xray"
+	"github.com/xray-family/xray"
 	"net/http"
 	"strings"
 )

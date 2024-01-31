@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/lxzan/gws"
-	"github.com/lxzan/xray"
-	"github.com/lxzan/xray/codec"
-	"github.com/lxzan/xray/internal"
+	"github.com/xray-family/xray"
+	"github.com/xray-family/xray/codec"
+	"github.com/xray-family/xray/internal"
 	"io"
 	"strconv"
 )

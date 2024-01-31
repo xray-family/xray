@@ -1,8 +1,8 @@
 package xray
 
 import (
-	"github.com/lxzan/xray/internal"
 	"github.com/stretchr/testify/assert"
+	"github.com/xray-family/xray/internal"
 	"strings"
 	"testing"
 )
