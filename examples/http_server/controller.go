@@ -16,7 +16,11 @@ func NewController() *Controller {
 
 func (c *Controller) Mapping(group *xray.Group) *Controller {
 	group.OnEvent(http.MethodGet, "/greet/:name", c.Greet)
-	group.POST("/test", c.Test)
+	group.POST("/greet/lee", c.Test)
+	group.DELETE("/greet/:name", c.Test)
+	group.GET("/greet/oh/:id", func(ctx *xray.Context) {
+		ctx.WriteJSON(200, xray.Any{})
+	})
 	return c
 }
 

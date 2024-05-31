@@ -3,6 +3,7 @@ package xray
 import (
 	"github.com/stretchr/testify/assert"
 	"github.com/xray-family/xray/internal"
+	"github.com/xray-family/xray/internal/treemap"
 	"net/http"
 	"sync"
 	"testing"
@@ -227,7 +228,7 @@ func TestNew(t *testing.T) {
 		)
 		r.Emit(path, ctx)
 
-		r.staticMatcher.Set(&apiHandler{
+		r.matcher.Set(http.MethodPost, "/404", &apiHandler{
 			Method: http.MethodPost,
 			Path:   "/404",
 			Funcs:  []HandlerFunc{AccessLog()},
@@ -417,7 +418,6 @@ func TestRouter_Dynamic(t *testing.T) {
 		r.OnEvent(http.MethodGet, "/user/:id", func(ctx *Context) {
 
 		})
-		//r.StartSilently()
 
 		ctx := NewContext(r, &Request{}, newResponseWriterMocker())
 		r.EmitEvent(http.MethodGet, "/user/1/profile", ctx)
@@ -487,7 +487,7 @@ func TestRouter_EmitRandom(t *testing.T) {
 	}
 	as.Equal(count, len(mapping))
 
-	var exists = func(m matcher, p string) bool {
+	var exists = func(m *treemap.TreeMap[*apiHandler], p string) bool {
 		var exists = false
 		m.Range(func(h *apiHandler) {
 			if h.Path == p {
@@ -535,7 +535,7 @@ func TestRouter_EmitRandom(t *testing.T) {
 		var arr = []string{prefix}
 		arr = append(arr, segments...)
 		path := internal.JoinPath(arr...)
-		if exists(r.staticMatcher, path) || exists(r.dynamicMatcher, path) {
+		if exists(r.matcher, path) {
 			expected++
 		}
 		r.EmitEvent(http.MethodGet, path, ctx)

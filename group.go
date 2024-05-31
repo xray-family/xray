@@ -33,7 +33,10 @@ func (c *Group) OnEvent(method string, path string, handlers ...HandlerFunc) {
 		Path:   internal.JoinPath(_sep, c.path, path),
 		Funcs:  h,
 	}
-	setApiHandler(c.router, api.Method, api.Path, api)
+	if v, exists := c.router.matcher.Exists(api.Method, api.Path); exists {
+		c.router.reportConflict(api, v)
+	}
+	c.router.matcher.Set(api.Method, api.Path, api)
 }
 
 // On  类似OnEvent方法, 但是没有操作方法

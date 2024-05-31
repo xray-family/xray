@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"github.com/xray-family/xray/codec"
 	"github.com/xray-family/xray/internal"
+	"github.com/xray-family/xray/internal/treemap"
 	"github.com/xray-family/xray/log"
 	"net/http"
 	"reflect"
@@ -20,11 +21,8 @@ type (
 		// 配置
 		conf *config
 
-		// 静态路由
-		staticMatcher staticMatcher
-
-		// 动态路由
-		dynamicMatcher dynamicMatcher
+		// 路由树
+		matcher *treemap.TreeMap[*apiHandler]
 
 		// 全局中间件
 		// global middlewares
@@ -58,10 +56,9 @@ func New(options ...Option) *Router {
 	}
 
 	r := &Router{
-		conf:           conf,
-		chainsGlobal:   make([]HandlerFunc, 0),
-		staticMatcher:  make(staticMatcher, 0),
-		dynamicMatcher: make(dynamicMatcher),
+		conf:         conf,
+		chainsGlobal: make([]HandlerFunc, 0),
+		matcher:      treemap.New[*apiHandler](),
 	}
 
 	r.SetHandlerNotFound(func(ctx *Context) {
@@ -139,7 +136,7 @@ func (c *Router) DELETE(path string, handlers ...HandlerFunc) {
 
 // 报告路由冲突
 func (c *Router) reportConflict(api1, api2 *apiHandler) {
-	c.Logger().Panic("method=%s, path=[ %s, %s ], msg=api path conflict", api1.Method, api1.Path, api2.Path)
+	c.Logger().Panic("method=%s, path=[ %s, %s ], msg=path conflict", api1.Method, api1.Path, api2.Path)
 }
 
 // OnEvent 监听一个事件, 绑定处理函数
@@ -151,13 +148,15 @@ func (c *Router) reportConflict(api1, api2 *apiHandler) {
 // path: request path
 // handler: handler function
 func (c *Router) OnEvent(method string, path string, handlers ...HandlerFunc) {
-	h := append(internal.Clone(c.chainsGlobal), handlers...)
 	api := &apiHandler{
 		Method: method,
 		Path:   internal.JoinPath(_sep, path),
-		Funcs:  h,
+		Funcs:  append(internal.Clone(c.chainsGlobal), handlers...),
 	}
-	setApiHandler(c, api.Method, api.Path, api)
+	if v, exists := c.matcher.Exists(api.Method, api.Path); exists {
+		c.reportConflict(api, v)
+	}
+	c.matcher.Set(api.Method, api.Path, api)
 }
 
 // Emit 分发事件
@@ -172,7 +171,7 @@ func (c *Router) EmitEvent(action string, path string, ctx *Context) {
 	path = internal.TrimPath(path)
 	ctx.Request.RPath = path
 
-	if h, ok := getApiHandler(c, action, path); ok {
+	if h, ok := c.matcher.Get(action, path); ok {
 		ctx.Request.VPath = h.Path
 		ctx.handlers = h.Funcs
 		ctx.Next()
@@ -192,8 +191,7 @@ var blessMessage string
 // display api list
 func (c *Router) display() {
 	var apis []*apiHandler
-	c.staticMatcher.Range(func(h *apiHandler) { apis = append(apis, h) })
-	c.dynamicMatcher.Range(func(h *apiHandler) { apis = append(apis, h) })
+	c.matcher.Range(func(h *apiHandler) { apis = append(apis, h) })
 	sort.Slice(apis, func(i, j int) bool {
 		a := apis[i]
 		b := apis[j]

@@ -158,3 +158,8 @@ func (c *Context) Param(key string) string {
 	}
 	return ""
 }
+
+// 判断字符串是否为变量
+func isVar(s string) bool {
+	return len(s) > 0 && s[0] == ':'
+}
